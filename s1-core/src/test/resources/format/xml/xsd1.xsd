@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+	<xs:element name="a">
+		<xs:annotation>
+			<xs:documentation>test</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="a" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>e aaa</xs:documentation>
+					</xs:annotation>
+                </xs:element>
+                <xs:element name="b" type="xs:string" maxOccurs="unbounded">
+                    <xs:annotation>
+                        <xs:documentation>e bbb</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="b1" minOccurs="0" maxOccurs="unbounded" type="ct2">
+                    <xs:annotation>
+                        <xs:documentation>e b111</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="b2" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>e b222</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="a" type="xs:string" maxOccurs="2">
+                                <xs:annotation>
+                                    <xs:documentation>e aaa</xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="c" maxOccurs="unbounded" type="ct1">
+                    <xs:annotation>
+                        <xs:documentation>e ccc</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="тест" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>e ddd</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="a" use="required">
+                <xs:annotation>
+                    <xs:documentation>aaa</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="2"/>
+                        <xs:maxLength value="50"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="b" use="required">
+                <xs:annotation>
+                    <xs:documentation>bbb</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="2"/>
+                        <xs:maxLength value="50"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="тест" use="required">
+                <xs:annotation>
+                    <xs:documentation>ccc</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="2"/>
+                        <xs:maxLength value="50"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="ct1">
+        <xs:sequence>
+            <xs:element name="element" minOccurs="0" type="ct1">
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="x" use="required">
+            <xs:annotation>
+                <xs:documentation>xxx</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="2"/>
+                    <xs:maxLength value="50"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="ct2">
+        <xs:sequence>
+            <xs:element name="a" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>e aaa</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

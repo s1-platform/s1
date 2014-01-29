@@ -1,0 +1,25 @@
+
+------=_Part_96_20122774.1369204635982
+Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
+Content-Transfer-Encoding: 8bit
+Content-ID: <rootpart@soapui.org>
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cry="http://s1-platform.com/crypto">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cry:SignRequest>
+         <type>smev</type>
+         <key>test</key>
+         <data><inc:Include href="cid:88424090462" xmlns:inc="http://www.w3.org/2004/08/xop/include"/></data>
+         <data2></data2>
+      </cry:SignRequest>
+   </soapenv:Body>
+</soapenv:Envelope>
+------=_Part_96_20122774.1369204635982
+Content-Type: text/xml; charset=utf-8; name=test.txt
+Content-Transfer-Encoding: quoted-printable
+Content-ID: <88424090462>
+Content-Disposition: attachment; name="test.txt"; filename="test.txt"
+
+qwer
+------=_Part_96_20122774.1369204635982--

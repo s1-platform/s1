@@ -1,6 +1,17 @@
+target
+*.log
 *.class
 
 # Package Files #
 *.jar
 *.war
 *.ear
+
+# IDE files
+.idea
+.project
+.settings
+*.iml
+
+# SVN #
+.svn

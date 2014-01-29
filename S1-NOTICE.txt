@@ -1,0 +1,29 @@
+**
+**  NOTICE file corresponding to the section 4 (d) of the Apache License,
+**  Version 2.0, in this case for the S1-Platform distribution.
+**
+
+The end-user documentation included with a redistribution, if any,
+must include the following acknowledgement:
+
+ "This product includes software developed by Grigory Pykhov
+    (http://s1-platform.org)."
+
+Alternately, this acknowledgement may appear in the software itself,
+if and wherever such third-party acknowledgements normally appear.
+
+The names "S1" or "S1 Platform" or "S1-Platform" must not be used
+to endorse or promote products derived from this software without
+prior written permission. For written permission, please contact
+s.one.platform@gmail.com
+
+Copyright (c) 20013-2014 Grigory Pykhov.  All rights reserved.
+
+*******************************************************************************
+
+S1-Platform includes following software:
+
+1. Hazelcast - software developed by the Hazelcast
+    Project (http://www.hazelcast.com);
+2. json-simple - software developed by Yidong Fang
+    (http://code.google.com/p/json-simple);

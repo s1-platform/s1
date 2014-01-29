@@ -1,0 +1,20 @@
+<xs:schema targetNamespace="http://example.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://example.com/">
+    <!-- elements -->
+    <xs:element name="SignRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element type="xs:string" name="type"/>
+                <xs:element type="xs:string" name="key"/>
+                <xs:element name="data" type="xs:base64Binary"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="SignResponse">
+        <xs:complexType>
+            <xs:sequence maxOccurs="1">
+                <xs:element type="xs:base64Binary" name="data"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

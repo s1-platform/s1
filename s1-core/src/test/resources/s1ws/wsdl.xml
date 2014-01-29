@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:tns="http://example.com/" targetNamespace="http://example.com/">
+    <wsdl:types>
+        <xs:schema targetNamespace="http://example.com/">
+            <xs:include schemaLocation="${address}?import=schema.xsd"></xs:include>
+
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="Sign_InputMessage">
+        <wsdl:part name="Sign_IN" element="tns:SignRequest"/>
+    </wsdl:message>
+    <wsdl:message name="Sign_OutputMessage">
+        <wsdl:part name="Sign_OUT" element="tns:SignResponse"/>
+    </wsdl:message>
+    
+    <wsdl:portType name="SignatureServicePort">
+        <wsdl:operation name="sign">
+            <wsdl:input message="tns:Sign_InputMessage"/>
+            <wsdl:output message="tns:Sign_OutputMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="SignatureServiceSoap11" type="tns:SignatureServicePort">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="sign">
+            <soap:operation soapAction="sign" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="SignatureService">
+        <wsdl:port name="SignatureServicePort" binding="tns:SignatureServiceSoap11">
+            <soap:address location="${address}"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
