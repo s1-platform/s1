@@ -7,9 +7,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>1.6</jdk.version>
-        <maven.compiler.plugin.version>3.0</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
-        <maven.javadoc.plugin.version>2.9</maven.javadoc.plugin.version>
+        <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
+        <maven.release.plugin.version>2.4.2</maven.release.plugin.version>
     </properties>
 
     <parent>
@@ -115,6 +116,12 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven.release.plugin.version}</version>
             </plugin>
         </plugins>
         <resources>
