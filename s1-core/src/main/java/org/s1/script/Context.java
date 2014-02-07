@@ -2,6 +2,7 @@ package org.s1.script;
 
 import org.s1.objects.Objects;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import java.util.Map;
  * Date: 01.02.14
  * Time: 10:40
  */
-public class Context {
+public class Context implements Serializable {
     private Map<String,Object> variables = Objects.newHashMap();
     private Context parent;
     private List<Context> children = Objects.newArrayList();
@@ -39,11 +40,15 @@ public class Context {
         return children;
     }
 
-    public Object get(String name){
+    public <T> T get(String name){
         Map<String,Object> m = getMap(name);
         if(m!=null)
-            return m.get(name);
+            return (T)m.get(name);
         return null;
+    }
+
+    public <T> T get(Class<T> c, String name){
+        return Objects.cast(get(name),c);
     }
 
     public void set(String name, Object o){
@@ -52,7 +57,13 @@ public class Context {
             m.put(name, o);
     }
 
-    private Map<String,Object> getMap(String name){
+    public void remove(String name){
+        Map<String,Object> m = getMap(name);
+        if(m!=null)
+            m.remove(name);
+    }
+
+    public Map<String,Object> getMap(String name){
         if(variables.containsKey(name))
             return variables;
         else if(parent!=null)

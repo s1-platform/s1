@@ -2,6 +2,7 @@ package org.s1.script;
 
 import org.mozilla.javascript.Node;
 import org.mozilla.javascript.Token;
+import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.ast.*;
 import org.s1.objects.Objects;
 
@@ -21,13 +22,18 @@ public class ASTEvaluator {
 
     public static Object eval(Node node, Context ctx) {
         if(node instanceof AstRoot){
-            Iterator<Node> it = node.iterator();
-            while(it.hasNext()){
-                Node n = it.next();
-                eval(n,ctx);
+            try {
+                Iterator<Node> it = node.iterator();
+                while(it.hasNext()){
+                    Node n = it.next();
+                    eval(n, ctx);
+                }
+            } catch (FunctionReturnException e){
+                return e.getData();
             }
         }else if(node instanceof Block){
             //{...}
+            //System.out.println("123");
             Context ctx1 = ctx.createChild();
             Iterator<Node> it = node.iterator();
             while(it.hasNext()){
@@ -39,7 +45,7 @@ public class ASTEvaluator {
             Context ctx1 = ctx.createChild();
             do{
                 try{
-                    eval(((DoLoop) node).getBody(), ctx1);
+                    eval(((DoLoop) node).getBody(), ctx);
                 }catch (LoopContinueException e){
 
                 }catch (LoopBreakException e){
@@ -124,11 +130,19 @@ public class ASTEvaluator {
             //switch(...)
             Object o = get(((SwitchStatement) node).getExpression(), ctx);
             for(SwitchCase sc:((SwitchStatement) node).getCases()){
-                Object o2 = get(sc.getExpression(),ctx);
-                if(Objects.equals(o,o2)){
+                boolean b = false;
+                if(sc.isDefault()){
+                    b = true;
+                }else{
+                    Object o2 = get(sc.getExpression(),ctx);
+                    if(Objects.equals(o,o2)){
+                        b = true;
+                    }
+                }
+                if(b){
                     try{
                         for(AstNode s: sc.getStatements()){
-                            eval(s,ctx);
+                            eval(s, ctx);
                         }
                     }catch (LoopContinueException e){
                     }catch (LoopBreakException e){
@@ -154,7 +168,7 @@ public class ASTEvaluator {
                 for(CatchClause cc:((TryStatement) node).getCatchClauses()){
                     Context ctx1 = ctx.createChild();
                     ctx1.getVariables().put(cc.getVarName().getIdentifier(),e.getData());
-                    if(condition(cc.getCatchCondition(), ctx1)){
+                    if(cc.getCatchCondition()==null || condition(cc.getCatchCondition(), ctx1)){
                         eval(cc.getBody(),ctx1);
                     }
                 }
@@ -175,21 +189,14 @@ public class ASTEvaluator {
             throw new LoopContinueException();
         }else if(node instanceof Scope){
             //{...}
+            Context ctx1 = ctx.createChild();
             for(AstNode n:((Scope) node).getStatements()){
-                eval(n,ctx);
+                eval(n,ctx1);
             }
         }else{
             get((AstNode)node,ctx);
         }
         return null;
-    }
-
-    protected static Object getPropertyName(PropertyGet node, Context ctx){
-        return node.getProperty().getIdentifier();
-    }
-
-    protected static Object getElement(ElementGet node, Context ctx){
-        return get(node.getElement(), ctx);
     }
 
     protected static boolean condition(AstNode node, Context ctx){
@@ -201,40 +208,32 @@ public class ASTEvaluator {
     }
 
     protected static Object get(AstNode node, Context ctx){
-        if(node instanceof PropertyGet || node instanceof ElementGet || node instanceof Name){
-            LinkedList<Object> list = new LinkedList<Object>();
-            AstNode n = node;
-            while(n!=null){
-                AstNode n1 = n;
-                if(n instanceof PropertyGet){
-                    list.addFirst(getPropertyName((PropertyGet)n,ctx));
-                    n1 = ((PropertyGet) n).getTarget();
-                }else if(n instanceof ElementGet){
-                    list.addFirst(getElement((ElementGet)n,ctx));
-                    n1 = ((ElementGet) n).getTarget();
-                }else if(n instanceof Name){
-                    list.addFirst(((Name)n).getIdentifier());
-                    break;
-                }
-                if(n1==n)
-                    break;
-                n = n1;
+        //System.out.println(node.getClass().getName());
+        if(node instanceof Name){
+            return ctx.get(((Name) node).getIdentifier());
+        }else if(node instanceof PropertyGet){
+            Object obj = get(((PropertyGet) node).getTarget(),ctx);
+            if(!(obj instanceof Map)){
+                throwScriptError("Object is not instance of Map",node);
             }
-            Object obj = null;
-            if(list.size()>0){
-                obj = ctx.get((String) list.get(0));
-                for(int i=1;i<list.size();i++){
-                    if(list.get(i) instanceof String){
-                        obj = ((Map)obj).get(list.get(i));
-                    }else if(list.get(i) instanceof Number){
-                        Number j = (Number)list.get(i);
-                        obj = ((List)obj).get(j.intValue());
-                    }else{
-                        //error
-                    }
+            return ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
+        }else if(node instanceof ElementGet){
+            Object obj = get(((ElementGet) node).getTarget(),ctx);
+
+            Object o = get(((ElementGet) node).getElement(), ctx);
+            if(o instanceof Number){
+                if(!(obj instanceof List)){
+                    throwScriptError("Object is not instance of List",node);
                 }
+                if(((List) obj).size()<=((Number) o).intValue())
+                    return null;
+                return ((List) obj).get(((Number) o).intValue());
+            }else{
+                if(!(obj instanceof Map)){
+                    throwScriptError("Object is not instance of Map",node);
+                }
+                return ((Map) obj).get(o);
             }
-            return obj;
         }else if(node instanceof KeywordLiteral){
             if(((KeywordLiteral) node).isBooleanLiteral()){
                 return node.getType() == Token.TRUE;
@@ -247,7 +246,11 @@ public class ASTEvaluator {
         }else if(node instanceof ObjectLiteral){
             Map<String,Object> m = Objects.newHashMap();
             for(ObjectProperty op:((ObjectLiteral) node).getElements()){
-                m.put(op.getLeft().getString(),get(op.getRight(), ctx));
+                if(op.getLeft() instanceof Name){
+                    m.put(op.getLeft().getString(),get(op.getRight(), ctx));
+                }else if(op.getLeft() instanceof StringLiteral){
+                    m.put(((StringLiteral) op.getLeft()).getValue(),get(op.getRight(), ctx));
+                }
             }
             return m;
         }else if(node instanceof ArrayLiteral){
@@ -297,7 +300,10 @@ public class ASTEvaluator {
                     Object pval = i<params.size()?params.get(i):null;
                     sf.getContext().getVariables().put(sf.getParams().get(i),pval);
                 }
+                sf.getContext().getVariables().put("arguments",params);
                 return sf.call();
+            }else{
+                throwScriptError("Object is not a ScriptFunction",node);
             }
         }else if(node instanceof UnaryExpression){
             //a++, delete a; typeof a
@@ -306,9 +312,18 @@ public class ASTEvaluator {
             AstNode operand = ((UnaryExpression) node).getOperand();
             Object o = get(operand,ctx);
             if(operator==Token.TYPEOF){
-                return o.getClass().getSimpleName();
+                if(o==null)
+                    return null;
+                else if(o instanceof Map)
+                    return "Map";
+                else if(o instanceof List)
+                    return "List";
+                else if(o instanceof ScriptFunction)
+                    return "Function";
+                else
+                    return o.getClass().getSimpleName();
             }else if(operator==Token.DELPROP){
-                set(operand,ctx,null);
+                set(operand,ctx, UNDEFINED);
                 return null;
             }else if(operator==Token.NOT){
                 if(o instanceof Boolean){
@@ -337,6 +352,15 @@ public class ASTEvaluator {
                         return d;
                     }
                 }
+            }else if(operator==Token.NEG){
+                if(o instanceof Number){
+                    double d = ((Number)o).doubleValue();
+                    if(prefix){
+                        return -d;
+                    }else{
+                        return d;
+                    }
+                }
             }
         }else if(node instanceof ConditionalExpression){
             //ternary operator
@@ -362,9 +386,17 @@ public class ASTEvaluator {
                 set(((InfixExpression) node).getLeft(),ctx,get(((InfixExpression) node).getRight(),ctx));
                 return r;
             }else if(operator==Token.OR){
-                return !Objects.isNullOrEmpty(l)||!Objects.isNullOrEmpty(r);
+                if(!(l instanceof Boolean))
+                    l = !Objects.isNullOrEmpty(l);
+                if(!(r instanceof Boolean))
+                    r = !Objects.isNullOrEmpty(r);
+                return (Boolean)l||(Boolean)r;
             }else if(operator==Token.AND){
-                return !Objects.isNullOrEmpty(l)&&!Objects.isNullOrEmpty(r);
+                if(!(l instanceof Boolean))
+                    l = !Objects.isNullOrEmpty(l);
+                if(!(r instanceof Boolean))
+                    r = !Objects.isNullOrEmpty(r);
+                return (Boolean)l&&(Boolean)r;
             }else if(operator==Token.LT){
                 if(l instanceof Number && r instanceof Number)
                     return ((Number)l).doubleValue() < ((Number)r).doubleValue();
@@ -436,51 +468,58 @@ public class ASTEvaluator {
         return null;
     }
 
+    public static final Object UNDEFINED = new Object();
+
     protected static void set(AstNode node, Context ctx, Object val){
-        if(node instanceof PropertyGet || node instanceof ElementGet || node instanceof Name){
-            LinkedList<Object> list = new LinkedList<Object>();
-            AstNode n = node;
-            while(n!=null){
-                AstNode n1 = n;
-                if(n instanceof PropertyGet){
-                    list.addFirst(getPropertyName((PropertyGet)n,ctx));
-                    n1 = ((PropertyGet) n).getTarget();
-                }else if(n instanceof ElementGet){
-                    list.addFirst(getElement((ElementGet)n,ctx));
-                    n1 = ((ElementGet) n).getTarget();
-                }else if(n instanceof Name){
-                    list.addFirst(((Name)n).getIdentifier());
-                    break;
-                }
-                if(n1==n)
-                    break;
-                n = n1;
+        if(node instanceof Name){
+            if(val==UNDEFINED){
+                ctx.remove(((Name) node).getIdentifier());
+            }else{
+                ctx.set(((Name) node).getIdentifier(), val);
             }
-            Object obj = null;
-            if(list.size()>0){
-                if(list.size()>1){
-                    obj = ctx.get((String) list.get(0));
-                    for(int i=1;i<list.size();i++){
-                        if(list.get(i) instanceof String){
-                            if(i<list.size()-1)
-                                obj = ((Map)obj).get(list.get(i));
-                            else
-                                ((Map)obj).put(list.get(i), val);
-                        }else if(list.get(i) instanceof Number){
-                            Number j = (Number)list.get(i);
-                            if(i<list.size()-1)
-                                obj = ((List)obj).get(j.intValue());
-                            else
-                                ((List)obj).set(j.intValue(), val);
-                        }else{
-                            //error
-                        }
+        }else if(node instanceof PropertyGet){
+            Object obj = get(((PropertyGet) node).getTarget(),ctx);
+            if(!(obj instanceof Map)){
+                throwScriptError("Object is not instance of Map",node);
+            }
+            if(val==UNDEFINED){
+                ((Map) obj).remove(((PropertyGet) node).getProperty().getIdentifier());
+            }else{
+                ((Map) obj).put(((PropertyGet) node).getProperty().getIdentifier(), val);
+            }
+        }else if(node instanceof ElementGet){
+            Object obj = get(((ElementGet) node).getTarget(),ctx);
+
+            Object o = get(((ElementGet) node).getElement(), ctx);
+            if(o instanceof Number){
+                if(!(obj instanceof List)){
+                    throwScriptError("Object is not instance of List",node);
+                }
+                if(val==UNDEFINED)
+                    val = null;
+                List l = ((List) obj);
+                int i = ((Number) o).intValue();
+                if(l.size()<=i){
+                    for(int j=l.size();j<=i;j++){
+                        l.add(null);
                     }
+                }
+                l.set(i,val);
+            }else{
+                if(!(obj instanceof Map)){
+                    throwScriptError("Object is not instance of Map",node);
+                }
+                if(val==UNDEFINED){
+                    ((Map) obj).remove(o);
                 }else{
-                    ctx.set((String) list.get(0), val);
+                    ((Map) obj).put(o,val);
                 }
             }
         }
+    }
+
+    protected static void throwScriptError(String message, AstNode node){
+        throw new JavaScriptException(message+": line "+node.getLineno()+", column "+node.getPosition());
     }
 
 }

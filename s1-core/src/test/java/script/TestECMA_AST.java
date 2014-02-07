@@ -27,17 +27,10 @@ public class TestECMA_AST extends BasicTest{
         ce.setStrictMode(true);
         ce.setXmlAvailable(false);
 
-        AstRoot ar = new Parser(ce).parse(resourceAsString("/script/test1.js"),"qwer",1);
+        AstRoot ar = new Parser(ce).parse("var a = true||false","qwer",1);
         trace(ar.debugPrint());
-        //ar.visitAll(new ASTEvaluator());
         Context c=new Context();
-        c.getVariables().put("ext_sum",new ScriptFunction(new Context(), Objects.newArrayList(String.class,"a","b")) {
-            @Override
-            public Object call() throws JavaScriptException {
-                return Objects.cast(getContext().getVariables().get("a"),Double.class)+
-                        Objects.cast(getContext().getVariables().get("b"),Double.class);
-            }
-        });
+
         ASTEvaluator.eval(ar,c);
         trace(c.getVariables());
     }

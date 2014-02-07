@@ -20,7 +20,12 @@ public class JavaScriptException extends RuntimeException {
     }
 
     public JavaScriptException(Object data) {
-        super();
+        super(""+data);
+        this.data = data;
+    }
+
+    public JavaScriptException(Object data, Throwable cause) {
+        super(""+data,cause);
         this.data = data;
     }
 

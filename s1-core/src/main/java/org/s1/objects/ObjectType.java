@@ -72,27 +72,45 @@ public class ObjectType {
         } else if (type == BigDecimal.class) {
             if (obj == null)
                 obj = "0";
-            obj = new BigDecimal("" + obj);
+            if(obj instanceof Number){
+                obj = new BigDecimal(((Number) obj).doubleValue());
+            }else
+                obj = new BigDecimal("" + obj);
         } else if (type == Integer.class) {
             if (obj == null)
                 obj = "0";
-            obj = Integer.parseInt("" + obj);
+            if(obj instanceof Number){
+                obj = ((Number) obj).intValue();
+            }else
+                obj = Integer.parseInt("" + obj);
         } else if (type == Long.class) {
             if (obj == null)
                 obj = "0";
-            obj = Long.parseLong("" + obj);
+            if(obj instanceof Number){
+                obj = ((Number) obj).longValue();
+            }else
+                obj = Long.parseLong("" + obj);
         } else if (type == Float.class) {
             if (obj == null)
                 obj = "0";
-            obj = Float.parseFloat("" + obj);
+            if(obj instanceof Number){
+                obj = ((Number) obj).floatValue();
+            }else
+                obj = Float.parseFloat("" + obj);
         } else if (type == Double.class) {
             if (obj == null)
                 obj = "0";
-            obj = Double.parseDouble("" + obj);
+            if(obj instanceof Number){
+                obj = ((Number) obj).doubleValue();
+            }else
+                obj = Double.parseDouble("" + obj);
         } else if (type == Boolean.class) {
             if (obj == null)
                 obj = "false";
-            obj = Boolean.parseBoolean("" + obj);
+            if(obj instanceof Number){
+                obj = ((Number) obj).intValue()!=0;
+            }else
+                obj = Boolean.parseBoolean("" + obj);
         } else if (type == Date.class) {
             if (obj != null) {
                 if (obj instanceof String) {
