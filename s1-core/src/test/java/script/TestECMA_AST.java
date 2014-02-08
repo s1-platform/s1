@@ -27,7 +27,7 @@ public class TestECMA_AST extends BasicTest{
         ce.setStrictMode(true);
         ce.setXmlAvailable(false);
 
-        AstRoot ar = new Parser(ce).parse("var a = true||false","qwer",1);
+        AstRoot ar = new Parser(ce).parse("function f1(){}","qwer",1);
         trace(ar.debugPrint());
         Context c=new Context();
 

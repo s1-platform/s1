@@ -171,29 +171,12 @@ public class ScriptSystemFunctions extends ScriptFunctions{
         l.remove(i.intValue());
     }
 
-    public Object get(String path, Object def){
-        String [] ts = ObjectPath.tokenizePath(path);
-        if(ts.length>0){
-            String t1 = ObjectPath.getLocalName(ts[0]);
-            Map<String,Object> m = getContext().getMap(t1);
-            if(m!=null){
-                return Objects.get(m,path,def);
-            }
-        }
-        return def;
+    public Object get(Map<String,Object> m, String path, Object def){
+        return Objects.get(m,path,def);
     }
 
-    public void set(String path, Object val){
-        String [] ts = ObjectPath.tokenizePath(path);
-        if(ts.length>0){
-            String t1 = ObjectPath.getLocalName(ts[0]);
-            Map<String,Object> m = getContext().getMap(t1);
-            if(m!=null){
-                Objects.set(m, path, val);
-            }else{
-                Objects.set(getContext().getVariables(), path, val);
-            }
-        }
+    public void set(Map<String,Object> m, String path, Object val){
+        Objects.set(m, path, val);
     }
     
 }

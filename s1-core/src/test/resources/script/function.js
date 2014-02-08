@@ -3,7 +3,7 @@ var obj = {
 };
 var obj2 = {};
 
-var fn2 = function(x,y){
+function fn2(x,y){
     return x+"_"+y;
 }
 

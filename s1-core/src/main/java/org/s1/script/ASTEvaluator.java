@@ -27,6 +27,7 @@ public class ASTEvaluator {
                 while(it.hasNext()){
                     Node n = it.next();
                     eval(n, ctx);
+                    System.out.println(n.getClass().getName());
                 }
             } catch (FunctionReturnException e){
                 return e.getData();
@@ -187,7 +188,7 @@ public class ASTEvaluator {
         }else if(node instanceof ContinueStatement){
             //continue;
             throw new LoopContinueException();
-        }else if(node instanceof Scope){
+        }else if(node instanceof Scope && !(node instanceof FunctionNode)){
             //{...}
             Context ctx1 = ctx.createChild();
             for(AstNode n:((Scope) node).getStatements()){
@@ -281,7 +282,7 @@ public class ASTEvaluator {
             if(!Objects.isNullOrEmpty(fn)){
                 ctx.getVariables().put(fn,sf);
             }
-            //System.out.println("-------"+fn);
+            System.out.println("-------"+fn);
             //ctx.getVariables().put(fn,node);
             //AstNode n = ((FunctionNode) node).getBody();
             //((FunctionNode) node).getParams();

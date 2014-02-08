@@ -81,10 +81,12 @@ public class S1ScriptEngine {
     public static final String SYSTEM_FUNCTION_NS = "s1";
 
     private void addFunctions(final String ns, Context c, final Class<? extends ScriptFunctions> cls){
+        //System.out.println("-------------");
         for(final Method method:cls.getDeclaredMethods()){
             if(!Modifier.isPublic(method.getModifiers())){
                 continue;
             }
+            //System.out.println("* "+method.getName());
             Objects.set(c.getVariables(), ns+method.getName(), new ScriptFunction(new Context(), Objects.newArrayList(String.class)) {
                 @Override
                 public Object call() throws JavaScriptException {

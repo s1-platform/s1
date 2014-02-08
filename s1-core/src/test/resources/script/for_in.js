@@ -5,6 +5,7 @@ var obj = {
     d:4,
     e:{a:1,b:2}
 };
+
 var a = "";
 for(var p in obj){
     a+=p+";";
@@ -28,3 +29,11 @@ assert("a2_2",s1.contains(a,"a;"));
 print(b)
 assert("b1",s1.contains(b,"1.0,"));
 assert("b2",s1.contains(b,"2.0,"));
+
+var arr = [1,2,3];
+var a = "";
+for(var i in arr){
+    a+=i+";";
+}
+print(a);
+assert("arr",a=="0.0;1.0;2.0;");
