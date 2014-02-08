@@ -84,7 +84,7 @@ public class ObjectPath {
 
                     for (int k = 0; k < j.length; k++) {
                         if(o1.size()<=j[k]){
-                            for(int ii=0;ii<=j[k]-o1.size();ii++){
+                            for(int ii=o1.size();ii<=j[k];ii++){
                                 o1.add(null);
                             }
                             if(k==j.length-1){

@@ -256,10 +256,13 @@ public class ObjectsTest extends BasicTest {
             @Override
             public Object call(Integer index) {
 
-                Map<String, Object> m = Objects.newHashMap("a", Objects.newArrayList(Objects.newHashMap("a", "1", "b", "2"), "2"));
+                Map<String, Object> m = Objects.newHashMap("a",
+                        Objects.newArrayList(Objects.newHashMap("a", "1", "b", "2"), "2"));
 
                 Objects.set(m, "a[0].a", "xxx");
+                Objects.set(m, "b[2].a", "yyy");
                 assertEquals("xxx", Objects.get(m, "a[0].a"));
+                assertEquals("yyy", Objects.get(m, "b[2].a"));
 
                 return null;
             }
