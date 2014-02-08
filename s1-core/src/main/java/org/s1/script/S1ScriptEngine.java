@@ -16,6 +16,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * s1v2
@@ -109,8 +112,96 @@ public class S1ScriptEngine {
         }
     }
 
-    public String template(String template, Map<String,Object> data){
-        return "";
+    public static final String TEMPLATE_PRINT_FUNCTION = "_print";
+
+    public String template(String template, Map<String,Object> data, String startExpr, String endExpr, String startCode, String endCode){
+
+        template = template
+                .replace("&","&amp;")
+                .replace("\\"+startCode+"\\","&startCode;")
+                .replace("\\"+endCode+"\\","&endCode;")
+                .replace("\\"+startExpr+"\\","&startExpr;")
+                .replace("\\"+endExpr+"\\","&endExpr;");
+
+        final String BEGIN = "|--"+ UUID.randomUUID().toString() +"--|";
+        final String END = "|--"+ UUID.randomUUID().toString() +"--|";
+
+        final Pattern codeP = Pattern.compile(Pattern.quote(startCode)+"(.+?)"+Pattern.quote(endCode),Pattern.DOTALL);
+        final Pattern exprP = Pattern.compile(Pattern.quote(startExpr)+"(.+?)"+Pattern.quote(endExpr),Pattern.DOTALL);
+        final Pattern textP = Pattern.compile(Pattern.quote(END)+"(.+?)"+Pattern.quote(BEGIN),Pattern.DOTALL);
+
+        //expr
+        final Matcher matcherExpr = exprP.matcher(template);
+        while (matcherExpr.find()) {
+            String text = matcherExpr.group(1);
+            template = template.replace(startExpr+matcherExpr.group(1)+endExpr,
+                    BEGIN+TEMPLATE_PRINT_FUNCTION+"("+text+");"+END);
+        }
+
+        //code
+        final Matcher matcherCode = codeP.matcher(template);
+        while (matcherCode.find()) {
+            String text = matcherCode.group(1);
+            template = template.replace(startCode+matcherCode.group(1)+endCode,
+                    BEGIN+"\n"+matcherCode.group(1)+"\n"+END);
+        }
+
+        //text
+        int s = template.indexOf(BEGIN);
+        if(s==-1){
+            template = printText(template);
+        }else{
+            if(s>0){
+                String text = template.substring(0,s);
+                template = printText(text)+template.substring(s+BEGIN.length());
+            }
+            int e = template.lastIndexOf(END);
+            if(e>0 && e<template.length()-1){
+                String text = template.substring(e+END.length());
+                template = template.substring(0,e)+printText(text);
+            }
+
+            final Matcher matcherText = textP.matcher(template);
+            while (matcherText.find()) {
+                String text = matcherText.group(1);
+                template = template.replace(END+text+BEGIN,printText(text));
+            }
+        }
+
+        //eval
+        final StringBuilder sb = new StringBuilder();
+        if(data==null){
+            data = Objects.newHashMap();
+        }
+        data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(),Objects.newArrayList("text")) {
+            @Override
+            public Object call() throws JavaScriptException {
+                //String text = getContext().get(String.class,"text");
+                //sb.append(text);
+                List<Object> args = getContext().get("arguments");
+                for(Object o:args){
+                    sb.append(o);
+                }
+                return null;
+            }
+        });
+        eval(template,data);
+
+        template = sb.toString();
+        template = template
+                .replace("&startCode;",startCode)
+                .replace("&endCode;",endCode)
+                .replace("&startExpr;",startExpr)
+                .replace("&endExpr;",endExpr)
+                .replace("&amp;","&");
+        return template;
+    }
+
+    private String printText(String text){
+        //return TEMPLATE_PRINT_FUNCTION+"(\""+text.replace("\"","\\\"")
+        //        .replaceAll("(\r\n|\n|\n\r)","\\\\n\"+\n\"")+"\");";
+        return TEMPLATE_PRINT_FUNCTION+"(\""+text.replace("\"","\\\"")
+                .replaceAll("(\r\n|\n|\n\r)","\\\\n\",\n\"")+"\");";
     }
 
 }

@@ -86,4 +86,39 @@ public class TestScript extends BasicTest{
         }));
     }
 
+    public void testTemplate(){
+        final File dir = new File(getTestClassesHome()+"/script/templates");
+        int p=1;
+        title("Template test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                File[] fs = dir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return !f.isDirectory() && f.getName().endsWith(".tpl");
+                    }
+                });
+                for(File f:fs){
+                    String template = null;
+                    try {
+                        template = FileUtils.readFileToString(f,"UTF-8");
+                    } catch (IOException e) {
+                        throw S1SystemError.wrap(e);
+                    }
+                    try{
+                        String t = scriptEngine.template(template,null,"{{","}}","<%","%>");
+                        if(input==0){
+                            //trace(f.getName()+":\nINPUT:\n"+template+"\nOUTPUT:\n"+t);
+                        }
+                    }catch (RuntimeException e){
+                        throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
+                    }
+                }
+                return null;
+            }
+        }));
+    }
+
 }
