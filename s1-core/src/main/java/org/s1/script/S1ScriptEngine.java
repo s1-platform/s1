@@ -3,6 +3,7 @@ package org.s1.script;
 import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.AstRoot;
+import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.options.OptionsStorage;
@@ -17,6 +18,7 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,9 +33,12 @@ public class S1ScriptEngine {
     private static final Logger LOG = LoggerFactory.getLogger(S1ScriptEngine.class);
 
     private Map<String,String> functions = Objects.newHashMap();
+    private long timeLimit = 0;
+    private long sizeLimit = 0;
+    private long memoryLimit = 0;
 
     public S1ScriptEngine(){
-        this("scriptEngine.functions");
+        this("scriptEngine");
     }
 
     public S1ScriptEngine(String path){
@@ -41,7 +46,10 @@ public class S1ScriptEngine {
     }
 
     public S1ScriptEngine(String options, String path){
-        functions = Options.getStorage().get(options,path,Objects.newHashMap(String.class,String.class));
+        functions = Options.getStorage().get(options,path+".functions",Objects.newHashMap(String.class,String.class));
+        timeLimit = Options.getStorage().get(options,path+".timeLimit",30000);
+        memoryLimit = Options.getStorage().get(options,path+".memoryLimit",16*1024*1024);
+        sizeLimit = Options.getStorage().get(options,path+".sizeLimit",16*1024*1024);
     }
 
     public Map<String, String> getFunctions() {
@@ -52,16 +60,48 @@ public class S1ScriptEngine {
         this.functions = functions;
     }
 
-    public Object eval(String script, Map<String,Object> data){
+    public long getTimeLimit() {
+        return timeLimit;
+    }
+
+    public void setTimeLimit(long timeLimit) {
+        this.timeLimit = timeLimit;
+    }
+
+    public long getSizeLimit() {
+        return sizeLimit;
+    }
+
+    public void setSizeLimit(long sizeLimit) {
+        this.sizeLimit = sizeLimit;
+    }
+
+    public long getMemoryLimit() {
+        return memoryLimit;
+    }
+
+    public void setMemoryLimit(long memoryLimit) {
+        this.memoryLimit = memoryLimit;
+    }
+
+    public <T> T eval(Class<T> cls, String script, Map<String,Object> data){
+        return Objects.cast(eval(script,data),cls);
+    }
+
+    public <T> T eval(String script, Map<String,Object> data){
+        if(data==null)
+            data = Objects.newHashMap();
+        if(script.length()>sizeLimit)
+            throw new SizeLimitException("Limit: "+sizeLimit+" chars");
         CompilerEnvirons ce = new CompilerEnvirons();
         ce.setRecordingComments(false);
         ce.setStrictMode(true);
         ce.setXmlAvailable(false);
 
-        AstRoot ar = new Parser(ce).parse(script,"S1RestrictedScript",1);
+        final AstRoot root = new Parser(ce).parse(script,"S1RestrictedScript",1);
 
-        Context c=new Context();
-        c.getVariables().putAll(data);
+        final Context ctx=new Context();
+        ctx.getVariables().putAll(data);
 
         //functions from options
         for(final String k:functions.keySet()){
@@ -72,13 +112,48 @@ public class S1ScriptEngine {
             } catch (Throwable e) {
                 LOG.warn("Class "+cls+" cannot be initialized as ScriptFunctions: "+e.getMessage());
             }
-            addFunctions("", c, cls);
+            addFunctions("", ctx, cls);
         }
 
         //system functions
-        addFunctions(SYSTEM_FUNCTION_NS+".", c, ScriptSystemFunctions.class);
+        addFunctions(SYSTEM_FUNCTION_NS+".", ctx, ScriptSystemFunctions.class);
 
-        return ASTEvaluator.eval(ar,c);
+        //run script
+        Future<Object> f = executeTask(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                //return null;
+                return ASTEvaluator.eval(root,ctx,new MemoryHeap(memoryLimit));
+            }
+        },timeLimit);
+
+        try {
+            return (T)f.get();
+        } catch (CancellationException e){
+            throw new TimeLimitException("Limit: "+timeLimit+" ms.");
+        } catch (InterruptedException e){
+            throw S1SystemError.wrap(e);
+        } catch (ExecutionException e){
+            if(e.getCause()!=null && e.getCause() instanceof MemoryLimitException)
+                throw new MemoryLimitException(e.getCause().getMessage(),e.getCause().getCause());
+            throw S1SystemError.wrap(e);
+        }
+
+        //return ASTEvaluator.eval(ar,c);
+    }
+
+    private <T> Future<T> executeTask(Callable<T> c, long timeoutMS){
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        ScheduledExecutorService canceller = Executors.newSingleThreadScheduledExecutor();
+
+        final Future<T> future = service.submit(c);
+        canceller.schedule(new Callable<Void>(){
+            public Void call(){
+                future.cancel(true);
+                return null;
+            }
+        }, timeoutMS, TimeUnit.MILLISECONDS);
+        return future;
     }
 
     public static final String SYSTEM_FUNCTION_NS = "s1";

@@ -5,10 +5,7 @@ import org.mozilla.javascript.Node;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.*;
 import org.s1.objects.Objects;
-import org.s1.script.ASTEvaluator;
-import org.s1.script.Context;
-import org.s1.script.JavaScriptException;
-import org.s1.script.ScriptFunction;
+import org.s1.script.*;
 import org.s1.test.BasicTest;
 
 import java.util.Iterator;
@@ -31,7 +28,7 @@ public class TestECMA_AST extends BasicTest{
         trace(ar.debugPrint());
         Context c=new Context();
 
-        ASTEvaluator.eval(ar,c);
+        ASTEvaluator.eval(ar,c,new MemoryHeap(10000));
         trace(c.getVariables());
     }
 }

@@ -5,10 +5,7 @@ import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
-import org.s1.script.Context;
-import org.s1.script.JavaScriptException;
-import org.s1.script.S1ScriptEngine;
-import org.s1.script.ScriptFunction;
+import org.s1.script.*;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 
@@ -121,4 +118,106 @@ public class TestScript extends BasicTest{
         }));
     }
 
+    public void testTimeLimit(){
+        int p=1;
+        title("Time limit test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        scriptEngine.setTimeLimit(2000);
+        final Map<String,Object> data = Objects.newHashMap(
+                "sleep",
+                new ScriptFunction(new Context(), Objects.newArrayList(String.class,"time")) {
+                    @Override
+                    public Object call() throws JavaScriptException {
+                        sleep(getContext().get(Long.class, "time"));
+                        return null;
+                    }
+                }
+        );
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                String t = scriptEngine.eval("'test'+'1';", data);
+                assertEquals("test1", t);
+
+                //timeout
+                boolean b = false;
+                try {
+                    scriptEngine.eval("sleep(3000); 'test1'", data);
+                } catch (TimeLimitException e){
+                    b = true;
+                }
+                assertTrue(b);
+
+                //timeout 2
+                b = false;
+                try {
+                    scriptEngine.eval("while(true){}", data);
+                } catch (TimeLimitException e){
+                    b = true;
+                }
+                assertTrue(b);
+                return null;
+            }
+        }));
+    }
+
+    public void testSizeLimit(){
+        int p=1;
+        title("Size limit test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        scriptEngine.setSizeLimit(10);
+
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                String t = scriptEngine.eval("'012345'", null);
+                assertEquals("012345", t);
+
+                //limit
+                boolean b = false;
+                try {
+                    scriptEngine.eval("'1234567890'", null);
+                } catch (SizeLimitException e){
+                    b = true;
+                }
+                assertTrue(b);
+                return null;
+            }
+        }));
+    }
+
+    public void testMemoryLimit(){
+        int p=1;
+        title("Memory limit test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        scriptEngine.setMemoryLimit(1000);
+
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                String t = scriptEngine.eval("'012345'", null);
+                assertEquals("012345", t);
+
+                //limit
+                boolean b = false;
+                try {
+                    scriptEngine.eval("var a = '1234567890';while(true){a+=a;}", null);
+                } catch (MemoryLimitException e){
+                    b = true;
+                }
+                assertTrue(b);
+
+
+                //limit 2
+                b = false;
+                try {
+                    scriptEngine.eval("while(true){var a='1234567890';}", null);
+                } catch (MemoryLimitException e){
+                    b = true;
+                }
+                assertTrue(b);
+                return null;
+            }
+        }));
+    }
 }
