@@ -2,66 +2,63 @@ package org.s1.script;
 
 import org.mozilla.javascript.Node;
 import org.mozilla.javascript.Token;
-import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.ast.*;
 import org.s1.objects.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.instrument.Instrumentation;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 01.02.14
- * Time: 10:37
+ * Abstract syntax tree evaluator
  */
 public class ASTEvaluator {
 
-
-    public static Object eval(Node node, Context ctx, MemoryHeap mh) {
+    /**
+     * Eval container
+     *
+     * @param node
+     * @param ctx
+     * @return
+     */
+    public Object eval(Node node, Context ctx) {
+        Object evalResult = null;
         if(node instanceof AstRoot){
-            try {
-                Object ret = null;
-                Iterator<Node> it = node.iterator();
-                while(it.hasNext()){
-                    Node n = it.next();
-                    ret = eval(n, ctx, mh);
-                    System.out.println(n.getClass().getName());
-                }
-                return ret;
-            } catch (FunctionReturnException e){
-                return e.getData();
+            Object ret = null;
+            Iterator<Node> it = node.iterator();
+            while(it.hasNext()){
+                Node n = it.next();
+                ret = eval(n, ctx);
             }
+            evalResult = ret;
         }else if(node instanceof Block){
             //{...}
-            //System.out.println("123");
             Context ctx1 = ctx.createChild();
             Iterator<Node> it = node.iterator();
             while(it.hasNext()){
                 Node n = it.next();
-                eval(n,ctx1, mh);
+                eval(n,ctx1);
             }
         }else if(node instanceof DoLoop){
             //do while(...) ...;
             Context ctx1 = ctx.createChild();
             do{
                 try{
-                    eval(((DoLoop) node).getBody(), ctx, mh);
+                    eval(((DoLoop) node).getBody(), ctx);
                 }catch (LoopContinueException e){
 
                 }catch (LoopBreakException e){
                     break;
                 }
-            }while (condition(((DoLoop) node).getCondition(),ctx1, mh));
+            }while (condition(((DoLoop) node).getCondition(),ctx1));
         }else if(node instanceof WhileLoop){
             //while(...){...}
             Context ctx1 = ctx.createChild();
-            while(condition(((WhileLoop) node).getCondition(),ctx1, mh)){
+            while(condition(((WhileLoop) node).getCondition(),ctx1)){
                 try{
-                    eval(((WhileLoop) node).getBody(), ctx1, mh);
+                    eval(((WhileLoop) node).getBody(), ctx1);
                 }catch (LoopContinueException e){
 
                 }catch (LoopBreakException e){
@@ -71,7 +68,7 @@ public class ASTEvaluator {
         }else if(node instanceof ForInLoop){
             //for(x in y){...}
             Context ctx1 = ctx.createChild();
-            Object o = get(((ForInLoop) node).getIteratedObject(),ctx, mh);
+            Object o = get(((ForInLoop) node).getIteratedObject(),ctx);
             if(o instanceof Map){
                 for(String s:((Map<String,Object>) o).keySet()){
                     AstNode it = ((ForInLoop) node).getIterator();
@@ -80,7 +77,7 @@ public class ASTEvaluator {
                         ctx1.getVariables().put(name, s);
                     }
                     try{
-                        eval(((ForInLoop) node).getBody(),ctx1, mh);
+                        eval(((ForInLoop) node).getBody(),ctx1);
                     }catch (LoopContinueException e){
 
                     }catch (LoopBreakException e){
@@ -95,7 +92,7 @@ public class ASTEvaluator {
                         ctx1.getVariables().put(name,i);
                     }
                     try{
-                        eval(((ForInLoop) node).getBody(),ctx1, mh);
+                        eval(((ForInLoop) node).getBody(),ctx1);
                     }catch (LoopContinueException e){
 
                     }catch (LoopBreakException e){
@@ -106,11 +103,11 @@ public class ASTEvaluator {
         }else if(node instanceof ForLoop){
             //for(...;...;...){...}
             Context ctx1 = ctx.createChild();
-            for(eval(((ForLoop) node).getInitializer(),ctx1, mh);
-                condition(((ForLoop) node).getCondition(),ctx1, mh);
-                eval(((ForLoop) node).getIncrement(),ctx1, mh)){
+            for(eval(((ForLoop) node).getInitializer(),ctx1);
+                condition(((ForLoop) node).getCondition(),ctx1);
+                eval(((ForLoop) node).getIncrement(),ctx1)){
                 try{
-                    eval(((ForLoop) node).getBody(), ctx1, mh);
+                    eval(((ForLoop) node).getBody(), ctx1);
                 }catch (LoopContinueException e){
 
                 }catch (LoopBreakException e){
@@ -122,23 +119,23 @@ public class ASTEvaluator {
 
         }else if(node instanceof IfStatement){
             //if(...){...}
-            boolean c = condition(((IfStatement) node).getCondition(),ctx, mh);
+            boolean c = condition(((IfStatement) node).getCondition(),ctx);
             if(c){
-                eval(((IfStatement) node).getThenPart(), ctx.createChild(), mh);
+                eval(((IfStatement) node).getThenPart(), ctx.createChild());
             }else{
                 if(((IfStatement) node).getElsePart()!=null){
-                    eval(((IfStatement) node).getElsePart(),ctx.createChild(), mh);
+                    eval(((IfStatement) node).getElsePart(),ctx.createChild());
                 }
             }
         }else if(node instanceof SwitchStatement){
             //switch(...)
-            Object o = get(((SwitchStatement) node).getExpression(), ctx, mh);
+            Object o = get(((SwitchStatement) node).getExpression(), ctx);
             for(SwitchCase sc:((SwitchStatement) node).getCases()){
                 boolean b = false;
                 if(sc.isDefault()){
                     b = true;
                 }else{
-                    Object o2 = get(sc.getExpression(),ctx, mh);
+                    Object o2 = get(sc.getExpression(),ctx);
                     if(Objects.equals(o,o2)){
                         b = true;
                     }
@@ -146,7 +143,7 @@ public class ASTEvaluator {
                 if(b){
                     try{
                         for(AstNode s: sc.getStatements()){
-                            eval(s, ctx, mh);
+                            eval(s, ctx);
                         }
                     }catch (LoopContinueException e){
                     }catch (LoopBreakException e){
@@ -161,30 +158,30 @@ public class ASTEvaluator {
             //var ...
             for(VariableInitializer vi:((VariableDeclaration) node).getVariables()){
                 String name = ((Name)vi.getTarget()).getIdentifier();
-                ctx.getVariables().put(name,get(vi.getInitializer(), ctx, mh));
+                ctx.getVariables().put(name,get(vi.getInitializer(), ctx));
             }
         }else if(node instanceof TryStatement){
             //try{...}catch(..){...}finally{...}
             try{
                 Context ctx1 = ctx.createChild();
-                eval(((TryStatement) node).getTryBlock(),ctx1, mh);
-            }catch (JavaScriptException e){
+                eval(((TryStatement) node).getTryBlock(),ctx1);
+            }catch (ScriptException e){
                 for(CatchClause cc:((TryStatement) node).getCatchClauses()){
                     Context ctx1 = ctx.createChild();
                     ctx1.getVariables().put(cc.getVarName().getIdentifier(),e.getData());
-                    if(cc.getCatchCondition()==null || condition(cc.getCatchCondition(), ctx1, mh)){
-                        eval(cc.getBody(),ctx1, mh);
+                    if(cc.getCatchCondition()==null || condition(cc.getCatchCondition(), ctx1)){
+                        eval(cc.getBody(),ctx1);
                     }
                 }
             }finally {
-                eval(((TryStatement) node).getFinallyBlock(),ctx, mh);
+                eval(((TryStatement) node).getFinallyBlock(),ctx);
             }
         }else if(node instanceof ThrowStatement){
             //throw ...;
-            throw new JavaScriptException(get(((ThrowStatement) node).getExpression(),ctx, mh));
+            throw new ScriptException(get(((ThrowStatement) node).getExpression(),ctx));
         }else if(node instanceof ReturnStatement){
             //return ...;
-            throw new FunctionReturnException(get(((ReturnStatement) node).getReturnValue(),ctx, mh));
+            throw new FunctionReturnException(get(((ReturnStatement) node).getReturnValue(),ctx));
         }else if(node instanceof BreakStatement){
             //break;
             throw new LoopBreakException();
@@ -195,60 +192,73 @@ public class ASTEvaluator {
             //{...}
             Context ctx1 = ctx.createChild();
             for(AstNode n:((Scope) node).getStatements()){
-                eval(n,ctx1, mh);
+                eval(n,ctx1);
             }
         }else{
-            return get((AstNode)node,ctx, mh);
+            evalResult = get((AstNode)node,ctx);
         }
-        return null;
+        return evalResult;
     }
 
-    protected static boolean condition(AstNode node, Context ctx, MemoryHeap mh){
-        Object o = get(node,ctx, mh);
+    /**
+     *
+     * @param node
+     * @param ctx
+     * @return
+     */
+    protected boolean condition(AstNode node, Context ctx){
+        boolean result = false;
+        Object o = get(node,ctx);
         if(o instanceof Boolean)
-            return ((Boolean) o).booleanValue();
+            result = ((Boolean) o).booleanValue();
         else
-            return !Objects.isNullOrEmpty(o);
+            result = !Objects.isNullOrEmpty(o);
+        return result;
     }
 
-    protected static Object get(AstNode node, Context ctx, final MemoryHeap mh){
-        //System.out.println(node.getClass().getName());
+    /**
+     *
+     * @param node
+     * @param ctx
+     * @return
+     */
+    protected Object get(AstNode node, Context ctx){
+        Object getResult = null;
         if(node instanceof Name){
-            return ctx.get(((Name) node).getIdentifier());
+            getResult = ctx.get(((Name) node).getIdentifier());
         }else if(node instanceof PropertyGet){
-            Object obj = get(((PropertyGet) node).getTarget(),ctx, mh);
+            Object obj = get(((PropertyGet) node).getTarget(),ctx);
             if(!(obj instanceof Map)){
                 throwScriptError("Object is not instance of Map",node);
             }
-            return ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
+            getResult = ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
         }else if(node instanceof ElementGet){
-            Object obj = get(((ElementGet) node).getTarget(),ctx, mh);
+            Object obj = get(((ElementGet) node).getTarget(),ctx);
 
-            Object o = get(((ElementGet) node).getElement(), ctx, mh);
+            Object o = get(((ElementGet) node).getElement(), ctx);
             if(o instanceof Number){
                 if(!(obj instanceof List)){
                     throwScriptError("Object is not instance of List",node);
                 }
-                if(((List) obj).size()<=((Number) o).intValue())
-                    return null;
-                return ((List) obj).get(((Number) o).intValue());
+                if(((List) obj).size()>((Number) o).intValue())
+                    getResult = ((List) obj).get(((Number) o).intValue());
             }else{
                 if(!(obj instanceof Map)){
                     throwScriptError("Object is not instance of Map",node);
                 }
-                return ((Map) obj).get(o);
+                getResult = ((Map) obj).get(o);
             }
         }else if(node instanceof KeywordLiteral){
             if(((KeywordLiteral) node).isBooleanLiteral()){
-                return node.getType() == Token.TRUE;
+                getResult = node.getType() == Token.TRUE;
             }else if(node.getType()==Token.NULL)
-                return null;
+                getResult = null;
         }else if(node instanceof StringLiteral){
             String s = ((StringLiteral) node).getValue();
-            return s;
+            getResult = s;
         }else if(node instanceof NumberLiteral){
             Double d = ((NumberLiteral) node).getNumber();
-            return d;
+            getResult = d;
         }else if(node instanceof ObjectLiteral){
             Map<String,Object> m = Objects.newHashMap();
             for(ObjectProperty op:((ObjectLiteral) node).getElements()){
@@ -259,17 +269,17 @@ public class ASTEvaluator {
                     k = ((StringLiteral) op.getLeft()).getValue();
                 }
                 if(k!=null){
-                    m.put(k,get(op.getRight(), ctx, mh));
+                    m.put(k,get(op.getRight(), ctx));
                 }
 
             }
-            return m;
+            getResult = m;
         }else if(node instanceof ArrayLiteral){
             List<Object> l = Objects.newArrayList();
             for(AstNode n:((ArrayLiteral) node).getElements()){
-                l.add(get(n, ctx, mh));
+                l.add(get(n, ctx));
             }
-            return l;
+            getResult = l;
         }else if(node instanceof FunctionNode){
             //function(...){...}
             String fn = ((FunctionNode) node).getName();
@@ -280,9 +290,9 @@ public class ASTEvaluator {
             }
             ScriptFunction sf = new ScriptFunction(ctx.createChild(),fparams){
                 @Override
-                public Object call() throws JavaScriptException {
+                public Object call() throws ScriptException {
                     try{
-                        eval(fnode.getBody(), getContext(), mh);
+                        eval(fnode.getBody(), getContext());
                     }catch (FunctionReturnException e){
                         return e.getData();
                     }
@@ -292,19 +302,16 @@ public class ASTEvaluator {
             if(!Objects.isNullOrEmpty(fn)){
                 ctx.getVariables().put(fn,sf);
             }
-            System.out.println("-------"+fn);
-            //ctx.getVariables().put(fn,node);
-            //AstNode n = ((FunctionNode) node).getBody();
-            //((FunctionNode) node).getParams();
-            return sf;
+
+            getResult = sf;
         }else if(node instanceof FunctionCall){
             //a()
             List<Object> params = Objects.newArrayList();
             List<AstNode> pnodes = ((FunctionCall) node).getArguments();
             for(AstNode pn:pnodes){
-                params.add(get(pn, ctx, mh));
+                params.add(get(pn, ctx));
             }
-            Object f = get(((FunctionCall) node).getTarget(),ctx, mh);
+            Object f = get(((FunctionCall) node).getTarget(),ctx);
             if(f instanceof ScriptFunction){
                 ScriptFunction sf = (ScriptFunction)f;
                 for(int i=0;i<sf.getParams().size();i++){
@@ -312,7 +319,7 @@ public class ASTEvaluator {
                     sf.getContext().getVariables().put(sf.getParams().get(i),pval);
                 }
                 sf.getContext().getVariables().put("arguments",params);
-                return sf.call();
+                getResult = sf.call();
             }else{
                 throwScriptError("Object is not a ScriptFunction",node);
             }
@@ -321,168 +328,178 @@ public class ASTEvaluator {
             boolean prefix = ((UnaryExpression) node).isPrefix();
             int operator = ((UnaryExpression) node).getOperator();
             AstNode operand = ((UnaryExpression) node).getOperand();
-            Object o = get(operand,ctx, mh);
+            Object o = get(operand,ctx);
             if(operator==Token.TYPEOF){
                 if(o==null)
-                    return null;
+                    getResult = null;
                 else if(o instanceof Map)
-                    return "Map";
+                    getResult = "Map";
                 else if(o instanceof List)
-                    return "List";
+                    getResult = "List";
                 else if(o instanceof ScriptFunction)
-                    return "Function";
+                    getResult = "Function";
                 else
-                    return o.getClass().getSimpleName();
+                    getResult = o.getClass().getSimpleName();
             }else if(operator==Token.DELPROP){
-                set(operand,ctx, UNDEFINED, mh);
-                return null;
+                set(operand,ctx, UNDEFINED);
             }else if(operator==Token.NOT){
                 if(o instanceof Boolean){
-                    return !((Boolean) o).booleanValue();
+                    getResult = !((Boolean) o).booleanValue();
+                }else{
+                    getResult = Objects.isNullOrEmpty(o);
                 }
-                return Objects.isNullOrEmpty(o);
             }else if(operator==Token.INC){
                 if(o instanceof Number){
                     double d = ((Number)o).doubleValue();
                     if(prefix){
-                        set(operand,ctx,d++, mh);
-                        return d;
+                        set(operand,ctx,d++);
+                        getResult = d;
                     }else{
-                        set(operand,ctx,d+1, mh);
-                        return d;
+                        set(operand,ctx,d+1);
+                        getResult = d;
                     }
                 }
             }else if(operator==Token.DEC){
                 if(o instanceof Number){
                     double d = ((Number)o).doubleValue();
                     if(prefix){
-                        set(operand,ctx,d--, mh);
-                        return d;
+                        set(operand,ctx,d--);
+                        getResult = d;
                     }else{
-                        set(operand,ctx,d-1, mh);
-                        return d;
+                        set(operand,ctx,d-1);
+                        getResult = d;
                     }
                 }
             }else if(operator==Token.NEG){
                 if(o instanceof Number){
                     double d = ((Number)o).doubleValue();
                     if(prefix){
-                        return -d;
+                        getResult = -d;
                     }else{
-                        return d;
+                        getResult = d;
                     }
                 }
             }
         }else if(node instanceof ConditionalExpression){
             //ternary operator
-            if(condition(((ConditionalExpression) node).getTestExpression(), ctx, mh)){
-                return get(((ConditionalExpression) node).getTrueExpression(),ctx, mh);
+            if(condition(((ConditionalExpression) node).getTestExpression(), ctx)){
+                getResult = get(((ConditionalExpression) node).getTrueExpression(),ctx);
             }else{
-                return get(((ConditionalExpression) node).getFalseExpression(),ctx, mh);
+                getResult = get(((ConditionalExpression) node).getFalseExpression(),ctx);
             }
         }else if(node instanceof ExpressionStatement){
             //expression
             AstNode exp = ((ExpressionStatement) node).getExpression();
-            return get(exp,ctx, mh);
+            getResult = get(exp,ctx);
         }else if(node instanceof ParenthesizedExpression){
             AstNode exp = ((ParenthesizedExpression) node).getExpression();
-            return get(exp,ctx, mh);
+            getResult = get(exp,ctx);
         }else if(node instanceof InfixExpression){
             //a>b
             int operator = ((InfixExpression) node).getOperator();
             int operatorPos = ((InfixExpression) node).getOperatorPosition();
-            Object l = get(((InfixExpression) node).getLeft(),ctx, mh);
-            Object r = get(((InfixExpression) node).getRight(),ctx, mh);
+            Object l = get(((InfixExpression) node).getLeft(),ctx);
+            Object r = get(((InfixExpression) node).getRight(),ctx);
             if(operator==Token.ASSIGN){
-                set(((InfixExpression) node).getLeft(),ctx,get(((InfixExpression) node).getRight(),ctx, mh), mh);
-                return r;
+                set(((InfixExpression) node).getLeft(),ctx,get(((InfixExpression) node).getRight(),ctx));
+                getResult = r;
             }else if(operator==Token.OR){
                 if(!(l instanceof Boolean))
                     l = !Objects.isNullOrEmpty(l);
                 if(!(r instanceof Boolean))
                     r = !Objects.isNullOrEmpty(r);
-                return (Boolean)l||(Boolean)r;
+                getResult = (Boolean)l||(Boolean)r;
             }else if(operator==Token.AND){
                 if(!(l instanceof Boolean))
                     l = !Objects.isNullOrEmpty(l);
                 if(!(r instanceof Boolean))
                     r = !Objects.isNullOrEmpty(r);
-                return (Boolean)l&&(Boolean)r;
+                getResult = (Boolean)l&&(Boolean)r;
             }else if(operator==Token.LT){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() < ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() < ((Number)r).doubleValue();
             }else if(operator==Token.LE){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() <= ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() <= ((Number)r).doubleValue();
             }else if(operator==Token.GT){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() > ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() > ((Number)r).doubleValue();
             }else if(operator==Token.GE){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() >= ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() >= ((Number)r).doubleValue();
             }else if(operator==Token.ADD){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() + ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() + ((Number)r).doubleValue();
                 else
-                    return Objects.cast(l,String.class)+Objects.cast(r,String.class);
+                    getResult = Objects.cast(l,String.class)+Objects.cast(r,String.class);
             }else if(operator==Token.SUB){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() - ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() - ((Number)r).doubleValue();
             }else if(operator==Token.MOD){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() % ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() % ((Number)r).doubleValue();
             }else if(operator==Token.MUL){
-                System.out.println("---"+((InfixExpression) node).getLeft().getClass().getName());
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() * ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() * ((Number)r).doubleValue();
             }else if(operator==Token.DIV){
                 if(l instanceof Number && r instanceof Number)
-                    return ((Number)l).doubleValue() / ((Number)r).doubleValue();
+                    getResult = ((Number)l).doubleValue() / ((Number)r).doubleValue();
             }else if(operator==Token.EQ){
-                return Objects.equals(l,r);
+                getResult = Objects.equals(l,r);
             }else if(operator==Token.NE){
-                return !Objects.equals(l,r);
+                getResult = !Objects.equals(l,r);
             }else if(operator==Token.ASSIGN_ADD){
                 Object o = null;
                 if(l instanceof Number && r instanceof Number)
                     o = ((Number)l).doubleValue() + ((Number)r).doubleValue();
                 else
                     o = Objects.cast(l,String.class)+Objects.cast(r,String.class);
-                set(((InfixExpression) node).getLeft(),ctx,o, mh);
-                return o;
+                set(((InfixExpression) node).getLeft(),ctx,o);
+                getResult = o;
             }else if(operator==Token.ASSIGN_SUB){
                 Object o = null;
                 if(l instanceof Number && r instanceof Number)
                     o = ((Number)l).doubleValue() - ((Number)r).doubleValue();
-                set(((InfixExpression) node).getLeft(),ctx,o, mh);
-                return o;
+                set(((InfixExpression) node).getLeft(),ctx,o);
+                getResult = o;
             }else if(operator==Token.ASSIGN_MUL){
                 Object o = null;
                 if(l instanceof Number && r instanceof Number)
                     o = ((Number)l).doubleValue() * ((Number)r).doubleValue();
-                set(((InfixExpression) node).getLeft(),ctx,o, mh);
-                return o;
+                set(((InfixExpression) node).getLeft(),ctx,o);
+                getResult = o;
             }else if(operator==Token.ASSIGN_DIV){
                 Object o = null;
                 if(l instanceof Number && r instanceof Number)
                     o = ((Number)l).doubleValue() / ((Number)r).doubleValue();
-                set(((InfixExpression) node).getLeft(),ctx,o, mh);
-                return o;
+                set(((InfixExpression) node).getLeft(),ctx,o);
+                getResult = o;
             }else if(operator==Token.ASSIGN_MOD){
                 Object o = null;
                 if(l instanceof Number && r instanceof Number)
                     o = ((Number)l).doubleValue() % ((Number)r).doubleValue();
-                set(((InfixExpression) node).getLeft(),ctx,o, mh);
-                return o;
+                set(((InfixExpression) node).getLeft(),ctx,o);
+                getResult = o;
             }
         }
-        return null;
+        ctx.getMemoryHeap().take(getResult);
+        return getResult;
     }
 
+    /**
+     *
+     */
     public static final Object UNDEFINED = new Object();
 
-    protected static void set(AstNode node, Context ctx, Object val, MemoryHeap mh){
-        mh.take(val);
+    /**
+     *
+     * @param node
+     * @param ctx
+     * @param val
+     */
+    protected void set(AstNode node, Context ctx, Object val){
+        MemoryHeap mh = ctx.getMemoryHeap();
+        //mh.take(val);
         if(node instanceof Name){
             String k = ((Name) node).getIdentifier();
             if(val==UNDEFINED){
@@ -492,7 +509,7 @@ public class ASTEvaluator {
                 mh.take(k);
             }
         }else if(node instanceof PropertyGet){
-            Object obj = get(((PropertyGet) node).getTarget(),ctx, mh);
+            Object obj = get(((PropertyGet) node).getTarget(),ctx);
             if(!(obj instanceof Map)){
                 throwScriptError("Object is not instance of Map",node);
             }
@@ -504,9 +521,9 @@ public class ASTEvaluator {
                 mh.take(k);
             }
         }else if(node instanceof ElementGet){
-            Object obj = get(((ElementGet) node).getTarget(),ctx, mh);
+            Object obj = get(((ElementGet) node).getTarget(),ctx);
 
-            Object o = get(((ElementGet) node).getElement(), ctx, mh);
+            Object o = get(((ElementGet) node).getElement(), ctx);
             if(o instanceof Number){
                 if(!(obj instanceof List)){
                     throwScriptError("Object is not instance of List",node);
@@ -536,8 +553,13 @@ public class ASTEvaluator {
         }
     }
 
-    protected static void throwScriptError(String message, AstNode node){
-        throw new JavaScriptException(message+": line "+node.getLineno()+", column "+node.getPosition());
+    /**
+     *
+     * @param message
+     * @param node
+     */
+    protected void throwScriptError(String message, AstNode node){
+        throw new ScriptException(message+": line "+node.getLineno()+", column "+node.getPosition());
     }
 
 }

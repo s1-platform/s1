@@ -1,16 +1,7 @@
 package org.s1.script;
 
-import org.s1.objects.Objects;
-
-import java.lang.instrument.Instrumentation;
-import java.math.BigDecimal;
-import java.util.Date;
-
 /**
- * s1v2
- * User: GPykhov
- * Date: 08.02.14
- * Time: 18:09
+ * Memory heap
  */
 public class MemoryHeap {
 
@@ -22,16 +13,27 @@ public class MemoryHeap {
         this.limit = memory;
     }
 
-    public synchronized void take(Object obj){
+    /**
+     * Takes object size from heap
+     *
+     * @param obj
+     * @throws ScriptLimitException
+     */
+    public synchronized void take(Object obj) throws ScriptLimitException{
         String s = ""+obj;
         take(s.length());
     }
 
-    public synchronized void take(long bytes){
+    /**
+     * Takes some bytes from heap
+     *
+     * @param bytes
+     * @throws ScriptLimitException
+     */
+    public synchronized void take(long bytes) throws ScriptLimitException{
         memory-=bytes;
-        System.err.println(memory);
         if(memory<0)
-            throw new MemoryLimitException("Limit: "+limit);
+            throw new ScriptLimitException(ScriptLimitException.Limits.MEMORY,limit);
     }
 
     public synchronized void release(long bytes){

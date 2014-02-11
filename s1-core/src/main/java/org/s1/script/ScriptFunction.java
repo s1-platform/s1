@@ -1,6 +1,5 @@
 package org.s1.script;
 
-import org.mozilla.javascript.ast.FunctionNode;
 import org.s1.objects.Objects;
 
 import java.io.Serializable;
@@ -8,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 04.02.14
- * Time: 0:59
+ * Javascript functions class
  */
 public abstract class ScriptFunction implements Serializable {
     private Context context;
@@ -22,15 +18,32 @@ public abstract class ScriptFunction implements Serializable {
         this.params = params;
     }
 
+    /**
+     * Parameter names
+     *
+     * @return
+     */
     public List<String> getParams() {
         return params;
     }
 
+    /**
+     * Call context, useful for closures
+     *
+     * @return
+     */
     public Context getContext() {
         return context;
     }
 
-    public Object call(Map<String,Object> m) throws JavaScriptException{
+    /**
+     * Call with parameters
+     *
+     * @param m put this in context
+     * @return
+     * @throws ScriptException
+     */
+    public Object call(Map<String,Object> m) throws ScriptException {
         List<Object> args = Objects.newArrayList();
         for(Object o:m.values()){
             args.add(o);
@@ -40,6 +53,12 @@ public abstract class ScriptFunction implements Serializable {
         return call();
     }
 
-    public abstract Object call() throws JavaScriptException;
+    /**
+     * Call function, parameters are already in context
+     *
+     * @return
+     * @throws ScriptException
+     */
+    public abstract Object call() throws ScriptException;
 
 }

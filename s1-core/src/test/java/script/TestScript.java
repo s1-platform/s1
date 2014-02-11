@@ -28,9 +28,9 @@ public class TestScript extends BasicTest{
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         final Map<String,Object> data = Objects.newHashMap(
                 "assert",
-                new ScriptFunction(new Context(), Objects.newArrayList(String.class,"message","b")) {
+                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message","b")) {
                     @Override
-                    public Object call() throws JavaScriptException {
+                    public Object call() throws ScriptException {
                         Object o = getContext().getVariables().get("b");
                         boolean b = false;
                         if(o instanceof Boolean)
@@ -38,14 +38,14 @@ public class TestScript extends BasicTest{
                         else
                             b = !Objects.isNullOrEmpty(o);
                         if(!b)
-                            throw new JavaScriptException(getContext().getVariables().get("message"));
+                            throw new ScriptException(getContext().getVariables().get("message"));
                         return null;
                     }
                 },
                 "print",
-                new ScriptFunction(new Context(), Objects.newArrayList(String.class,"message")) {
+                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message")) {
                     @Override
-                    public Object call() throws JavaScriptException {
+                    public Object call() throws ScriptException {
                         Object o = getContext().getVariables().get("message");
                         if(o!=null)
                             System.out.println(">>>"+o.getClass().getName()+":"+o);
@@ -125,9 +125,9 @@ public class TestScript extends BasicTest{
         scriptEngine.setTimeLimit(2000);
         final Map<String,Object> data = Objects.newHashMap(
                 "sleep",
-                new ScriptFunction(new Context(), Objects.newArrayList(String.class,"time")) {
+                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"time")) {
                     @Override
-                    public Object call() throws JavaScriptException {
+                    public Object call() throws ScriptException {
                         sleep(getContext().get(Long.class, "time"));
                         return null;
                     }
@@ -143,8 +143,8 @@ public class TestScript extends BasicTest{
                 boolean b = false;
                 try {
                     scriptEngine.eval("sleep(3000); 'test1'", data);
-                } catch (TimeLimitException e){
-                    b = true;
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.TIME;
                 }
                 assertTrue(b);
 
@@ -152,8 +152,8 @@ public class TestScript extends BasicTest{
                 b = false;
                 try {
                     scriptEngine.eval("while(true){}", data);
-                } catch (TimeLimitException e){
-                    b = true;
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.TIME;
                 }
                 assertTrue(b);
                 return null;
@@ -177,8 +177,8 @@ public class TestScript extends BasicTest{
                 boolean b = false;
                 try {
                     scriptEngine.eval("'1234567890'", null);
-                } catch (SizeLimitException e){
-                    b = true;
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.SIZE;
                 }
                 assertTrue(b);
                 return null;
@@ -187,7 +187,7 @@ public class TestScript extends BasicTest{
     }
 
     public void testMemoryLimit(){
-        int p=1;
+        int p=1000;
         title("Memory limit test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setMemoryLimit(1000);
@@ -202,8 +202,8 @@ public class TestScript extends BasicTest{
                 boolean b = false;
                 try {
                     scriptEngine.eval("var a = '1234567890';while(true){a+=a;}", null);
-                } catch (MemoryLimitException e){
-                    b = true;
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.MEMORY;
                 }
                 assertTrue(b);
 
@@ -211,13 +211,39 @@ public class TestScript extends BasicTest{
                 //limit 2
                 b = false;
                 try {
-                    scriptEngine.eval("while(true){var a='1234567890';}", null);
-                } catch (MemoryLimitException e){
-                    b = true;
+                    scriptEngine.eval("var arr = []; while(true){s1.add(arr,'asd');}", null);
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.MEMORY;
                 }
                 assertTrue(b);
+
+
+                //limit 3
+                b = false;
+                try {
+                    scriptEngine.eval("var obj = {a:'asd'}; while(true){s1.set(obj,'a',obj.a+'qwer');}", null);
+                } catch (ScriptLimitException e){
+                    b = e.getType()== ScriptLimitException.Limits.MEMORY;
+                }
+                assertTrue(b);
+
                 return null;
             }
         }));
     }
+
+    public void testSyntaxError(){
+        title("Syntax error");
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        boolean b = false;
+        try{
+            scriptEngine.eval("return;",null);
+        }catch (SyntaxException e){
+            b = true;
+            trace(e.getMessage());
+        }
+        assertTrue(b);
+
+    }
+
 }

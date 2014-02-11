@@ -11,8 +11,8 @@ import org.s1.script.functions.ScriptFunctions;
 import org.s1.script.functions.ScriptSystemFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.org.mozilla.javascript.internal.EvaluatorException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -23,43 +23,63 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 06.02.14
- * Time: 16:07
+ * S1 Script engine
  */
 public class S1ScriptEngine {
 
     private static final Logger LOG = LoggerFactory.getLogger(S1ScriptEngine.class);
 
-    private Map<String,String> functions = Objects.newHashMap();
+    private List<String> functions = Objects.newArrayList();
     private long timeLimit = 0;
     private long sizeLimit = 0;
     private long memoryLimit = 0;
 
+    /**
+     * Create with path='scriptEngine'
+     */
     public S1ScriptEngine(){
         this("scriptEngine");
     }
 
+    /**
+     * Create
+     *
+     * @param path system options path
+     */
     public S1ScriptEngine(String path){
         this(OptionsStorage.SYSTEM_PROPERTIES,path);
     }
 
+    /**
+     * Create
+     *
+     * @param options name of options
+     * @param path options path
+     */
     public S1ScriptEngine(String options, String path){
-        functions = Options.getStorage().get(options,path+".functions",Objects.newHashMap(String.class,String.class));
+        functions = Options.getStorage().get(options,path+".functions",Objects.newArrayList(String.class));
         timeLimit = Options.getStorage().get(options,path+".timeLimit",30000);
         memoryLimit = Options.getStorage().get(options,path+".memoryLimit",16*1024*1024);
         sizeLimit = Options.getStorage().get(options,path+".sizeLimit",16*1024*1024);
     }
 
-    public Map<String, String> getFunctions() {
+    /**
+     * Functions classes
+     * @return
+     */
+    public List<String> getFunctions() {
         return functions;
     }
 
-    public void setFunctions(Map<String, String> functions) {
+    public void setFunctions(List<String> functions) {
         this.functions = functions;
     }
 
+    /**
+     * Time limit in ms
+     *
+     * @return
+     */
     public long getTimeLimit() {
         return timeLimit;
     }
@@ -68,6 +88,11 @@ public class S1ScriptEngine {
         this.timeLimit = timeLimit;
     }
 
+    /**
+     * Size limit in characters
+     *
+     * @return
+     */
     public long getSizeLimit() {
         return sizeLimit;
     }
@@ -76,6 +101,11 @@ public class S1ScriptEngine {
         this.sizeLimit = sizeLimit;
     }
 
+    /**
+     * Memory limit in bytes
+     *
+     * @return
+     */
     public long getMemoryLimit() {
         return memoryLimit;
     }
@@ -84,28 +114,59 @@ public class S1ScriptEngine {
         this.memoryLimit = memoryLimit;
     }
 
+    /**
+     * Eval script and cast result
+     *
+     * @param cls
+     * @param script
+     * @param data
+     * @param <T>
+     * @return
+     */
     public <T> T eval(Class<T> cls, String script, Map<String,Object> data){
         return Objects.cast(eval(script,data),cls);
     }
 
-    public <T> T eval(String script, Map<String,Object> data){
+    /**
+     * Eval script
+     *
+     * @param script source
+     * @param data context
+     * @param <T>
+     * @return last script statement result
+     * @throws ScriptException
+     * @throws ScriptLimitException
+     * @throws SyntaxException
+     */
+    public <T> T eval(String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
+        long t = System.currentTimeMillis();
         if(data==null)
             data = Objects.newHashMap();
         if(script.length()>sizeLimit)
-            throw new SizeLimitException("Limit: "+sizeLimit+" chars");
+            throw new ScriptLimitException(ScriptLimitException.Limits.SIZE,getSizeLimit());
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Evaluating S1 script:\n"+script+"\nWith data:"+data);
+        }
         CompilerEnvirons ce = new CompilerEnvirons();
         ce.setRecordingComments(false);
         ce.setStrictMode(true);
         ce.setXmlAvailable(false);
 
-        final AstRoot root = new Parser(ce).parse(script,"S1RestrictedScript",1);
+        final AstRoot root;
+        try {
+            root = new Parser(ce).parse(script,"S1RestrictedScript",1);
+        } catch (Throwable e) {
+            throw new SyntaxException(e.getMessage(),e);
+        }
+        if(LOG.isDebugEnabled()){
+            LOG.debug(root.debugPrint());
+        }
 
-        final Context ctx=new Context();
+        final Context ctx=new Context(getMemoryLimit());
         ctx.getVariables().putAll(data);
 
         //functions from options
-        for(final String k:functions.keySet()){
-            String f = functions.get(k);
+        for(final String f:functions){
             Class<? extends ScriptFunctions> cls = null;
             try {
                 cls = (Class<? extends ScriptFunctions>)Class.forName(f);
@@ -122,26 +183,34 @@ public class S1ScriptEngine {
         Future<Object> f = executeTask(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
-                //return null;
-                return ASTEvaluator.eval(root,ctx,new MemoryHeap(memoryLimit));
+                return new ASTEvaluator().eval(root,ctx);
             }
-        },timeLimit);
+        },getTimeLimit());
 
         try {
-            return (T)f.get();
+            T result = (T)f.get();
+            if(LOG.isDebugEnabled()){
+                LOG.debug("Script result ("+(System.currentTimeMillis()-t)+"ms.): "+result);
+            }
+            return result;
         } catch (CancellationException e){
-            throw new TimeLimitException("Limit: "+timeLimit+" ms.");
+            throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
         } catch (InterruptedException e){
             throw S1SystemError.wrap(e);
         } catch (ExecutionException e){
-            if(e.getCause()!=null && e.getCause() instanceof MemoryLimitException)
-                throw new MemoryLimitException(e.getCause().getMessage(),e.getCause().getCause());
+            if(e.getCause()!=null && e.getCause() instanceof ScriptLimitException)
+                throw (ScriptLimitException)e.getCause();
             throw S1SystemError.wrap(e);
         }
-
-        //return ASTEvaluator.eval(ar,c);
     }
 
+    /**
+     *
+     * @param c
+     * @param timeoutMS
+     * @param <T>
+     * @return
+     */
     private <T> Future<T> executeTask(Callable<T> c, long timeoutMS){
         ExecutorService service = Executors.newFixedThreadPool(1);
         ScheduledExecutorService canceller = Executors.newSingleThreadScheduledExecutor();
@@ -156,18 +225,28 @@ public class S1ScriptEngine {
         return future;
     }
 
+    /**
+     * System functions namespace
+     */
     public static final String SYSTEM_FUNCTION_NS = "s1";
 
+    /**
+     *
+     * @param ns
+     * @param c
+     * @param cls
+     */
     private void addFunctions(final String ns, Context c, final Class<? extends ScriptFunctions> cls){
-        //System.out.println("-------------");
         for(final Method method:cls.getDeclaredMethods()){
             if(!Modifier.isPublic(method.getModifiers())){
                 continue;
             }
-            //System.out.println("* "+method.getName());
-            Objects.set(c.getVariables(), ns+method.getName(), new ScriptFunction(new Context(), Objects.newArrayList(String.class)) {
+            if(LOG.isTraceEnabled()){
+                LOG.trace(ns + method.getName() + " -> " + cls.getName() + "#" + method.getName());
+            }
+            Objects.set(c.getVariables(), ns+method.getName(), new ScriptFunction(new Context(getMemoryLimit()), Objects.newArrayList(String.class)) {
                 @Override
-                public Object call() throws JavaScriptException {
+                public Object call() throws ScriptException {
                     List args = getContext().get("arguments");
                     try {
                         for(int i=0;i<method.getParameterTypes().length;i++){
@@ -175,21 +254,47 @@ public class S1ScriptEngine {
                                 args.set(i,Objects.cast(args.get(i),method.getParameterTypes()[i]));
                             }
                         }
-                        System.out.println(ns+method.getName()+": "+args);
+                        if(LOG.isTraceEnabled()){
+                            LOG.trace(ns+method.getName()+"("+args+")");
+                        }
                         ScriptFunctions sf = cls.newInstance();
                         sf.setContext(getContext());
                         return method.invoke(sf, args.toArray());
                     } catch (Throwable e) {
-                        throw new JavaScriptException(ns+method.getName()+": "+e.getMessage(), e);
+                        throw new ScriptException(ns+method.getName()+": "+e.getMessage(), e);
                     }
                 }
             });
         }
     }
 
+    /**
+     * Function name for printing
+     */
     public static final String TEMPLATE_PRINT_FUNCTION = "_print";
 
-    public String template(String template, Map<String,Object> data, String startExpr, String endExpr, String startCode, String endCode){
+    /**
+     * Run template
+     *
+     * @param template template text
+     * @param data context
+     * @param startExpr tag for expression start
+     * @param endExpr tag for expression end
+     * @param startCode tag for code start
+     * @param endCode tag for code end
+     * @return evaluated template
+     * @throws ScriptException
+     * @throws ScriptLimitException
+     * @throws SyntaxException
+     */
+    public String template(String template, Map<String,Object> data, String startExpr, String endExpr, String startCode, String endCode)
+        throws ScriptException,ScriptLimitException,SyntaxException{
+
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Building S1 template:\n"+template+"\nWith data:"+data+"\n"
+                    +startExpr+"expression"+endExpr
+                    +startCode+"code"+endCode);
+        }
 
         template = template
                 .replace("&","&amp;")
@@ -248,9 +353,9 @@ public class S1ScriptEngine {
         if(data==null){
             data = Objects.newHashMap();
         }
-        data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(),Objects.newArrayList("text")) {
+        data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList("text")) {
             @Override
-            public Object call() throws JavaScriptException {
+            public Object call() throws ScriptException {
                 //String text = getContext().get(String.class,"text");
                 //sb.append(text);
                 List<Object> args = getContext().get("arguments");
@@ -272,9 +377,12 @@ public class S1ScriptEngine {
         return template;
     }
 
+    /**
+     *
+     * @param text
+     * @return
+     */
     private String printText(String text){
-        //return TEMPLATE_PRINT_FUNCTION+"(\""+text.replace("\"","\\\"")
-        //        .replaceAll("(\r\n|\n|\n\r)","\\\\n\"+\n\"")+"\");";
         return TEMPLATE_PRINT_FUNCTION+"(\""+text.replace("\"","\\\"")
                 .replaceAll("(\r\n|\n|\n\r)","\\\\n\",\n\"")+"\");";
     }

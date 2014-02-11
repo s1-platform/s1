@@ -3,12 +3,12 @@ package org.s1.script;
 import org.s1.objects.Objects;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Will be thrown on
+ * <code>return ...;</code>
+ * command
  */
 public class FunctionReturnException extends RuntimeException {
+
     private Object data;
 
     public Object getData() {

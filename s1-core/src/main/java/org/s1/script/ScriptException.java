@@ -3,12 +3,12 @@ package org.s1.script;
 import org.s1.objects.Objects;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Script exception.
+ * Will be thrown on
+ * <code>throw ...;</code>
+ * command or on some runtime error
  */
-public class JavaScriptException extends RuntimeException {
+public class ScriptException extends RuntimeException {
     private Object data;
 
     public Object getData() {
@@ -19,12 +19,12 @@ public class JavaScriptException extends RuntimeException {
         this.data = data;
     }
 
-    public JavaScriptException(Object data) {
+    public ScriptException(Object data) {
         super(""+data);
         this.data = data;
     }
 
-    public JavaScriptException(Object data, Throwable cause) {
+    public ScriptException(Object data, Throwable cause) {
         super(""+data,cause);
         this.data = data;
     }
