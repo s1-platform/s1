@@ -143,6 +143,8 @@ public class ObjectSchema implements Serializable{
 
     protected ValidateResultBean validate(Map<String,Object> data, boolean expand, boolean deep, Map<String,Object> ctx, boolean quite)
             throws ObjectSchemaValidationException{
+        if(ctx==null)
+            ctx = Objects.newHashMap();
         Map<String,Object> validatedData = Objects.copy(data);
         ObjectSchema resolvedSchema = copyAndReset();
         resolvedSchema.resolved = true;

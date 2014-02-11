@@ -198,8 +198,12 @@ public class S1ScriptEngine {
         } catch (InterruptedException e){
             throw S1SystemError.wrap(e);
         } catch (ExecutionException e){
-            if(e.getCause()!=null && e.getCause() instanceof ScriptLimitException)
-                throw (ScriptLimitException)e.getCause();
+            if(e.getCause()!=null){
+                if(e.getCause() instanceof ScriptLimitException)
+                    throw (ScriptLimitException)e.getCause();
+                if(e.getCause() instanceof ScriptException)
+                    throw (ScriptException)e.getCause();
+            }
             throw S1SystemError.wrap(e);
         }
     }

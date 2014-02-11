@@ -21,7 +21,7 @@ public class SchemaTest extends BasicTest{
 
     public void testSimpleType1(){
         title("simple types");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -92,7 +92,7 @@ public class SchemaTest extends BasicTest{
 
     public void testMap1(){
         title("map");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -128,7 +128,7 @@ public class SchemaTest extends BasicTest{
 
     public void testMapList(){
         title("maps and lists");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -209,7 +209,7 @@ public class SchemaTest extends BasicTest{
 
     public void testList1(){
         title("list of strings");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -243,7 +243,7 @@ public class SchemaTest extends BasicTest{
 
     public void testList2(){
         title("list with maps");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -291,7 +291,7 @@ public class SchemaTest extends BasicTest{
 
     public void testDefault1(){
         title("default list");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -322,7 +322,7 @@ public class SchemaTest extends BasicTest{
 
     public void testDefault2(){
         title("default string");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -349,7 +349,7 @@ public class SchemaTest extends BasicTest{
 
     public void testVariants1(){
         title("variants");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -386,7 +386,7 @@ public class SchemaTest extends BasicTest{
 
     public void testReference1(){
         title("reference");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -447,7 +447,7 @@ public class SchemaTest extends BasicTest{
 
     public void testReference2(){
         title("cycle reference");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -501,7 +501,7 @@ public class SchemaTest extends BasicTest{
 
     public void testListMinMax(){
         title("list min max");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -569,7 +569,7 @@ public class SchemaTest extends BasicTest{
 
     public void testComplexType(){
         title("complex type");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -637,7 +637,7 @@ public class SchemaTest extends BasicTest{
 
     public void testValidate(){
         title("custom validate");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -683,7 +683,7 @@ public class SchemaTest extends BasicTest{
 
     public void testDynamic1(){
         title("dynamic form field");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -730,7 +730,7 @@ public class SchemaTest extends BasicTest{
 
     public void testDynamic2(){
         title("change entire attribute");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -775,7 +775,7 @@ public class SchemaTest extends BasicTest{
 
     public void testDynamic3(){
         title("dynamic list");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -847,7 +847,7 @@ public class SchemaTest extends BasicTest{
 
     public void testErrorFormat(){
         title("error format");
-        int p=1000;
+        int p=100;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
