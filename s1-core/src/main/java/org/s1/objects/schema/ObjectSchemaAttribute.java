@@ -177,7 +177,7 @@ public abstract class ObjectSchemaAttribute<T> {
             }
         }
 
-        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine("objectSchema.scriptEngine");
         final String script = Objects.get(m, "script");
         if(!Objects.isNullOrEmpty(script)){
             this.script = new Closure<ObjectSchemaAttribute, ObjectSchemaAttribute>() {
