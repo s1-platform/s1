@@ -246,4 +246,11 @@ public class TestScript extends BasicTest{
 
     }
 
+    public void testOptionsFunctions(){
+        title("Options functions");
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        assertTrue(Objects.equals(5,scriptEngine.eval("test.sum(2,3);",null)));
+
+    }
+
 }

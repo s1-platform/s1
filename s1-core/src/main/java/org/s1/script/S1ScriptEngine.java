@@ -29,7 +29,7 @@ public class S1ScriptEngine {
 
     private static final Logger LOG = LoggerFactory.getLogger(S1ScriptEngine.class);
 
-    private List<String> functions = Objects.newArrayList();
+    private List<Map<String,Object>> functions = Objects.newArrayList();
     private long timeLimit = 0;
     private long sizeLimit = 0;
     private long memoryLimit = 0;
@@ -57,21 +57,21 @@ public class S1ScriptEngine {
      * @param path options path
      */
     public S1ScriptEngine(String options, String path){
-        functions = Options.getStorage().get(options,path+".functions",Objects.newArrayList(String.class));
-        timeLimit = Options.getStorage().get(options,path+".timeLimit",30000);
-        memoryLimit = Options.getStorage().get(options,path+".memoryLimit",16*1024*1024);
-        sizeLimit = Options.getStorage().get(options,path+".sizeLimit",16*1024*1024);
+        functions = Options.getStorage().get(options,path+".functions",functions);
+        timeLimit = Options.getStorage().get(options,path+".timeLimit",30000L);
+        memoryLimit = Options.getStorage().get(options,path+".memoryLimit",16*1024*1024L);
+        sizeLimit = Options.getStorage().get(options,path+".sizeLimit",16*1024*1024L);
     }
 
     /**
      * Functions classes
      * @return
      */
-    public List<String> getFunctions() {
+    public List<Map<String,Object>> getFunctions() {
         return functions;
     }
 
-    public void setFunctions(List<String> functions) {
+    public void setFunctions(List<Map<String,Object>> functions) {
         this.functions = functions;
     }
 
@@ -166,14 +166,18 @@ public class S1ScriptEngine {
         ctx.getVariables().putAll(data);
 
         //functions from options
-        for(final String f:functions){
+        for(final Map<String,Object> f:functions){
+            String clName = Objects.get(f,"class");
+            String ns = Objects.get(f,"namespace","");
+            if(ns.length()>0 && !ns.endsWith("."))
+                ns+=".";
             Class<? extends ScriptFunctions> cls = null;
             try {
-                cls = (Class<? extends ScriptFunctions>)Class.forName(f);
+                cls = (Class<? extends ScriptFunctions>)Class.forName(clName);
+                addFunctions(ns, ctx, cls);
             } catch (Throwable e) {
-                LOG.warn("Class "+cls+" cannot be initialized as ScriptFunctions: "+e.getMessage());
+                LOG.warn("Class "+cls+" cannot be initialized as ScriptFunctions: "+e.getMessage(),e);
             }
-            addFunctions("", ctx, cls);
         }
 
         //system functions
