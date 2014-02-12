@@ -11,7 +11,6 @@ import org.s1.script.functions.ScriptFunctions;
 import org.s1.script.functions.ScriptSystemFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.org.mozilla.javascript.internal.EvaluatorException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
