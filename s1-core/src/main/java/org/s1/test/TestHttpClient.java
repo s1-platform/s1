@@ -34,10 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 21:42
+ * Http client for server testing
  */
 public class TestHttpClient {
 

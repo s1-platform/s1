@@ -12,10 +12,7 @@ import org.s1.objects.Objects;
 import java.io.*;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 12:00
+ * Base test class for server tests
  */
 public abstract class ServerTest extends BasicTest {
 
