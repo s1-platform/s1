@@ -12,10 +12,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 22:39
+ * Operation that executes multiple other web operations at once.<br>
+ * Accepts requests like:
+ * <pre>{list: [{
+ *     operation: "...operation name...",
+ *     method: "...method...",
+ *     params: Object
+ * }, ...]}</pre>
+ * Usually uses with {@link org.s1.weboperation.MapWebOperation} because params must be parseable
+ * with {@link org.s1.weboperation.MapWebOperation#convertRequestToMap(javax.servlet.http.HttpServletRequest)}
  */
 public class CommandWebOperation extends MapWebOperation {
 

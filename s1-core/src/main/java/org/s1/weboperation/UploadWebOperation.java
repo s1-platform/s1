@@ -17,12 +17,14 @@ import java.net.URLEncoder;
 import java.util.*;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 22:39
+ * Operation for file uploading and downloading to/from FileStorage
+ * @see org.s1.cluster.datasource.FileStorage
  */
-public class UploadWebOperation extends MapWebOperation{
+public class UploadWebOperation extends MapWebOperation {
+
+    /**
+     * Default group
+     */
     public static final String GROUP = "upload";
 
     @Override
@@ -42,6 +44,14 @@ public class UploadWebOperation extends MapWebOperation{
         return result;
     }
 
+    /**
+     * Upload file
+     * @see MapWebOperation.FileParameter
+     *
+     * @param params {group:"...default is GROUP...", file: FileParameter}
+     * @param result will be {id:"..."}
+     * @throws Exception
+     */
     public static void upload(Map<String, Object> params,
                               Map<String, Object> result) throws Exception{
         String group = (String)params.get("group");
@@ -91,8 +101,9 @@ public class UploadWebOperation extends MapWebOperation{
     }
 
     /**
+     * Download file
      *
-     * @param params
+     * @param params {group:"...default is GROUP...", id:"..."}
      * @param response
      */
     public static void download(Map<String, Object> params,
@@ -123,7 +134,8 @@ public class UploadWebOperation extends MapWebOperation{
 
     /**
      * Download file from storage with content-disposition
-     * @param params
+     *
+     * @param params {group:"...default is GROUP...", id:"...", name:"...default will be taken from FileMetaBean.name ..."}
      * @param response
      */
     public static void downloadAsFile(Map<String, Object> params,

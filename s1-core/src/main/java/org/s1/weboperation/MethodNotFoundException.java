@@ -1,10 +1,7 @@
 package org.s1.weboperation;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * WebOperation method not found
  */
 public class MethodNotFoundException extends Exception {
 

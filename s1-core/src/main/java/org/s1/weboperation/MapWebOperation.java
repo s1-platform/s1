@@ -20,15 +20,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 29.01.14
- * Time: 21:42
+ * Base class for Map-in/Map-out web operations
  */
 public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Map<String,Object>> {
 
     /**
-     * Parse request to make Map
+     * Parse request to make Map. Try application/json, url params, application/x-www-form-urlencoded, multipart/form-data
+     *
      * @param request
      * @return
      */
@@ -100,7 +98,7 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
     }
 
     /**
-     *
+     * Bean for file request parameter
      */
     public static class FileParameter {
         private InputStream inputStream;
@@ -142,11 +140,12 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
         }
     }
 
+    @Override
     protected Map<String,Object> parseInput(HttpServletRequest request) throws Exception{
         return convertRequestToMap(request);
     }
 
-
+    @Override
     protected void formatOutput(Map<String, Object> out, boolean error,
                                 HttpServletRequest request, HttpServletResponse response) throws Exception{
         if (out != null) {
@@ -167,6 +166,7 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
         }
     }
 
+    @Override
     protected Map<String, Object> transformError(Throwable e, HttpServletRequest request, HttpServletResponse response) {
         if (e instanceof MethodNotFoundException) {
             response.setStatus(404);
@@ -175,7 +175,8 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
     }
 
     /**
-     * Error to map
+     * Convert error to map
+     *
      * @param e
      * @return
      */

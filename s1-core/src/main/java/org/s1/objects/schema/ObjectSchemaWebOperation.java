@@ -2,7 +2,6 @@ package org.s1.objects.schema;
 
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ObjectSchema;
 import org.s1.weboperation.MapWebOperation;
 
 import javax.servlet.http.HttpServletRequest;
