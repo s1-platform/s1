@@ -1,10 +1,7 @@
 package org.s1.cluster.datasource;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Object not found
  */
 public class NotFoundException extends Exception {
 

@@ -25,6 +25,9 @@ public class Session {
 
     private static final ThreadLocal<String> idLocal = new ThreadLocal<String>();
 
+    /**
+     *
+     */
     public static final String SESSION_MAP = "SessionMap";
 
     private static IMap<String,SessionBean> sessionMap;
@@ -46,9 +49,10 @@ public class Session {
     }
 
     /**
+     * Run some code in session
      *
-     * @param id
-     * @param closure
+     * @param id session id
+     * @param closure code
      * @return
      */
     public static Object run(String id, Closure<String,Object> closure) throws ClosureException{
@@ -69,6 +73,7 @@ public class Session {
     }
 
     /**
+     * Return current session data
      *
      * @return
      */
@@ -111,10 +116,13 @@ public class Session {
      */
     public static final String ANONYMOUS = "anonymous";
 
+    /**
+     * Root user id
+     */
     public static final String ROOT = "root";
 
     /**
-     *
+     * Session data
      */
     public static class SessionBean implements Serializable{
         private String id;
@@ -123,45 +131,104 @@ public class Session {
         private String userId = ANONYMOUS;
         private Map<String,Object> data = Objects.newHashMap();
 
+        /**
+         * Session id
+         *
+         * @return
+         */
         public String getId() {
             return id;
         }
 
+        /**
+         * Create timestamp
+         *
+         * @return
+         */
         public long getCreated() {
             return created;
         }
 
+        /**
+         * Last used timestamp
+         *
+         * @return
+         */
         public long getLastUsed() {
             return lastUsed;
         }
 
+        /**
+         * User id
+         *
+         * @return
+         */
         public String getUserId() {
             if(userId==null)
                 return ANONYMOUS;
             return userId;
         }
 
+        /**
+         *
+         * @param userId
+         */
         public void setUserId(String userId) {
             this.userId = userId;
             updateSessionBean(this);
         }
 
+        /**
+         * Get session parameter
+         *
+         * @param path
+         * @param <T>
+         * @return
+         */
         public <T> T get(String path){
             return get(path,null);
         }
 
+        /**
+         *
+         * @param path
+         * @param def
+         * @param <T>
+         * @return
+         */
         public <T> T get(String path, T def){
             return Objects.get(data,path,def);
         }
 
+        /**
+         *
+         * @param cls
+         * @param path
+         * @param <T>
+         * @return
+         */
         public <T> T get(Class<T> cls, String path){
             return get(cls,path,null);
         }
 
+        /**
+         *
+         * @param cls
+         * @param path
+         * @param def
+         * @param <T>
+         * @return
+         */
         public <T> T get(Class<T> cls,String path, T def){
             return Objects.get(cls,data,path,def);
         }
 
+        /**
+         * Set session parameter
+         *
+         * @param path
+         * @param val
+         */
         public void set(String path, Object val){
             Objects.set(data,path,val);
             updateSessionBean(this);

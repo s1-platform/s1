@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Schema type for references
  */
 public class ObjectSchemaType {
 
@@ -22,21 +19,39 @@ public class ObjectSchemaType {
         fromMap(m);
     }
 
+    /**
+     *
+     * @param name
+     * @param attributes
+     */
     public ObjectSchemaType(String name, List<ObjectSchemaAttribute> attributes) {
         this.name = name;
         if(attributes!=null)
             this.attributes = attributes;
     }
 
+    /**
+     *
+     * @param name
+     * @param args
+     */
     public ObjectSchemaType(String name, ObjectSchemaAttribute... args) {
         this.name = name;
         this.attributes = Arrays.asList(args);
     }
 
+    /**
+     *
+     * @return
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<ObjectSchemaAttribute> getAttributes() {
         List<ObjectSchemaAttribute> list = Objects.newArrayList();
         for(ObjectSchemaAttribute a:attributes) list.add(a);
@@ -54,6 +69,10 @@ public class ObjectSchemaType {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public Map<String,Object> toMap(){
         List<Map<String,Object>> attrs = Objects.newArrayList();
         for(ObjectSchemaAttribute a:attributes){
@@ -63,6 +82,10 @@ public class ObjectSchemaType {
         return m;
     }
 
+    /**
+     *
+     * @return
+     */
     public ObjectSchemaType copy(){
         ObjectSchemaType a = new ObjectSchemaType(name);
         a.attributes = Objects.newArrayList();

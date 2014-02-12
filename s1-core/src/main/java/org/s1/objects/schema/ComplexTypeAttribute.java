@@ -5,10 +5,7 @@ import org.s1.objects.Objects;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Complex type attribute
  */
 public class ComplexTypeAttribute extends ObjectSchemaAttribute<Map<String,Object>> {
 
@@ -18,11 +15,24 @@ public class ComplexTypeAttribute extends ObjectSchemaAttribute<Map<String,Objec
     ComplexTypeAttribute(){
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param typeClass
+     */
     public ComplexTypeAttribute(String name, String label, Class<? extends ComplexType> typeClass) {
         super(name,label,"ComplexType");
         this.typeClass = typeClass;
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param typeClass
+     * @param typeCfg
+     */
     public ComplexTypeAttribute(String name, String label, Class<? extends ComplexType> typeClass, Map<String, Object> typeCfg) {
         this(name,label,typeClass);
         this.typeCfg = Objects.copy(typeCfg);
@@ -36,7 +46,7 @@ public class ComplexTypeAttribute extends ObjectSchemaAttribute<Map<String,Objec
 
         if(data!=null){
             ComplexType t = typeClass.newInstance();
-            t.setCfg(typeCfg);
+            t.setConfig(typeCfg);
             data = t.validate(data);
             if(expand)
                 data = t.expand(data,deep);
@@ -66,18 +76,34 @@ public class ComplexTypeAttribute extends ObjectSchemaAttribute<Map<String,Objec
         return m;
     }
 
+    /**
+     *
+     * @return
+     */
     public Class<? extends ComplexType> getTypeClass() {
         return typeClass;
     }
 
+    /**
+     *
+     * @return
+     */
     public Map<String, Object> getTypeCfg() {
         return typeCfg;
     }
 
+    /**
+     *
+     * @param typeClass
+     */
     public void setTypeClass(Class<? extends ComplexType> typeClass) {
         this.typeClass = typeClass;
     }
 
+    /**
+     *
+     * @param typeCfg
+     */
     public void setTypeCfg(Map<String, Object> typeCfg) {
         if(typeCfg!=null)
             this.typeCfg = typeCfg;

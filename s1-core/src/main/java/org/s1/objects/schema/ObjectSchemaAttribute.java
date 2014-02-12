@@ -1,17 +1,19 @@
 package org.s1.objects.schema;
 
+import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.misc.Closure;
+import org.s1.script.Context;
+import org.s1.script.S1ScriptEngine;
+import org.s1.script.ScriptException;
+import org.s1.script.ScriptFunction;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Base class for schema attributes
  */
 public abstract class ObjectSchemaAttribute<T> {
 
@@ -52,6 +54,8 @@ public abstract class ObjectSchemaAttribute<T> {
     ObjectSchemaAttribute(Map<String, Object> a) throws ObjectSchemaFormatException{
         fromMap(a);
     }
+
+    private Map<String,Object> validationCtx;
 
     protected boolean required;
     protected boolean denied;
@@ -170,13 +174,21 @@ public abstract class ObjectSchemaAttribute<T> {
             }
         }
 
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine("objectSchema.scriptEngine");
         final String script = Objects.get(m, "script");
         if(!Objects.isNullOrEmpty(script)){
             this.script = new Closure<ObjectSchemaAttribute, ObjectSchemaAttribute>() {
                 @Override
-                public ObjectSchemaAttribute call(ObjectSchemaAttribute input) {
+                public ObjectSchemaAttribute call(final ObjectSchemaAttribute input) {
                     //call script
-                    return null;
+                    Map<String,Object> m = input.getScriptMap();
+                    scriptEngine.eval(script,m);
+                    Map<String,Object> attr = Objects.get(m,"attr");
+                    try {
+                        return ObjectSchemaAttribute.createFromMap(attr);
+                    } catch (ObjectSchemaFormatException e) {
+                        throw S1SystemError.wrap(e);
+                    }
                 }
             };
         }
@@ -186,11 +198,44 @@ public abstract class ObjectSchemaAttribute<T> {
             this.validate = new Closure<ObjectSchemaAttribute, String>() {
                 @Override
                 public String call(ObjectSchemaAttribute input) {
-                    //call script
+                    Map<String,Object> m = input.getScriptMap();
+                    try{
+                        scriptEngine.eval(validate,m);
+                    }catch (ScriptException e){
+                        return ""+e.getData();
+                    }
                     return null;
                 }
             };
         }
+    }
+
+    /**
+     *
+     * @return
+     */
+    protected Map<String,Object> getParentMap(){
+        Map<String,Object> m = null;
+        if(getParent()!=null){
+            m = Objects.newHashMap();
+            m.putAll(getParent().toMap());
+            m.put("parent",getParent().getParentMap());
+            m.put("data",getParent().getData());
+        }
+        return m;
+    }
+
+    /**
+     *
+     * @return
+     */
+    protected Map<String,Object> getScriptMap(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("data", getData());
+        m.put("parent", getParentMap());
+        m.put("attr", toMap());
+        m.put("ctx", null);
+        return m;
     }
 
     /**
@@ -358,18 +403,21 @@ public abstract class ObjectSchemaAttribute<T> {
                   Map<String,Object> ctx, boolean quite)  throws ObjectSchemaValidationException{
         ObjectSchemaAttribute attribute = this;
         attribute.error = null;
+        attribute.validationCtx = ctx;
         try{
+            String name = attribute.name;
             attribute.data = data;
             //run script
             if(attribute.script!=null){
                 ObjectSchemaAttribute a1 = (ObjectSchemaAttribute)attribute.script.call(attribute);
                 if(a1!=null){
-                    a1.data = data;
-                    a1.name = attribute.name;
                     a1.setParent(attribute.parent);
                     a1.setSchema(attribute.schema);
                     attribute = a1;
                 }
+                attribute.name = name;
+                attribute.data = data;
+                attribute.validationCtx = ctx;
             }
 
             if(!attribute.nonPresent){
@@ -442,7 +490,7 @@ public abstract class ObjectSchemaAttribute<T> {
                 if(e instanceof ObjectSchemaValidationException)
                     throw new ObjectSchemaValidationException(e.getMessage(),e);
                 else
-                    throw new ObjectSchemaValidationException("Error validating attribute "+getPath(" / ")+": "+e.getMessage(),e);
+                    throw new ObjectSchemaValidationException(getPath(" / ")+": "+e.getMessage(),e);
             }
         }
         return attribute;

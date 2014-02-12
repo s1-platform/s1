@@ -21,6 +21,12 @@ import java.util.*;
  */
 public class Loggers {
 
+    /**
+     * Convert logging event to map
+     *
+     * @param e
+     * @return
+     */
     public static Map<String,Object> toMap(LoggingEvent e){
         final Map<String,Object> m = Objects.newHashMap(
                 "date",new Date(e.getTimeStamp()),
@@ -53,6 +59,7 @@ public class Loggers {
     }
 
     /**
+     * Get all log classes names
      *
      * @return
      */
@@ -73,9 +80,10 @@ public class Loggers {
     }
 
     /**
+     * Set log level
      *
-     * @param cls
-     * @param level
+     * @param cls if null, then rootLogger
+     * @param level one of ['TRACE','DEBUG','INFO','WARN','ERROR']
      */
     public static void setLogLevel(String cls, String level){
         Logger l = null;

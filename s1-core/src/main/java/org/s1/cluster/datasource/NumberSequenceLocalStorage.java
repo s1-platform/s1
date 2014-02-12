@@ -14,10 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 11:52
+ * Number sequence local implementation
  */
 public class NumberSequenceLocalStorage {
 

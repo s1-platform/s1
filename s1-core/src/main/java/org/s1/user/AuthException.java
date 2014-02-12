@@ -1,10 +1,7 @@
 package org.s1.user;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Authentication exception
  */
 public class AuthException extends Exception {
 

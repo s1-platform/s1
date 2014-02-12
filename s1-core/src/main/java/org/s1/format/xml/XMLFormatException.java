@@ -1,10 +1,7 @@
 package org.s1.format.xml;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * XML format error
  */
 public class XMLFormatException extends Exception {
 

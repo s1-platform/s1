@@ -23,14 +23,9 @@ import java.util.Enumeration;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 25.01.14
- * Time: 12:10
+ * Base class for your Web Services
  */
 public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SOAPOperation.class);
 
     @Override
     protected SOAPMessage parseInput(HttpServletRequest request) throws Exception {
@@ -58,9 +53,10 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     /**
+     * Get resource (WSDL or XSD)
      *
-     * @param path
-     * @param address
+     * @param path path to resource relative to /s1ws/ java package
+     * @param address service address - will replace ${address} in resource
      * @return
      */
     protected Document getResource(String path, String address) throws XMLFormatException{
@@ -125,10 +121,11 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     /**
+     * Get SOAPAction, try to get it from first body child name
      *
      * @param method
-     * @param params
-     * @param httpServletRequest
+     * @param msg
+     * @param request
      * @return
      */
     protected String getAction(String method, SOAPMessage msg, HttpServletRequest request){
@@ -150,6 +147,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     /**
+     * Implement business logic here
      *
      * @param action
      * @param request
@@ -169,6 +167,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     /**
+     * Get current service address
      *
      * @param request
      * @return

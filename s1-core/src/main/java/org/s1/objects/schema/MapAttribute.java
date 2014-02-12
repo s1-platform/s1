@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Map attribute
  */
 public class MapAttribute extends ObjectSchemaAttribute<Map<String, Object>> {
 
@@ -19,12 +16,24 @@ public class MapAttribute extends ObjectSchemaAttribute<Map<String, Object>> {
     MapAttribute(){
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param args
+     */
     public MapAttribute(String name, String label, ObjectSchemaAttribute... args) {
         super(name,label,"Map");
         this.attributes = Arrays.asList(args);
         updateChildSchemaAndParent();
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param args
+     */
     public MapAttribute(String name, String label, List<ObjectSchemaAttribute> args) {
         super(name, label, "Map");
         if(args!=null)
@@ -94,10 +103,18 @@ public class MapAttribute extends ObjectSchemaAttribute<Map<String, Object>> {
         return Objects.copy(m);
     }
 
+    /**
+     *
+     * @return
+     */
     public List<ObjectSchemaAttribute> getAttributes() {
         return attributes;
     }
 
+    /**
+     *
+     * @param attributes
+     */
     public void setAttributes(List<ObjectSchemaAttribute> attributes) {
         if(attributes!=null)
             this.attributes = Objects.newArrayList();

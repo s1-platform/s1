@@ -8,23 +8,24 @@ import org.slf4j.MDC;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 13:04
+ * Base class for background workers
  */
 public abstract class BackgroundWorker extends Thread {
 
-    public static final Logger LOG = LoggerFactory.getLogger(BackgroundWorker.class);
-
-    public static final Map<String,Object> DEFAULT_CONFIG = Objects.newHashMap("Interval",10000);
+    private static final Logger LOG = LoggerFactory.getLogger(BackgroundWorker.class);
 
     protected String name = null;
     protected Map<String,Object> config = null;
 
+    /**
+     * Initializing with name and config
+     *
+     * @param name
+     * @param config
+     */
     public void init(String name, Map<String,Object> config) {
         this.name = name;
-        this.config = Objects.merge(null,DEFAULT_CONFIG,config);
+        this.config = config;
         this.run = true;
         this.stopped = false;
     }
@@ -58,8 +59,14 @@ public abstract class BackgroundWorker extends Thread {
         }
     }
 
+    /**
+     * Business logic stub
+     */
     public abstract void process();
 
+    /**
+     * Stopping worker gracefully
+     */
     public void doShutdown() {
         long t = System.currentTimeMillis();
         LOG.info(""+name+" is going down now");

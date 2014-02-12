@@ -15,29 +15,35 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 23.01.14
- * Time: 18:26
+ * Base class for some web actions
  */
-public abstract class WebOperation<I,O> {
+public abstract class WebOperation<I, O> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebOperation.class);
 
     /**
      *
      */
-    protected Map<String,Object> config;
+    protected Map<String, Object> config;
 
-    public WebOperation(){
+    /**
+     *
+     */
+    public WebOperation() {
     }
 
-    public void setConfig(Map<String, Object> config){
+    /**
+     * Configuration
+     *
+     * @param config
+     */
+    public void setConfig(Map<String, Object> config) {
         this.config = config;
     }
 
     /**
      * Override this method to provide some logic
+     *
      * @param method
      * @param params
      * @param request
@@ -50,6 +56,7 @@ public abstract class WebOperation<I,O> {
 
     /**
      * Parse operation input
+     *
      * @param request
      * @return
      */
@@ -57,16 +64,18 @@ public abstract class WebOperation<I,O> {
 
     /**
      * Format operation output
+     *
      * @param out
      * @param error
      * @param request
      * @param response
      */
     protected abstract void formatOutput(O out, boolean error,
-                                HttpServletRequest request, HttpServletResponse response) throws Exception;
+                                         HttpServletRequest request, HttpServletResponse response) throws Exception;
 
     /**
      * Transform error
+     *
      * @param e
      * @param request
      * @param response
@@ -75,6 +84,7 @@ public abstract class WebOperation<I,O> {
     protected abstract O transformError(Throwable e, HttpServletRequest request, HttpServletResponse response);
 
     /**
+     * Log input params
      *
      * @param params
      */
@@ -85,7 +95,7 @@ public abstract class WebOperation<I,O> {
         }
         if (LOG.isTraceEnabled()) {
             LOG.trace("Request params: " + s);
-        }else if (LOG.isDebugEnabled()) {
+        } else if (LOG.isDebugEnabled()) {
             if (s.length() > 4000)
                 s = s.substring(0, 4000) + "...";
             LOG.debug("Request params: " + s);
@@ -93,21 +103,23 @@ public abstract class WebOperation<I,O> {
     }
 
     /**
+     * Convert input params to string
      *
      * @param params
      * @return
      */
-    protected String inToString(I params){
+    protected String inToString(I params) {
         return params.toString();
     }
 
     /**
+     * Log request
      *
      * @param method
      * @param request
      */
     protected void logRequest(String method, HttpServletRequest request) {
-        if(LOG.isDebugEnabled()){
+        if (LOG.isDebugEnabled()) {
             LOG.debug("Request started\n" +
                     "   Class: " + this.getClass().getName() + "\n" +
                     "   Method: " + method + "\n" +
@@ -119,6 +131,7 @@ public abstract class WebOperation<I,O> {
     }
 
     /**
+     * Log output data
      *
      * @param out
      */
@@ -129,7 +142,7 @@ public abstract class WebOperation<I,O> {
         }
         if (LOG.isTraceEnabled()) {
             LOG.trace("Process result: " + s);
-        }else if (LOG.isDebugEnabled()) {
+        } else if (LOG.isDebugEnabled()) {
             if (s.length() > 4000)
                 s = s.substring(0, 4000) + "...";
             LOG.debug("Process result: " + s);
@@ -137,62 +150,68 @@ public abstract class WebOperation<I,O> {
     }
 
     /**
+     * Convert output data to string
      *
      * @param out
      * @return
      */
-    protected String outToString(O out){
+    protected String outToString(O out) {
         return out.toString();
     }
 
     /**
+     * Log result
      *
      * @param time
      */
     protected void logResult(long time) {
-        if(LOG.isDebugEnabled())
+        if (LOG.isDebugEnabled())
             LOG.debug("Request finished in, ms: " + time);
     }
 
     /**
+     * Log error
      *
      * @param e
      */
     protected void logError(Throwable e) {
-        LOG.info("Request error: "+e.getMessage(), e);
+        LOG.info("Request error: " + e.getMessage(), e);
     }
 
     /**
-     *
+     * Session id cookie
      */
     public static final String COOKIE = "S1_ID";
 
     /**
+     * Run closure within session
      *
      * @param req
      * @param resp
+     * @param cl
      */
-    public static void runWithinSession(HttpServletRequest req, HttpServletResponse resp, Closure<String,Object> cl){
+    public static void runWithinSession(HttpServletRequest req, HttpServletResponse resp, Closure<String, Object> cl) {
         String id = null;
-        if(req.getCookies()!=null){
-            for(Cookie it: req.getCookies()){
-                if(COOKIE.equals(it.getName()))
+        if (req.getCookies() != null) {
+            for (Cookie it : req.getCookies()) {
+                if (COOKIE.equals(it.getName()))
                     id = it.getValue();
             }
         }
-        if(id==null){
+        if (id == null) {
             id = UUID.randomUUID().toString();
-            resp.addCookie(new Cookie(COOKIE,id));
+            resp.addCookie(new Cookie(COOKIE, id));
         }
-        try{
-            Session.run(id,cl);
-        }catch (ClosureException e){
+        try {
+            Session.run(id, cl);
+        } catch (ClosureException e) {
             throw e.toSystemError();
         }
     }
 
     /**
      * Main method, that makes request processing. Called from DispatcherServlet
+     *
      * @param method
      * @param request
      * @param response
@@ -201,7 +220,7 @@ public abstract class WebOperation<I,O> {
      */
     public void request(final String method, final HttpServletRequest request,
                         final HttpServletResponse response) throws ServletException, IOException {
-        runWithinSession(request,response,new Closure<String, Object>() {
+        runWithinSession(request, response, new Closure<String, Object>() {
             @Override
             public Object call(String input) throws ClosureException {
 
@@ -239,12 +258,13 @@ public abstract class WebOperation<I,O> {
     }
 
     /**
+     * Throws method not found
      *
      * @param method
      * @throws MethodNotFoundException
      */
-    public static void throwMethodNotFound(String method) throws MethodNotFoundException{
-        throw new MethodNotFoundException("Method "+method+" not found");
+    public static void throwMethodNotFound(String method) throws MethodNotFoundException {
+        throw new MethodNotFoundException("Method " + method + " not found");
     }
 
 }

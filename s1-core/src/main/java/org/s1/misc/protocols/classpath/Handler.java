@@ -8,10 +8,7 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
 /**
- * s1
- * User: GPykhov
- * Date: 13.11.13
- * Time: 11:40
+ * Classpath handler
  */
 public class Handler extends URLStreamHandler {
     /** The classloader to find resources from. */

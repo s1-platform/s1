@@ -1,9 +1,8 @@
 package org.s1.log;
 
 import org.s1.S1SystemError;
-import org.s1.cluster.AccessDeniedException;
+import org.s1.user.AccessDeniedException;
 import org.s1.cluster.Session;
-import org.s1.log.Loggers;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ObjectSchema;
 import org.s1.objects.schema.SimpleTypeAttribute;
@@ -15,18 +14,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 22:40
+ * WebOperation for managing log. Requires user id == 'root'
  */
 public class LogOperation extends MapWebOperation {
 
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Map<String,Object> res = Objects.newHashMap();
-        if(!Session.getSessionBean().getUserId().equals("root"))
-            throw new AccessDeniedException("You must have root access");
+        checkAccess();
         if("get".equals(method)){
             res = Loggers.getLogClasses();
         }else if("set".equals(method)){
@@ -45,7 +40,22 @@ public class LogOperation extends MapWebOperation {
         return res;
     }
 
+    /**
+     *
+     * @throws AccessDeniedException
+     */
+    protected void checkAccess() throws AccessDeniedException{
+        if(!Session.getSessionBean().getUserId().equals("root"))
+            throw new AccessDeniedException("You must have root access");
+
+    }
+
     private LogStorage storage;
+
+    /**
+     * Get log storage
+     * @return
+     */
     public synchronized LogStorage getStorage(){
         if(storage==null){
             String cls = Objects.get(config,"storageClass",LogStorage.class.getName());

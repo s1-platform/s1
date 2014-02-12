@@ -1,10 +1,7 @@
 package org.s1.misc;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 19.01.14
- * Time: 13:08
+ * Base64 utils
  */
 public class Base64 {
 
@@ -19,6 +16,11 @@ public class Base64 {
         }
     }
 
+    /**
+     *
+     * @param bytes
+     * @return
+     */
     public static String encode(byte [] bytes){
         int length = bytes.length;
         int start = 0;
@@ -70,6 +72,12 @@ public class Base64 {
         return new String(dst);
     }
 
+    /**
+     *
+     * @param base64
+     * @return
+     * @throws Base64FormatException
+     */
     public static byte [] decode(String base64) throws Base64FormatException{
         if(base64.length()%4!=0)
             throw new Base64FormatException("Bad base64 string");

@@ -3,18 +3,25 @@ package org.s1.misc;
 import java.math.BigInteger;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 19.01.14
- * Time: 13:08
+ * Hex utils
  */
 public class Hex {
 
+    /**
+     *
+     * @param bytes
+     * @return
+     */
     public static String encode(byte [] bytes){
         BigInteger bi = new BigInteger(1, bytes);
         return String.format("%0" + (bytes.length << 1) + "X", bi);
     }
 
+    /**
+     *
+     * @param hex
+     * @return
+     */
     public static byte [] decode(String hex){
         int len = hex.length();
         byte[] data = new byte[len / 2];

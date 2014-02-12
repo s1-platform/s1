@@ -277,6 +277,10 @@ public class Objects {
         return ObjectMerge.merge(args);
     }
 
+    public static Map<String, Object> merge(List<Map<String, Object>> args) {
+        return ObjectMerge.merge(args);
+    }
+
     public static List<ObjectDiff.DiffBean> diff(Map<String, Object> oldObject, Map<String, Object> newObject) {
         return ObjectDiff.diff(oldObject, newObject);
     }

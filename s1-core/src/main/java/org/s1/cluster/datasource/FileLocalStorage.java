@@ -18,16 +18,14 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 11:32
+ * Local file storage
  */
 public class FileLocalStorage {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileLocalStorage.class);
 
     /**
+     * Read file
      *
      * @param group
      * @param id
@@ -77,6 +75,7 @@ public class FileLocalStorage {
     }
 
     /**
+     * Write file
      *
      * @param group
      * @param id
@@ -109,6 +108,7 @@ public class FileLocalStorage {
     }
 
     /**
+     * Remove file
      *
      * @param group
      * @param id

@@ -111,7 +111,7 @@ public class SOAPHelperTest extends ServerTest {
     }
 
     public void testValidate(){
-        int p = 100;
+        int p = 1;
         title("Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -127,12 +127,17 @@ public class SOAPHelperTest extends ServerTest {
                         "                </SOAP-ENV:Body>\n" +
                         "                </SOAP-ENV:Envelope>";
                 SOAPMessage msg = SOAPHelper.createSoapFromString(soap);
+                SOAPHelper.writeFile(true,msg,XMLFormat.getElement(SOAPHelper.getEnvelope(msg),"Body.SignRequest.data",null),"asdf".getBytes());
+
                 String res = resourceAsString("/ws/wsdl.xml");
                 try {
                     SOAPHelper.validateMessage(XMLFormat.fromString(res),msg);
                 } catch (Exception e) {
                     throw S1SystemError.wrap(e);
                 }
+                //file ok
+                assertEquals("asdf",new String(SOAPHelper.readFile(msg,XMLFormat.getElement(SOAPHelper.getEnvelope(msg),"Body.SignRequest.data",null))));
+
 
                 //error
                 String soap2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
@@ -145,6 +150,7 @@ public class SOAPHelperTest extends ServerTest {
                         "                </SOAP-ENV:Body>\n" +
                         "                </SOAP-ENV:Envelope>";
                 SOAPMessage msg2 = SOAPHelper.createSoapFromString(soap2);
+                SOAPHelper.writeFile(true,msg2,XMLFormat.getElement(SOAPHelper.getEnvelope(msg2),"Body.SignRequest.data",null),"asdf".getBytes());
 
                 boolean b = false;
                 try {
@@ -158,6 +164,10 @@ public class SOAPHelperTest extends ServerTest {
                     throw S1SystemError.wrap(e);
                 }
                 assertTrue(b);
+
+                //file ok
+                assertEquals("asdf",new String(SOAPHelper.readFile(msg2,XMLFormat.getElement(SOAPHelper.getEnvelope(msg2),"Body.SignRequest.data",null))));
+
 
                 return null;
             }

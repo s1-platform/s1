@@ -13,9 +13,12 @@ import java.util.Map;
 
 
 /**
- * ERROR - error on DataSource
+ * Cluster Node
+ * Log levels:
+ * <pre>ERROR - error on DataSource
  * WARN - error initializing DistributedDataSource
  * INFO - start, stop, shutdownOnError
+ * </pre>
  */
 public class ClusterNode {
 
@@ -124,11 +127,12 @@ public class ClusterNode {
     }
 
     /**
+     * Call distributed data source command
      *
-     * @param cls
-     * @param command
-     * @param params
-     * @param group
+     * @param cls ditributed data source class
+     * @param command command name
+     * @param params input data
+     * @param group string identifies current input data+command, it will be used for lock
      */
     public static void call(Class<? extends DistributedDataSource> cls, String command, Map<String,Object> params, String group){
         MessageBean e = new MessageBean();

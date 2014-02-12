@@ -22,10 +22,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 13:03
+ * Dispatcher servlet. Dispatches requests between web operations. <br>
+ * Starts {@link org.s1.cluster.node.ClusterNode} on init, initializes {@link org.s1.misc.protocols.classpath.Handler}<br>
+ * Stops Hazelcast and ClusterNode on shutdown.<br>
+ * <pre>
+ * &lt;!-- Main dispatcher servlet. Serves business logic of application. -->
+ * &lt;servlet>
+ *  &lt;servlet-name>dispatcher&lt;/servlet-name>
+ *  &lt;servlet-class>org.s1.weboperation.DispatcherServlet&lt;/servlet-class>
+ *  &lt;load-on-startup>1&lt;/load-on-startup>
+ * &lt;/servlet>
+ * &lt;servlet-mapping>
+ *  &lt;servlet-name>dispatcher&lt;/servlet-name>
+ *  &lt;url-pattern>/dispatcher/*&lt;/url-pattern>
+ * &lt;/servlet-mapping>
+ * </pre>
  */
 @MultipartConfig
 public class DispatcherServlet extends HttpServlet {
@@ -51,25 +62,13 @@ public class DispatcherServlet extends HttpServlet {
         super.destroy();
     }
 
-    /**
-     *
-     * @param request
-     * @param response
-     * @throws javax.servlet.ServletException
-     * @throws java.io.IOException
-     */
+    @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
         process(request, response);
     }
 
-    /**
-     *
-     * @param request
-     * @param response
-     * @throws javax.servlet.ServletException
-     * @throws IOException
-     */
+    @Override
     protected void doPost(HttpServletRequest request,
                           HttpServletResponse response) throws ServletException, IOException {
         process(request, response);
@@ -77,6 +76,7 @@ public class DispatcherServlet extends HttpServlet {
 
     /**
      * Get method from request.
+     *
      * @param request
      * @return
      */
@@ -98,9 +98,11 @@ public class DispatcherServlet extends HttpServlet {
     private static Map<String,WebOperation> cache = new ConcurrentHashMap<String, WebOperation>();
 
     /**
-     * Override this method to add new weboperations or override existing
+     * Get WebOperation by name
+     *
      * @param name
      * @return
+     * @throws WebOperationNotFoundException
      */
     public static WebOperation getOperationByName(final String name) throws WebOperationNotFoundException{
         if(!cache.containsKey(name)){
@@ -129,8 +131,10 @@ public class DispatcherServlet extends HttpServlet {
 
     /**
      * Get operation from request
+     *
      * @param request
      * @return
+     * @throws WebOperationNotFoundException
      */
     protected WebOperation getOperation(HttpServletRequest request) throws WebOperationNotFoundException{
         String uri = request.getRequestURI();
@@ -148,7 +152,9 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     /**
-     * Process GET|POST request
+     * Process GET|POST request: get {@link org.s1.weboperation.WebOperation},
+     * and call {@link org.s1.weboperation.WebOperation#request(String, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+     *
      * @param request
      * @param response
      * @throws javax.servlet.ServletException

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 public class Locks {
 
     /**
+     *
      * @param lockId
      * @param closure
      * @param timeout
@@ -41,6 +42,8 @@ public class Locks {
     }
 
     /**
+     * Run only if there is not other lock
+     *
      * @param lockId
      * @param closure
      * @return

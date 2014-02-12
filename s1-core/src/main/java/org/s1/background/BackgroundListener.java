@@ -1,5 +1,9 @@
 package org.s1.background;
 
+import com.hazelcast.core.Hazelcast;
+import org.s1.S1SystemError;
+import org.s1.cluster.node.ClusterNode;
+import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -11,17 +15,30 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 13:03
+ * Background servlet listener. Workers list is described in system options on path 'backgroundWorkers'
+ * <pre>backgroundWorkers = [{
+ *     name:"... default is Worker#i ...",
+ *     class:"...subclass of {@link org.s1.background.BackgroundWorker} ...",
+ *     config:{...configuration...}
+ * },...]</pre>
  */
 public class BackgroundListener implements ServletContextListener {
-    public static final Logger LOG = LoggerFactory.getLogger(BackgroundListener.class);
+
+    private static final Logger LOG = LoggerFactory.getLogger(BackgroundListener.class);
+
     private Map<String,BackgroundWorker> workers = null;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        //start cluster node
+        Init.init();
+        try{
+            ClusterNode.start();
+        }catch (Exception e){
+            LOG.error("Cannot start ClusterNode: "+e.getMessage(),e);
+            throw S1SystemError.wrap(e);
+        }
+
         if (workers == null) {
             List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
             workers = Objects.newHashMap();
@@ -55,6 +72,10 @@ public class BackgroundListener implements ServletContextListener {
             }
         }
         workers = null;
+
+        //stop
+        ClusterNode.stop();
+        Hazelcast.shutdownAll();
     }
 
 }

@@ -1,13 +1,16 @@
 package org.s1;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 23.01.14
- * Time: 14:57
+ * System error
  */
 public class S1SystemError extends RuntimeException {
 
+    /**
+     * Wrap exception with system error
+     *
+     * @param e
+     * @return
+     */
     public static S1SystemError wrap(Throwable e){
         return new S1SystemError(e.getMessage(),e);
     }

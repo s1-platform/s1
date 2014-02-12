@@ -7,16 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Reference attribute
  */
 public class ReferenceAttribute extends ObjectSchemaAttribute<Map<String,Object>> {
 
     ReferenceAttribute(){
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param type
+     */
     public ReferenceAttribute(String name, String label, String type) {
         super(name,label,type);
     }

@@ -16,10 +16,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 10.01.14
- * Time: 11:47
+ * Test app server
  */
 public abstract class TestAppServer implements Runnable{
 

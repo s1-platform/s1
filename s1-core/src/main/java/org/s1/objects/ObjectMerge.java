@@ -16,6 +16,26 @@ public class ObjectMerge {
      * @param args
      * @return
      */
+    static Map<String, Object> merge(List<Map<String, Object>> args) {
+        if (args.size() > 1) {
+            Map<String, Object> obj = args.get(0);
+            for (int i = 1; i < args.size(); i++) {
+                obj = mergeTwo(obj, args.get(i));
+            }
+            return obj;
+        } else if (args.size() == 1) {
+            return args.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Merge maps right map override left map
+     *
+     * @param args
+     * @return
+     */
     static Map<String, Object> merge(Map<String, Object>... args) {
         if (args.length > 1) {
             Map<String, Object> obj = args[0];

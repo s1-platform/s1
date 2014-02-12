@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Iterator over JBF structures
+ * Iterator over Map-List-Object structures
  */
 public class ObjectIterator {
 
