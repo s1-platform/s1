@@ -29,24 +29,46 @@ public class Cache {
     private Map<String,Object> locks = new HashMap<String,Object>();
     private static final String LOCK_ALL = "__ALL_LOCK__";
 
+    /**
+     *
+     * @param capacity maximum number of records in cache
+     */
     public Cache(int capacity){
         this.capacity = capacity;
     }
 
+    /**
+     *
+     * @param capacity maximum number of records in cache
+     * @param ttl record lifetime
+     * @param tu record lifetime units
+     */
     public Cache(int capacity, long ttl, TimeUnit tu){
         this.capacity = capacity;
         this.ttl = ttl;
         this.tu = tu;
     }
 
+    /**
+     *
+     * @return
+     */
     public Map<String,Object> getCache(){
         return Objects.copy(cache);
     }
 
+    /**
+     * Get statistics 'name':'gets count'
+     *
+     * @return
+     */
     public Map<String,Long> getGetsStat(){
         return Objects.copy(gets);
     }
 
+    /**
+     *
+     */
     protected void lockAll(){
         while(true){
             synchronized (locks){
@@ -63,12 +85,19 @@ public class Cache {
         }
     }
 
+    /**
+     *
+     */
     protected void unlockAll(){
         synchronized (locks){
             locks.remove(LOCK_ALL);
         }
     }
 
+    /**
+     *
+     * @param name
+     */
     protected void lock(String name){
         while(true){
             synchronized (locks){
@@ -85,12 +114,19 @@ public class Cache {
         }
     }
 
+    /**
+     *
+     * @param name
+     */
     protected void unlock(String name){
         synchronized (locks){
             locks.remove(name);
         }
     }
 
+    /**
+     *
+     */
     protected void checkSize(){
         lockAll();
         try{
@@ -119,11 +155,7 @@ public class Cache {
                 long g = gets.get(key);
                 long cr = created.get(key);
                 Double weight = getWeight(cr,g,createdMax,createdMin,getsMax,getsMin);
-                //if("test0".equals(key))
-                    //System.out.println(g+":"+weight);
                 weights.put(key, weight);
-                //if("test0".equals(key))
-                //    System.out.println(weight);
                 int pos = 0;
                 for(Double w:sortedWeights){
                     if(weight<w)
@@ -133,9 +165,6 @@ public class Cache {
                 sortedWeights.add(pos,weight);
                 sorted.add(pos,key);
             }
-            //System.out.println("---------------");
-            //System.out.println(sorted);
-            //System.out.println(sortedWeights);
 
             //check size
             while(cache.size()>(capacity-(int)(capacity*0.2D))){
@@ -150,6 +179,16 @@ public class Cache {
         }
     }
 
+    /**
+     *
+     * @param created
+     * @param gets
+     * @param createdMax
+     * @param createdMin
+     * @param getsMax
+     * @param getsMin
+     * @return
+     */
     protected double getWeight(long created, long gets, long createdMax, long createdMin, long getsMax, long getsMin){
         double weightGets = 0.8D;
         double weightCreated = 0.2D;
@@ -163,11 +202,12 @@ public class Cache {
     }
 
     /**
+     * Get record from cache
      *
-     * @param name
-     * @param closure
-     * @param <T>
-     * @return
+     * @param name record name
+     * @param closure if record not present initialize it with closure
+     * @param <T> type of record
+     * @return record
      */
     public <T> T get(String name, Closure<String,T> closure){
         T obj = null;
@@ -206,6 +246,7 @@ public class Cache {
     }
 
     /**
+     * Get record and cast it with {@link org.s1.objects.Objects#cast(Object, Class)}
      *
      * @param cls
      * @param name
@@ -217,6 +258,11 @@ public class Cache {
         return Objects.cast(get(name,closure),cls);
     }
 
+    /**
+     * Invalidate record
+     *
+     * @param name
+     */
     public void invalidate(String name){
         lock(name);
         try{
@@ -228,6 +274,9 @@ public class Cache {
         }
     }
 
+    /**
+     * Invalidate all cache
+     */
     public void invalidateAll(){
         lockAll();
         try{
