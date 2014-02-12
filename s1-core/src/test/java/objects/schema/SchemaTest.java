@@ -553,7 +553,7 @@ public class SchemaTest extends BasicTest{
     public static class TestComplexType extends ComplexType{
         @Override
         public Map<String, Object> expand(Map<String, Object> m, boolean expand) throws Exception {
-            m.put("y",m.get("x")+"_"+cfg.get("a"));
+            m.put("y",m.get("x")+"_"+ config.get("a"));
             if(expand)
                 m.put("z",m.get("x")+"_1234");
             return m;

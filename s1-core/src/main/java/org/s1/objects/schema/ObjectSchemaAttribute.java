@@ -13,10 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Base class for schema attributes
  */
 public abstract class ObjectSchemaAttribute<T> {
 

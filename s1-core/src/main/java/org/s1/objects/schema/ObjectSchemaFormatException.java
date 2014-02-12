@@ -1,10 +1,7 @@
 package org.s1.objects.schema;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Object schema format exception
  */
 public class ObjectSchemaFormatException extends Exception {
 

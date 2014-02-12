@@ -5,23 +5,28 @@ import org.s1.objects.Objects;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 13.01.14
- * Time: 21:20
+ * Base type for complex types
  */
 public abstract class ComplexType {
 
-    protected Map<String,Object> cfg = Objects.newHashMap();
+    protected Map<String,Object> config = Objects.newHashMap();
 
-    public Map<String, Object> getCfg() {
-        return cfg;
+    /**
+     *
+     * @return
+     */
+    public Map<String, Object> getConfig() {
+        return config;
     }
 
-    public void setCfg(Map<String, Object> cfg) {
-        if(cfg==null)
-            cfg = Objects.newHashMap();
-        this.cfg = cfg;
+    /**
+     *
+     * @param config
+     */
+    public void setConfig(Map<String, Object> config) {
+        if(config ==null)
+            config = Objects.newHashMap();
+        this.config = config;
     }
 
     /**

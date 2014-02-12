@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * JBF diff helper
+ * Object diff helper
  */
 public class ObjectDiff {
 

@@ -5,16 +5,19 @@ import org.s1.objects.Objects;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 17:17
+ * Simple type attribute
  */
 public class SimpleTypeAttribute extends ObjectSchemaAttribute<Object> {
 
     SimpleTypeAttribute(){
     }
 
+    /**
+     *
+     * @param name
+     * @param label
+     * @param type
+     */
     public SimpleTypeAttribute(String name, String label, Class type) {
         super(name,label,type.getSimpleName());
         this.type = Objects.resolveType(this.type).getSimpleName();

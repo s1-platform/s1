@@ -10,10 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 22:40
+ * Web operation for object schema validating
  */
 public class ObjectSchemaWebOperation extends MapWebOperation {
 
