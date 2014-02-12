@@ -1,10 +1,7 @@
 package org.s1.misc;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Base64 format error
  */
 public class Base64FormatException extends Exception {
 

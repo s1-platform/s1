@@ -1,10 +1,7 @@
 package org.s1.format.json;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * JSON format error
  */
 public class JSONFormatException extends Exception {
 

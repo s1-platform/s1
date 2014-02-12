@@ -1,14 +1,9 @@
 package org.s1.misc;
 
-import org.s1.S1SystemError;
-
 import java.io.*;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 13:35
+ * File utils
  */
 public class FileUtils {
 

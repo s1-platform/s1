@@ -4,10 +4,7 @@ import javax.servlet.*;
 import java.io.IOException;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 11.01.14
- * Time: 13:06
+ * Web charset encoding filter
  */
 public class CharsetEncodingFilter implements Filter {
 

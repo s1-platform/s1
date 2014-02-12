@@ -5,22 +5,35 @@ import java.nio.charset.Charset;
 import java.util.Scanner;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 17.01.14
- * Time: 12:24
+ * IO utils
  */
 public class IOUtils {
 
+    /**
+     *
+     * @param b
+     * @param charset
+     * @return
+     */
     public static String toString(byte[] b, String charset) {
         return new String(b, Charset.forName(charset));
     }
 
+    /**
+     *
+     * @param is
+     * @param charset
+     * @return
+     */
     public static String toString(InputStream is, String charset) {
         Scanner s = new Scanner(is, charset).useDelimiter("\\A");
         return s.hasNext() ? s.next() : null;
     }
 
+    /**
+     *
+     * @param closeable
+     */
     public static void closeQuietly(Closeable closeable) {
         try {
             if (closeable != null) {
@@ -31,6 +44,13 @@ public class IOUtils {
         }
     }
 
+    /**
+     *
+     * @param is
+     * @param os
+     * @return
+     * @throws IOException
+     */
     public static long copy(InputStream is, OutputStream os) throws IOException {
         byte buffer[] = new byte[4096];
         long count = 0;
@@ -42,6 +62,15 @@ public class IOUtils {
         return count;
     }
 
+    /**
+     *
+     * @param is
+     * @param os
+     * @param offset
+     * @param length
+     * @return
+     * @throws IOException
+     */
     public static long copy(InputStream is, OutputStream os, long offset, long length) throws IOException {
         if (offset > 0) {
             //skip
