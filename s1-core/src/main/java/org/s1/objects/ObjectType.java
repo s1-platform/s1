@@ -72,10 +72,7 @@ public class ObjectType {
         } else if (type == BigDecimal.class) {
             if (obj == null)
                 obj = "0";
-            if(obj instanceof Number){
-                obj = new BigDecimal(((Number) obj).doubleValue());
-            }else
-                obj = new BigDecimal("" + obj);
+            obj = new BigDecimal("" + obj);
         } else if (type == Integer.class) {
             if (obj == null)
                 obj = "0";
