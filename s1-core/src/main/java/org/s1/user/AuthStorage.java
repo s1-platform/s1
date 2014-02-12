@@ -1,13 +1,17 @@
 package org.s1.user;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 25.01.14
- * Time: 11:27
+ * Authentication data storage
  */
 public class AuthStorage {
 
+    /**
+     * Must return id of found user
+     *
+     * @param name userName
+     * @param password password
+     * @return user id or null if not found
+     */
     public String auth(String name, String password){
         return null;
     }

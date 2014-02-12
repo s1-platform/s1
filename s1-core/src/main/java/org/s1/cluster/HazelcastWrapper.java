@@ -17,7 +17,7 @@ import java.io.InputStream;
  * Hazelcast wrapper, helps you to build hazelcast config, xml find order:
  * <ol>
  * <li>'HazelcastConfig' options parameter - defines full path to xml config file</li>
- * <li>Looks in default for current OptionsStorage place for config with name 'hazelcast.xml'</li>
+ * <li>Looks in default for current OptionsStorage place for config with name 'Hazelcast.xml'</li>
  * <li>Instantiate default Config</li>
  * </ol>
  */
@@ -27,9 +27,20 @@ public class HazelcastWrapper {
 
     private static HazelcastInstance hazelcastInstance = null;
 
+    /**
+     * Default options path 'hazelcastXMLConfigFilePath'
+     */
     public static final String XML_CONFIG_FILE_PATH = "hazelcastXMLConfigFilePath";
+
+    /**
+     * Hazelcast.xml
+     */
     public static final String DEFAULT_FILENAME = "Hazelcast.xml";
 
+    /**
+     *
+     * @return
+     */
     public static synchronized HazelcastInstance getInstance(){
         if(hazelcastInstance!=null && !hazelcastInstance.getLifecycleService().isRunning())
             hazelcastInstance = null;

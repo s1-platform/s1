@@ -9,10 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * LOG levels:
+ * Cluster node message listener.
+ * <pre>LOG levels:
  * INFO - started,stopped;
  * DEBUG - every message except params;
- * TRACE - every message with params;
+ * TRACE - every message with params;</pre>
  */
 class NodeMessageListener{
     private static final Logger LOG = LoggerFactory.getLogger(NodeMessageListener.class);

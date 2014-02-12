@@ -12,10 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 24.01.14
- * Time: 22:40
+ * Standard login/password authentication operation
  */
 public class AuthOperation extends MapWebOperation {
 
@@ -51,6 +48,12 @@ public class AuthOperation extends MapWebOperation {
     }
 
     private AuthStorage storage;
+
+    /**
+     * Gets authentication data storage
+     *
+     * @return
+     */
     public synchronized AuthStorage getStorage(){
         if(storage==null){
             String cls = Objects.get(config,"storageClass",LogStorage.class.getName());

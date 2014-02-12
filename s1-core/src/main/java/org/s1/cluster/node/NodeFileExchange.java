@@ -22,14 +22,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * s1
- * User: GPykhov
- * Date: 21.12.13
- * Time: 13:17
+ * Cluster file exchange server and client
  */
 public class NodeFileExchange {
     private static final Logger LOG = LoggerFactory.getLogger(NodeFileExchange.class);
 
+    /**
+     *
+     * @return
+     */
     private static int getPortMax(){
         int port = Options.getStorage().getSystem("cluster.filePortMax", 0);
         if(port<=0 || port>=65535){
@@ -38,6 +39,11 @@ public class NodeFileExchange {
         return port;
     }
 
+    /**
+     *
+     * @param portMax
+     * @return
+     */
     private static int getPortMin(int portMax){
         int port = Options.getStorage().getSystem("cluster.filePortMin", 0);
         if(port<=0 || port>=65535){
@@ -48,6 +54,12 @@ public class NodeFileExchange {
         return port;
     }
 
+    /**
+     *
+     * @param nodeId
+     * @param threads
+     * @param address
+     */
     NodeFileExchange(String nodeId, int threads, String address){
         this.nodeId = nodeId;
         if(threads<=0)
@@ -69,7 +81,7 @@ public class NodeFileExchange {
     private ServerSocket serverSocket;
 
     /**
-     *
+     * Start server
      */
     synchronized void start() throws BindException{
         if(status.equals("started"))
@@ -105,7 +117,7 @@ public class NodeFileExchange {
     }
 
     /**
-     *
+     * Stop file server
      */
     synchronized void stop(){
         if(status.equals("stopped"))
@@ -200,6 +212,7 @@ public class NodeFileExchange {
     }
 
     /**
+     * Request for file from cluster
      *
      * @param group
      * @param id
@@ -273,6 +286,9 @@ public class NodeFileExchange {
             }
     }
 
+    /**
+     *
+     */
     private static class FileRequestBean implements Serializable{
         private String nodeId;
         private String id;
@@ -301,6 +317,9 @@ public class NodeFileExchange {
         }
     }
 
+    /**
+     * Get file bean
+     */
     public static class GetFileBean implements Serializable{
         private InputStream inputStream;
         private long size;
@@ -319,6 +338,9 @@ public class NodeFileExchange {
         }
     }
 
+    /**
+     *
+     */
     private static class FileResponseBean implements Serializable{
         private String nodeId;
         private String id;

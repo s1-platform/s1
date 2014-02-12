@@ -18,13 +18,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * Node queue worker
+ * <pre>
  * INFO - start, stop
  * DEBUG - queue worker started, stopped, message
- * TRACE - message with params
+ * TRACE - message with params</pre>
  */
 class NodeQueueWorker {
     private static final Logger LOG = LoggerFactory.getLogger(NodeQueueWorker.class);
 
+    /**
+     *
+     * @param nodeId
+     * @param threads
+     * @param transactionPriority
+     * @param priorityTable
+     */
     NodeQueueWorker(String nodeId, int threads, double transactionPriority, Map<String,Double> priorityTable){
         this.nodeId = nodeId;
         if(threads>0)

@@ -18,10 +18,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 20.01.14
- * Time: 14:33
+ * Distributed file storage - use it for storing files, internally uses {@link org.s1.cluster.datasource.FileLocalStorage}
  */
 public class FileStorage extends DistributedDataSource {
 
@@ -94,14 +91,43 @@ public class FileStorage extends DistributedDataSource {
         return localStorage;
     }
 
+    /**
+     *
+     * @param cls
+     * @param group
+     * @param id
+     * @param cl
+     * @param <T>
+     * @return
+     * @throws NotFoundException
+     * @throws ClosureException
+     */
     public static <T> T read(Class<T> cls, String group, String id, Closure<FileReadBean,T> cl) throws NotFoundException, ClosureException{
         return Objects.cast(read(group,id,cl),cls);
     }
 
+    /**
+     *
+     * @param group
+     * @param id
+     * @param cl
+     * @param <T>
+     * @return
+     * @throws NotFoundException
+     * @throws ClosureException
+     */
     public static <T> T read(String group, String id, Closure<FileReadBean,T> cl) throws NotFoundException, ClosureException {
         return getLocalStorage().read(group,id,cl);
     }
 
+    /**
+     *
+     * @param group
+     * @param id
+     * @param closure
+     * @param meta
+     * @throws ClosureException
+     */
     public static void write(String group, String id, Closure<OutputStream,Boolean> closure, FileMetaBean meta) throws ClosureException{
         getLocalStorage().write(group, id, closure, meta);
         ClusterNode.call(FileStorage.class,"write",Objects.newHashMap(String.class,Object.class,
@@ -111,6 +137,11 @@ public class FileStorage extends DistributedDataSource {
                 "meta",meta),group+":"+id);
     }
 
+    /**
+     *
+     * @param group
+     * @param id
+     */
     public static void remove(String group, String id){
         ClusterNode.call(FileStorage.class, "remove", Objects.newHashMap(String.class,Object.class,
                 "group",group,
@@ -118,6 +149,9 @@ public class FileStorage extends DistributedDataSource {
         ),group+":"+id);
     }
 
+    /**
+     *
+     */
     public static class FileMetaBean implements Serializable{
 
         private String name;
@@ -231,6 +265,9 @@ public class FileStorage extends DistributedDataSource {
         }
     }
 
+    /**
+     *
+     */
     public static class FileReadBean{
         private InputStream inputStream;
         private FileMetaBean meta;

@@ -12,10 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * s1
- * User: GPykhov
- * Date: 21.12.13
- * Time: 13:18
+ * Transactions wrapper for distributed data source commands
  */
 public class Transactions {
     private static final Logger LOG = LoggerFactory.getLogger(Transactions.class);
@@ -27,7 +24,7 @@ public class Transactions {
     private static final Map<String,LogBean> transactionLog = new ConcurrentHashMap<String, LogBean>();
 
     /**
-     *
+     * Check if you`re in transaction
      * @return
      */
     public static boolean isInTransaction(){
@@ -45,6 +42,7 @@ public class Transactions {
 
     /**
      * All operation calls will be combined in one atomic transaction
+     *
      * @param closure
      * @return
      */
@@ -97,14 +95,16 @@ public class Transactions {
     }
 
     /**
-      
      * @param b
      */
-    public static void addOperation(CommandBean b){
+    static void addOperation(CommandBean b){
         String id = local.get();
         transactionLog.get(id).getList().add(b);
     }
 
+    /**
+     *
+     */
     private static class LogBean{
         private List<CommandBean> list = Objects.newArrayList();
 

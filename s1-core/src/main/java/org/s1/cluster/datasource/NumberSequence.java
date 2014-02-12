@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- *
+ * Distributed number sequence
  */
 public class NumberSequence extends DistributedDataSource {
 
