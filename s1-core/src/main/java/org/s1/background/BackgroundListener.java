@@ -1,5 +1,9 @@
 package org.s1.background;
 
+import com.hazelcast.core.Hazelcast;
+import org.s1.S1SystemError;
+import org.s1.cluster.node.ClusterNode;
+import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -26,6 +30,15 @@ public class BackgroundListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        //start cluster node
+        Init.init();
+        try{
+            ClusterNode.start();
+        }catch (Exception e){
+            LOG.error("Cannot start ClusterNode: "+e.getMessage(),e);
+            throw S1SystemError.wrap(e);
+        }
+
         if (workers == null) {
             List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
             workers = Objects.newHashMap();
@@ -59,6 +72,10 @@ public class BackgroundListener implements ServletContextListener {
             }
         }
         workers = null;
+
+        //stop
+        ClusterNode.stop();
+        Hazelcast.shutdownAll();
     }
 
 }
