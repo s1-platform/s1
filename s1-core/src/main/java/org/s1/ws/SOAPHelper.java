@@ -2,6 +2,7 @@ package org.s1.ws;
 
 import org.s1.S1SystemError;
 import org.s1.format.xml.XMLFormat;
+import org.s1.format.xml.XMLFormatException;
 import org.s1.format.xml.XSDFormatException;
 import org.s1.format.xml.XSDValidationException;
 import org.s1.misc.Base64;
@@ -30,6 +31,12 @@ public class SOAPHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(SOAPHelper.class);
 
+    /**
+     * Create message from string
+     *
+     * @param soap
+     * @return
+     */
     public static SOAPMessage createSoapFromString(String soap){
         try{
             MessageFactory messageFactory = MessageFactory.newInstance();
@@ -39,6 +46,12 @@ public class SOAPHelper {
         }
     }
 
+    /**
+     * Get envelope element quite
+     *
+     * @param m
+     * @return
+     */
     public static Element getEnvelope(SOAPMessage m){
         try{
             return m.getSOAPPart().getEnvelope();
@@ -48,6 +61,7 @@ public class SOAPHelper {
     }
 
     /**
+     * Create message from stream with headers
      *
      * @param headers
      * @param is
@@ -68,47 +82,49 @@ public class SOAPHelper {
         }
     }
 
+    /**
+     * Validate message on wsdl
+     *
+     * @param wsdl
+     * @param msg
+     * @throws XSDFormatException
+     * @throws XSDValidationException
+     */
     public static void validateMessage(Document wsdl, SOAPMessage msg) throws XSDFormatException, XSDValidationException{
         LOG.debug("Validating message on WSDL");
 
-        //replace base64Binary with xsd:any
-        /*NodeList elementNodeSet = wsdl.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema","element");
-        for(int i=0;i<elementNodeSet.getLength();i++){
-            if(elementNodeSet.item(i) instanceof Element){
-                Element element = (Element)elementNodeSet.item(i);
-                if(element.getAttribute("type").endsWith("base64Binary")){
-                    Element ct = wsdl.createElementNS("http://www.w3.org/2001/XMLSchema","complexType");
-                    Element seq = wsdl.createElementNS("http://www.w3.org/2001/XMLSchema","sequence");
-                    Element any = wsdl.createElementNS("http://www.w3.org/2001/XMLSchema","any");
-                    ct.appendChild(seq);
-                    ct.setAttribute("mixed","true");
-                    seq.appendChild(any);
-                    seq.setAttribute("minOccurs","0");
-                    seq.setAttribute("maxOccurs","unbounded");
-                    element.appendChild(ct);
-                    element.removeAttribute("type");
-                    any.setAttribute("processContents","skip");
-                }
-
-            }
-        }*/
-        if(msg.getAttachments().hasNext())
-            return;
-
         //get schema
         Element schemaNode = (Element)wsdl.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema","schema").item(0);
-        Element el = null;
-        try{
-            el = XMLFormat.getFirstChildElement(msg.getSOAPBody(), null, null);
-        }catch (SOAPException e){
+
+        //get body
+        Element body = null;
+        try {
+            body = msg.getSOAPBody();
+        } catch (SOAPException e) {
             throw S1SystemError.wrap(e);
         }
-        XMLFormat.validate(schemaNode, el);
+
+        if(msg.getAttachments().hasNext()){
+            //copy
+            body = (Element)body.cloneNode(true);
+            //remove xop:Includes
+            NodeList nl = body.getElementsByTagNameNS("http://www.w3.org/2004/08/xop/include","Include");
+            for(int i=0;i<nl.getLength();i++){
+                Node n = nl.item(i);
+                n.getParentNode().removeChild(n);
+            }
+        }
+
+        //validate Body children
+        for(Element el:XMLFormat.getChildElementList(body,null,null)){
+            XMLFormat.validate(schemaNode, el);
+        }
     }
 
     /**
+     * Send message
      *
-     * @param endpoint
+     * @param endpoint service address
      * @param data
      * @return
      */
@@ -144,6 +160,7 @@ public class SOAPHelper {
     }
 
     /**
+     * Read binary data from element (base64 or xop:Include)
      *
      * @param msg
      * @param el
@@ -168,7 +185,6 @@ public class SOAPHelper {
                 }
             }
         }else{
-            //LOG.debug("Reading base64 file")
             String b = el.getTextContent();
             try{
                 data = Base64.decode(b);
@@ -182,6 +198,7 @@ public class SOAPHelper {
     }
 
     /**
+     * Write binary data to message as base64 or xop:Include depending on mtom parameter.
      *
      * @param mtom
      * @param msg
@@ -210,6 +227,7 @@ public class SOAPHelper {
     }
 
     /**
+     * Convert message envelope xml to string
      *
      * @param msg
      * @return
@@ -217,13 +235,11 @@ public class SOAPHelper {
     public static String toString(SOAPMessage msg){
         if(msg==null)
             return null;
-        //ByteArrayOutputStream os = new ByteArrayOutputStream();
-        //msg.writeTo(os);
-        //return new String(os.toByteArray(),"UTF-8");
         return XMLFormat.toString(msg.getSOAPPart().getDocumentElement());
     }
 
     /**
+     * Write message with attachments to stream
      *
      * @param msg
      * @return
