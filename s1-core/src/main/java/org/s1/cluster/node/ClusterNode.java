@@ -160,6 +160,16 @@ public class ClusterNode {
     }
 
     /**
+     * Wait for group is flushed from queue
+     *
+     * @param cls
+     * @param group
+     */
+    public static void flush(Class<? extends DistributedDataSource> cls, String group){
+        queueWorker.flush(cls,group);
+    }
+
+    /**
      *
      * @param e
      */
