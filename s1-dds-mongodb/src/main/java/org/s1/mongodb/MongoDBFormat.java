@@ -33,6 +33,12 @@ public class MongoDBFormat {
             @Override
             public Object call(ObjectIterator.IterateBean input) throws ClosureException {
                 Object o = input.getValue();
+                if(o instanceof Map){
+                    Map m = (Map)o;
+                    if(m.containsKey("$date") && m.size()==1){
+                        o = m.get("$date");
+                    }
+                }
                 /*if(o instanceof Integer || o instanceof Long){
                     o = Objects.cast(o,BigInteger.class);
                 }else if(o instanceof Float || o instanceof Double){

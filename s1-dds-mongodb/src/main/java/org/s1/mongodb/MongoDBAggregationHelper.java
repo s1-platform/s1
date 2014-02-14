@@ -1,8 +1,6 @@
 package org.s1.mongodb;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
+import com.mongodb.*;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,16 +47,16 @@ public class MongoDBAggregationHelper {
         AggregationOutput out = coll.aggregate(new BasicDBObject("$match", s),
                 new BasicDBObject("$group", gr));
 
-        List<Map<String, Object>> l = (List<Map<String, Object>>) out.getCommandResult().get("result");
-        Map<String,Object> res = Objects.newHashMap();
+        BasicDBList l = (BasicDBList) out.getCommandResult().get("result");
+        DBObject res = new BasicDBObject();
         if(l.size()>0){
-            res = l.get(0);
-            res.remove("_id");
+            res = (DBObject)l.get(0);
+            res.removeField("_id");
         }
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB aggregation result ("+"instance: "+instance+", collection: "+collection+", search: "+search+
                     ") \n\t> "+res);
-        return res;
+        return MongoDBFormat.toMap(res);
     }
 
     /**
@@ -75,7 +73,7 @@ public class MongoDBAggregationHelper {
      * @param collection
      * @param field
      * @param search
-     * @return [{_id, count},...]
+     * @return [{value, count},...]
      */
     public static List<Map<String, Object>> countGroup(String instance, String collection,
                                                        String field, Map<String, Object> search){
@@ -95,11 +93,18 @@ public class MongoDBAggregationHelper {
         AggregationOutput out = coll.aggregate(new BasicDBObject("$match", s),
                 new BasicDBObject("$group", group));
 
-        List<Map<String,Object>> result = (List<Map<String, Object>>) out.getCommandResult().get("result");
+        List<Map<String,Object>> result = Objects.newArrayList();
+                BasicDBList result_list = (BasicDBList) out.getCommandResult().get("result");
+        for(Object o:result_list){
+            DBObject dbo = (DBObject)o;
+            dbo.put("value",dbo.get("_id"));
+            dbo.removeField("_id");
+            result.add(MongoDBFormat.toMap(dbo));
+        }
 
         //regroup
         if (result.size() > GROUP_COUNT) {
-            final Object probe = result.get(0).get("_id");
+            final Object probe = result.get(0).get("value");
 
             if(LOG.isDebugEnabled())
                 LOG.debug("Count group probe: "+probe.getClass().getName());
@@ -143,7 +148,7 @@ public class MongoDBAggregationHelper {
             } else {
                 List<Map<String,Object>> result2 = Objects.newArrayList();
                 for(Map<String,Object> o:result){
-                    if(o.get("_id")!=null){
+                    if(o.get("value")!=null){
                         result2.add(o);
                     }
                 }
@@ -154,8 +159,8 @@ public class MongoDBAggregationHelper {
                     @Override
                     public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                         if(probe instanceof Date){
-                            long n1 = Objects.get(Date.class, o1,"_id").getTime();
-                            long n2 = Objects.get(Date.class, o2,"_id").getTime();
+                            long n1 = Objects.get(Date.class, o1,"value").getTime();
+                            long n2 = Objects.get(Date.class, o2,"value").getTime();
                             if(n1>n2){
                                 return 1;
                             }else if(n1==n2){
@@ -164,8 +169,8 @@ public class MongoDBAggregationHelper {
                                 return -1;
                             }
                         }else if(probe instanceof Number){
-                            double n1 = Objects.get(Number.class,o1,"_id").doubleValue();
-                            double n2 = Objects.get(Number.class,o2,"_id").doubleValue();
+                            double n1 = Objects.get(Number.class,o1,"value").doubleValue();
+                            double n2 = Objects.get(Number.class,o2,"value").doubleValue();
                             if(n1>n2){
                                 return 1;
                             }else if(n1==n2){
@@ -178,10 +183,10 @@ public class MongoDBAggregationHelper {
                     }
                 });
 
-                Object max = result.get(result.size() - 1).get("_id");
-                Object min = result.get(0).get("_id");
+                Object max = result.get(result.size() - 1).get("value");
+                Object min = result.get(0).get("value");
 
-                Map<String,Long> resultMap = Objects.newHashMap();
+                Map<String,Map<String,Object>> resultMap = Objects.newHashMap();
                 //make range
                 if (probe instanceof Date) {
                     //
@@ -194,7 +199,7 @@ public class MongoDBAggregationHelper {
 
                     int calStep = Calendar.SECOND;
                     int calStepSize = 1;
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     if ((86400000L * 365) <= step) {
                         calStep = Calendar.YEAR;
                         cal.set(Calendar.MONTH, 0);
@@ -208,7 +213,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("MM.yyyy");
+                        sdf = new SimpleDateFormat("yyyy-MM");
                     } else if ((86400000L * 30) <= step) {
                         calStep = Calendar.MONTH;
                         cal.set(Calendar.DAY_OF_MONTH, 1);
@@ -221,7 +226,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("dd.MM.yyyy");
+                        sdf = new SimpleDateFormat("yyyy-MM-dd");
                     } else if ((86400000L * 7) <= step) {
                         calStep = Calendar.WEEK_OF_YEAR;
                         cal.set(Calendar.DAY_OF_WEEK, 1);
@@ -234,7 +239,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("dd.MM.yyyy");
+                        sdf = new SimpleDateFormat("yyyy-MM-dd");
                     } else if (86400000L <= step) {
                         calStep = Calendar.DAY_OF_MONTH;
                         cal.set(Calendar.HOUR, 0);
@@ -246,7 +251,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("dd.MM.yyyy");
+                        sdf = new SimpleDateFormat("yyyy-MM-dd");
                     } else if (3600000L <= step) {
                         calStep = Calendar.HOUR;
                         cal.set(Calendar.MINUTE, 0);
@@ -257,7 +262,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+                        sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                     } else if (60000L <= step) {
                         calStep = Calendar.MINUTE;
                         cal.set(Calendar.SECOND, 0);
@@ -267,7 +272,7 @@ public class MongoDBAggregationHelper {
                             } else
                                 break;
                         }
-                        sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+                        sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                     } else {
                         for (int i = 1; i < 61; i++) {
                             if ((1000L * i) <= step) {
@@ -283,8 +288,8 @@ public class MongoDBAggregationHelper {
                     //group by
                     for(Map<String,Object> o:result){
                         long cnt = Objects.get(o,"count");
-                        Date _id = Objects.get(Date.class,o,"_id");
-                        if (cal.getTimeInMillis() <= _id.getTime()) {
+                        Date value = Objects.get(Date.class,o,"value");
+                        if (cal.getTimeInMillis() <= value.getTime()) {
                             cal.add(calStep, calStepSize);
                         }
                         Calendar cal1 = Calendar.getInstance();
@@ -295,10 +300,11 @@ public class MongoDBAggregationHelper {
                         String str = ""+sdf.format(from) + " - " + sdf.format(to);
 
                         if(resultMap.containsKey(str)){
-                            long c = resultMap.get(str);
-                            resultMap.put(str,cnt+c);
+                            long c = Objects.get(resultMap.get(str),"count");
+                            resultMap.get(str).put("count",cnt+c);
                         }else{
-                            resultMap.put(str,cnt);
+                            resultMap.put(str,Objects.newHashMap(String.class,Object.class,
+                                    "count",cnt,"from",from,"to",to,"label",str));
                         }
                     }
                 } else if (probe instanceof Long || probe instanceof Integer) {
@@ -312,21 +318,23 @@ public class MongoDBAggregationHelper {
 
                     for(Map<String,Object> o:result){
                         long cnt = Objects.get(o,"count");
-                        long _id = Objects.get(Long.class,o,"_id");
+                        long value = Objects.get(Long.class,o,"value");
                         long gr = min_d;
                         for (int i = 0; i < GROUP_COUNT; i++) {
-                            if (gr + step > _id) {
+                            if (gr + step > value) {
                                 break;
                             }
                             gr += step;
                         }
                         String str = ""+gr + " - " + (gr + step);
-
+                        long from = gr;
+                        long to = gr+step;
                         if(resultMap.containsKey(str)){
-                            long c = resultMap.get(str);
-                            resultMap.put(str,cnt+c);
+                            long c = Objects.get(resultMap.get(str),"count");
+                            resultMap.get(str).put("count",cnt+c);
                         }else{
-                            resultMap.put(str,cnt);
+                            resultMap.put(str,Objects.newHashMap(String.class,Object.class,
+                                    "count",cnt,"from",from,"to",to,"label",str));
                         }
                     }
                 } else if (probe instanceof Double || probe instanceof Float) {
@@ -340,27 +348,32 @@ public class MongoDBAggregationHelper {
 
                     for(Map<String,Object> o:result){
                         long cnt = Objects.get(o,"count");
-                        double _id = Objects.get(Double.class,o,"_id");
+                        double value = Objects.get(Double.class,o,"value");
                         double gr = min_d;
                         for (int i = 0; i < GROUP_COUNT; i++) {
-                            if (gr + step > _id) {
+                            if (gr + step > value) {
                                 break;
                             }
                             gr += step;
                         }
                         String str = ""+gr + " - " + (gr + step);
 
+                        double from = gr;
+                        double to = gr+step;
                         if(resultMap.containsKey(str)){
-                            long c = resultMap.get(str);
-                            resultMap.put(str,cnt+c);
+                            long c = Objects.get(resultMap.get(str),"count");
+                            resultMap.get(str).put("count",cnt+c);
                         }else{
-                            resultMap.put(str,cnt);
+                            resultMap.put(str,Objects.newHashMap(String.class,Object.class,
+                                    "count",cnt,"from",from,"to",to,"label",str));
                         }
                     }
                 }
                 for(String str:resultMap.keySet() ){
                     cuttedResult.add(Objects.newHashMap(String.class,Object.class,
-                            "_id",str,"count",resultMap.get(str)
+                            "value",str,"count",resultMap.get(str).get("count"),
+                            "valueFrom",resultMap.get(str).get("from"),
+                            "valueTo",resultMap.get(str).get("to")
                     ));
                 }
             }

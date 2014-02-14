@@ -49,7 +49,7 @@ public class AggregationTest extends BasicTest{
     }
 
     public void testAggregate(){
-        int p=100;
+        int p=1;
         title("Aggregate, parallel:"+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
