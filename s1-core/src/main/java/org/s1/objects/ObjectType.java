@@ -76,31 +76,31 @@ public class ObjectType {
         } else if (type == Integer.class) {
             if (obj == null)
                 obj = "0";
-            if(obj instanceof Number){
-                obj = ((Number) obj).intValue();
+            if(obj instanceof Integer){
+
             }else
-                obj = Integer.parseInt("" + obj);
+                obj = new BigDecimal(""+obj).intValue();
         } else if (type == Long.class) {
             if (obj == null)
                 obj = "0";
-            if(obj instanceof Number){
-                obj = ((Number) obj).longValue();
+            if(obj instanceof Long){
+
             }else
-                obj = Long.parseLong("" + obj);
+                obj = new BigDecimal(""+obj).longValue();
         } else if (type == Float.class) {
             if (obj == null)
                 obj = "0";
-            if(obj instanceof Number){
-                obj = ((Number) obj).floatValue();
+            if(obj instanceof Float){
+
             }else
-                obj = Float.parseFloat("" + obj);
+                obj = new BigDecimal(""+obj).floatValue();
         } else if (type == Double.class) {
             if (obj == null)
                 obj = "0";
-            if(obj instanceof Number){
-                obj = ((Number) obj).doubleValue();
+            if(obj instanceof Double){
+
             }else
-                obj = Double.parseDouble("" + obj);
+                obj = new BigDecimal(""+obj).doubleValue();
         } else if (type == Boolean.class) {
             if (obj == null)
                 obj = "false";
@@ -112,7 +112,7 @@ public class ObjectType {
             if (obj != null) {
                 if (obj instanceof String) {
                     obj = new Date(Long.parseLong("" + obj));
-                } else if (obj instanceof Number) {
+                } else if (obj instanceof Long) {
                     obj = new Date((Long) obj);
                 }
             }

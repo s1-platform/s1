@@ -60,6 +60,8 @@ public class MongoDBFormat {
                     o = Objects.cast(o, Long.class);
                 } else if (o instanceof BigDecimal) {
                     o = Objects.cast(o, Double.class);
+                } else if (o instanceof Float) {
+                    o = Objects.cast(o, Double.class);
                 }
                 return o;
             }

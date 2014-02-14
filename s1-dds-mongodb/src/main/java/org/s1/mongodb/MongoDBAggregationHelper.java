@@ -36,9 +36,9 @@ public class MongoDBAggregationHelper {
                 "_id","$_null",
                 "min",Objects.newHashMap("$min","$"+field),
                 "max",Objects.newHashMap("$max","$"+field),
-                "sum",Objects.newHashMap("sum","$"+field),
-                "avg",Objects.newHashMap("avg","$"+field),
-                "count",Objects.newHashMap("sum",1)
+                "sum",Objects.newHashMap("$sum","$"+field),
+                "avg",Objects.newHashMap("$avg","$"+field),
+                "count",Objects.newHashMap("$sum",1L)
         );
 
         //search
@@ -84,7 +84,7 @@ public class MongoDBAggregationHelper {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
         Map<String,Object> group = Objects.newHashMap(
                 "_id","$"+field,
-                "count",Objects.newHashMap("$sum",1)
+                "count",Objects.newHashMap("$sum",1L)
         );
 
         //search
@@ -109,8 +109,8 @@ public class MongoDBAggregationHelper {
                 Collections.sort(result, new Comparator<Map<String, Object>>() {
                     @Override
                     public int compare(Map<String, Object> o1, Map<String, Object> o2) {
-                        long count1 = Objects.get(o1,"count");
-                        long count2 = Objects.get(o2,"count");
+                        long count1 = Objects.get(Long.class,o1,"count");
+                        long count2 = Objects.get(Long.class,o2,"count");
                         if(count1>count2){
                             return -1;
                         }else if(count1==count2){
@@ -124,14 +124,14 @@ public class MongoDBAggregationHelper {
                 //total count
                 long valSum = 0;
                 for(Map<String,Object> o:result){
-                    long count = Objects.get(o,"count");
+                    long count = Objects.get(Long.class,o,"count");
                     valSum+=count;
                 }
 
                 //first 20 count
                 long firstValSum = 0;
                 for(int i=0; i<GROUP_COUNT;i++){
-                    long count = Objects.get(result.get(i),"count");
+                    long count = Objects.get(Long.class,result.get(i),"count");
                     firstValSum+=count;
                 }
 
@@ -139,7 +139,7 @@ public class MongoDBAggregationHelper {
                 for (int i = 0; i < GROUP_COUNT; i++) {
                     cuttedResult.add(result.get(i));
                 }
-                cuttedResult.add(Objects.newHashMap(String.class,Object.class, "$other", valSum - firstValSum));
+                cuttedResult.add(Objects.newHashMap(String.class,Object.class, "other", valSum - firstValSum));
             } else {
                 List<Map<String,Object>> result2 = Objects.newArrayList();
                 for(Map<String,Object> o:result){

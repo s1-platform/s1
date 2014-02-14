@@ -45,6 +45,7 @@ public class MongoDBQueryHelper {
 
     /**
      *
+     * @param res
      * @param instance
      * @param collection
      * @param search
@@ -54,16 +55,16 @@ public class MongoDBQueryHelper {
      * @param max
      * @return
      */
-    public static long list(String instance, List<Map<String, Object>> res, String collection,
+    public static long list(List<Map<String, Object>> res, String instance, String collection,
                             Map<String, Object> search, Map<String, Object> sort,
                             Map<String, Object> fields, int skip, int max) {
-        return list(instance, res,collection,search,sort,fields,skip,max,null);
+        return list(res, instance, collection,search,sort,fields,skip,max,null);
     }
 
     /**
      *
-     * @param instance
      * @param res
+     * @param instance
      * @param collection
      * @param search
      * @param sort
@@ -73,7 +74,7 @@ public class MongoDBQueryHelper {
      * @param prepareCursor
      * @return
      */
-    public static long list(String instance, List<Map<String, Object>> res, String collection,
+    public static long list(List<Map<String, Object>> res, String instance, String collection,
                                          Map<String, Object> search, Map<String, Object> sort,
                                          Map<String, Object> fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
