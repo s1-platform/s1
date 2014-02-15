@@ -27,8 +27,11 @@ public class MongoDBConnectionHelper {
     private static synchronized void initialize(String instance) {
         if(!connections.containsKey(instance)){
 
-            Map<String,Object> m = Options.getStorage().getMap("MongoDB");
-            m = Objects.get(m,instance);
+            Map<String,Object> mopt = Options.getStorage().getMap("MongoDB");
+            Map<String,Object> m = Objects.get(mopt,instance);
+            if(Objects.isNullOrEmpty(m)){
+                m = Objects.get(mopt,DEFAULT_INSTANCE);
+            }
 
             MongoClientOptions.Builder b = MongoClientOptions.builder();
             MongoClientOptions def_opt = MongoClientOptions.builder().build();
