@@ -80,8 +80,12 @@ public class Transactions {
      * @param id
      */
     private static void commit(String id){
+        List<Map<String,Object>> l = Objects.newArrayList();
+        for(CommandBean c:transactionLog.get(id).getList()){
+            l.add(c.toMap());
+        }
         ClusterNode.call(null,LIST_COMMAND,
-                Objects.newHashMap(String.class,Object.class,"list",transactionLog.get(id).getList()),
+                Objects.newHashMap(String.class,Object.class,"list",l),
                 LIST_GROUP);
         transactionLog.remove(id);
     }

@@ -176,16 +176,7 @@ public class ClusterNode {
     static void runCommand(MessageBean e){
         try{
             operationLog.addToLocalLog(e);
-            if(e.getDataSource()!=null){
-                runRealWrite(e);
-            }else{
-                //transaction
-                if(e.getCommand().equals(Transactions.LIST_COMMAND)){
-                    for(CommandBean b:Objects.get(e.getParams(), "list", Objects.newArrayList(CommandBean.class))){
-                        runRealWrite(b);
-                    }
-                }
-            }
+            runRealWrite(e);
             operationLog.markDone(e.getId());
         }catch (Throwable t){
             onError(e,t);
@@ -197,6 +188,28 @@ public class ClusterNode {
      * @param e
      */
     private static void runRealWrite(CommandBean e){
+        if(e.getDataSource()!=null){
+            runAtomicWrite(e);
+        }else{
+            //transaction
+            if(e.getCommand().equals(Transactions.LIST_COMMAND)){
+                List<Map<String,Object>> l = Objects.get(e.getParams(), "list");
+                if(l==null)
+                    l = Objects.newArrayList();
+                for(Map<String,Object> m:l){
+                    CommandBean c = new CommandBean();
+                    c.fromMap(m);
+                    runAtomicWrite(c);
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param e
+     */
+    private static void runAtomicWrite(CommandBean e){
         DistributedDataSource dds = null;
         try{
             dds = e.getDataSource().newInstance();

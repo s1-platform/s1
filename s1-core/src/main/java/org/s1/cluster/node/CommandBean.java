@@ -1,6 +1,8 @@
 package org.s1.cluster.node;
 
+import org.s1.S1SystemError;
 import org.s1.cluster.datasource.DistributedDataSource;
+import org.s1.objects.Objects;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -79,5 +81,37 @@ public class CommandBean implements Serializable{
         if(withData)
             s+=", params: "+getParams();
         return s;
+    }
+
+    /**
+     *
+     * @param m
+     */
+    public void fromMap(Map<String,Object> m){
+        System.out.println(m);
+        String cl_name = Objects.get(m, "class");
+        Class<? extends DistributedDataSource> cls = null;
+        if(cl_name!=null){
+            try{
+                cls = (Class<? extends DistributedDataSource>)Class.forName(cl_name);
+            }catch (Exception e){
+                throw S1SystemError.wrap(e);
+            }
+        }
+        setDataSource(cls);
+        setCommand(Objects.get(String.class,m,"command"));
+        setParams(Objects.get(Map.class,m,"params"));
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("class",getDataSource()!=null?getDataSource().getName():null);
+        m.put("command",getCommand());
+        m.put("params",getParams());
+        return m;
     }
 }

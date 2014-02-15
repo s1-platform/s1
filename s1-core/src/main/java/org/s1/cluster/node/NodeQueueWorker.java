@@ -205,7 +205,7 @@ class NodeQueueWorker {
      * @return
      */
     private String getUniqueNameGroupId(Class<? extends DistributedDataSource> name, String group){
-        return name.getName()+":::"+group;
+        return (name!=null?name.getName():null)+":::"+group;
     }
 
     /**

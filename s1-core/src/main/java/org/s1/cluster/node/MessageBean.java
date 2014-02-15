@@ -1,5 +1,9 @@
 package org.s1.cluster.node;
 
+import org.s1.S1SystemError;
+import org.s1.cluster.datasource.DistributedDataSource;
+import org.s1.objects.Objects;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -73,9 +77,34 @@ public class MessageBean extends CommandBean{
      * @return
      */
     public String toString(boolean withData){
-        String s = "id:"+getId()+", class:"+getClass().getName()+", command:"+getCommand()+", group:"+getGroup();
+        String s = "id:"+getId()+",nodeId: "+getNodeId()+
+                ", class:"+(getDataSource()!=null?getDataSource().getName():null)+
+                ", command:"+getCommand()+", group:"+getGroup();
         if(withData)
             s+=", params:"+getParams();
         return s;
+    }
+
+    /**
+     *
+     * @param m
+     */
+    public void fromMap(Map<String,Object> m){
+        super.fromMap(m);
+        id = Objects.get(m,"id");
+        nodeId = Objects.get(m,"nodeId");
+        group = Objects.get(m,"group");
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = super.toMap();
+        m.put("id",id);
+        m.put("nodeId",nodeId);
+        m.put("group",group);
+        return m;
     }
 }
