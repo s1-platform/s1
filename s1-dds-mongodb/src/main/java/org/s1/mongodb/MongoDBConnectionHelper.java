@@ -4,6 +4,8 @@ import com.mongodb.*;
 import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -14,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * MongoDB connection helper
  */
 public class MongoDBConnectionHelper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBConnectionHelper.class);
 
     /**
      *
@@ -66,7 +70,7 @@ public class MongoDBConnectionHelper {
                     throw new S1SystemError("Cannot authenticate MongoDB connection "+dbName+" with user "+user);
                 }
             }
-            System.out.println(Objects.formatDate(new Date(),"yyyy-MM-dd HH:mm:ss.SSS")+ " INFO MongoDBConnectionHelper: MongoDB connected "+cl.getAddress().getHost()+":"+cl.getAddress().getPort());
+            LOG.info("MongoDB connected " + cl.getAddress().getHost() + ":" + cl.getAddress().getPort());
             connections.put(instance,db);
         }
     }

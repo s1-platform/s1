@@ -40,24 +40,27 @@ public class BackgroundListener implements ServletContextListener {
         }
 
         if (workers == null) {
+
             List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
             workers = Objects.newHashMap();
-            int i=0;
-            for(Map<String,Object> m : l){
-                String cls = Objects.get(m,"class");
-                String name = Objects.get(m,"name","Worker#"+i);
-                Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
-                i++;
-                BackgroundWorker w = null;
-                try{
-                    w = (BackgroundWorker)Class.forName(cls).newInstance();
-                    w.init(name,cfg);
-                }catch (Throwable e){
-                    LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
-                }
-                if(w!=null){
-                    workers.put(name,w);
-                    w.start();
+            if(l!=null){
+                int i=0;
+                for(Map<String,Object> m : l){
+                    String cls = Objects.get(m,"class");
+                    String name = Objects.get(m,"name","Worker#"+i);
+                    Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
+                    i++;
+                    BackgroundWorker w = null;
+                    try{
+                        w = (BackgroundWorker)Class.forName(cls).newInstance();
+                        w.init(name,cfg);
+                    }catch (Throwable e){
+                        LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
+                    }
+                    if(w!=null){
+                        workers.put(name,w);
+                        w.start();
+                    }
                 }
             }
         }

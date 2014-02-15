@@ -94,6 +94,7 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
                 }
             }
         }
+        inParams = Objects.fromWire(inParams);
         return inParams;
     }
 
@@ -156,6 +157,7 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
                     && request.getContentType().contains("application/json"))*/
             response.setCharacterEncoding("UTF-8");
             String callback = request.getParameter("callback");
+            m = Objects.toWire(m);
             if(request.getMethod().equalsIgnoreCase("get") && !Objects.isNullOrEmpty(callback)){
                 response.setContentType("text/javascript");
                 response.getWriter().write(callback+"("+JSONFormat.toJSON(m)+");");

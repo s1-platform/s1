@@ -32,7 +32,7 @@ public class LogOperation extends MapWebOperation {
             Loggers.setLogLevel(Objects.get(String.class,params,"name"),Objects.get(String.class,params,"level"));
         }else if("list".equals(method)){
             List<Map<String,Object>> l = Objects.newArrayList();
-            long c = getStorage().list(l,null,Objects.get(params,"skip",0),Objects.get(params,"max",10));
+            long c = getStorage().list(l,Objects.get(params,"search"),Objects.get(params,"skip",0),Objects.get(params,"max",10));
             res = Objects.newHashMap("count",c,"list",l);
         }else{
             throwMethodNotFound(method);

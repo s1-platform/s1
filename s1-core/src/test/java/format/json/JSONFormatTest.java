@@ -98,5 +98,17 @@ public class JSONFormatTest extends BasicTest {
         }));
     }
 
+    public void testNewLine() {
+        title("New line");
+        final Map<String, Object> m = Objects.newHashMap("a","asd\n\t>aaa");
+        Map<String, Object> m2 = null;
+        try {
+            m2 = JSONFormat.evalJSON(JSONFormat.toJSON(m));
+        } catch (JSONFormatException e) {
+            throw new RuntimeException(e);
+        }
+        assertTrue(Objects.equals(m,m2));
+    }
+
 
 }

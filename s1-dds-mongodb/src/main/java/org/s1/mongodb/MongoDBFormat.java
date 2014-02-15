@@ -3,13 +3,17 @@ package org.s1.mongodb;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bson.types.ObjectId;
+import org.s1.S1SystemError;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
 
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,6 +41,16 @@ public class MongoDBFormat {
                     Map m = (Map)o;
                     if(m.containsKey("$date") && m.size()==1){
                         o = m.get("$date");
+                    }
+                    if(m.containsKey("_serializable") && m.size()==1){
+                        try {
+                            byte [] b = (byte [])m.get("_serializable");
+                            ByteArrayInputStream bin = new ByteArrayInputStream(b);
+                            ObjectInputStream ois = new ObjectInputStream(bin);
+                            o = ois.readObject();
+                        } catch (Exception e) {
+                            throw S1SystemError.wrap(e);
+                        }
                     }
                 }
                 /*if(o instanceof Integer || o instanceof Long){
@@ -68,6 +82,24 @@ public class MongoDBFormat {
                     o = Objects.cast(o, Double.class);
                 } else if (o instanceof Float) {
                     o = Objects.cast(o, Double.class);
+                } else if(!(o instanceof List)
+                        && !(o instanceof Map)
+                        && !(o instanceof String)
+                        && !(o instanceof Boolean)
+                        && !(o instanceof Date)
+                        && !(o instanceof Number)
+                        && !(o instanceof byte[])){
+                    if(o instanceof Serializable){
+                        try {
+                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                            ObjectOutputStream oos = new ObjectOutputStream(bos);
+                            oos.writeObject(o);
+                            oos.flush();
+                            o = Objects.newHashMap("_serializable",bos.toByteArray());
+                        } catch (Exception e) {
+                            throw S1SystemError.wrap(e);
+                        }
+                    }
                 }
                 return o;
             }

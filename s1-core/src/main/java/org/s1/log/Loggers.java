@@ -29,6 +29,7 @@ public class Loggers {
      */
     public static Map<String,Object> toMap(LoggingEvent e){
         final Map<String,Object> m = Objects.newHashMap(
+                "name",e.getLoggerName(),
                 "date",new Date(e.getTimeStamp()),
                 "level",e.getLevel().toString(),
                 "thread",e.getThreadName(),
