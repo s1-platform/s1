@@ -36,6 +36,37 @@ public class ClusterNode {
     private static NodeFileExchange fileExchange;
     private static NodeMonitor monitor;
 
+    /**
+     *
+     * @return
+     */
+    static Map<String,Object> getStatistic(boolean full){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("currentTimeMillis",System.currentTimeMillis());
+
+        m.put("availableProcessors",Runtime.getRuntime().availableProcessors());
+        m.put("freeMemory",Runtime.getRuntime().freeMemory());
+        m.put("maxMemory",Runtime.getRuntime().maxMemory());
+        m.put("totalMemory",Runtime.getRuntime().totalMemory());
+
+        m.put("status",status);
+        m.put("nodeId",ClusterNode.getCurrentNodeId());
+
+        if(full){
+            m.put("env",System.getenv());
+            m.put("properties",System.getProperties());
+        }
+        if("started".equals(status) ){
+            m.put("monitor",monitor.getStatistic());
+            m.put("fileServer",fileExchange.getStatistic());
+            m.put("queueWorker",queueWorker.getStatistic());
+            m.put("messageListener",messageListener.getStatistic());
+            m.put("startupUpdator",startupUpdator.getStatistic());
+            m.put("operationLog",operationLog.getClass().getName());
+        }
+        return m;
+    }
+
     public static String getCurrentNodeId(){
         return nodeId;
     }

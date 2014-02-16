@@ -1,12 +1,17 @@
 package cluster.monitor;
 
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
 import org.s1.test.TestHttpClient;
+import org.s1.weboperation.WebOperation;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,13 +22,14 @@ import java.util.Map;
  */
 public class MonitorWebTest extends ServerTest {
 
-    public void testLog(){
-        int p = 1;
+    public void testMonitor(){
+        int p = 30;
         title("Log, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
                 TestHttpClient client = client();
+
                 boolean b = true;
                 try{
                     client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
@@ -48,13 +54,17 @@ public class MonitorWebTest extends ServerTest {
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);
+                assertEquals(1,Objects.get(List.class,m,"nodes").size());
+                assertEquals("node-1",Objects.get(m,"nodes",Objects.newArrayList(Map.class)).get(0).get("nodeId"));
 
 
                 //node indicators
-                m = client.postJSON(getContext()+"/dispatcher/Monitor.nodeIndicators",Objects.newHashMap(
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.nodeInfo",Objects.newHashMap(
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);
+                assertEquals("node-1",Objects.get(m,"nodeId"));
+                assertNotNull(Objects.get(m, "freeMemory"));
 
                 //root logger
                 client.postJSON(getContext()+"/dispatcher/Monitor.setLogLevel",Objects.newHashMap(

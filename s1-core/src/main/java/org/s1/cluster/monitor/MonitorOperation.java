@@ -7,8 +7,11 @@ import org.s1.objects.Objects;
 import org.s1.objects.schema.MapAttribute;
 import org.s1.objects.schema.ObjectSchema;
 import org.s1.objects.schema.SimpleTypeAttribute;
+import org.s1.script.S1ScriptEngine;
 import org.s1.user.AuthException;
 import org.s1.weboperation.MapWebOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,15 +24,15 @@ import java.util.Map;
  */
 public class MonitorOperation extends MapWebOperation {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MonitorOperation.class);
+
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         checkAccess();
         Map<String,Object> result = Objects.newHashMap();
         if("clusterInfo".equals(method)){
-            List<Map<String,Object>> nodes = Objects.newArrayList();
-            result.put("nodes",nodes);
-
-        }else if("nodeIndicators".equals(method)){
+            result = NodeMonitor.getMonitorData(null,method,params);
+        }else if("nodeInfo".equals(method)){
             params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true))
                     .validate(params);
             String nodeId = Objects.get(params,"nodeId");
@@ -52,7 +55,7 @@ public class MonitorOperation extends MapWebOperation {
             params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true)
             ).validate(params);
             String nodeId = Objects.get(params,"nodeId");
-            result = NodeMonitor.getMonitorData(nodeId,method,params);
+            result = NodeMonitor.getMonitorData(nodeId, method, params);
         }else{
             throwMethodNotFound(method);
         }
@@ -64,9 +67,22 @@ public class MonitorOperation extends MapWebOperation {
      * @throws AuthException
      */
     protected void checkAccess() throws AuthException{
-        if(Session.ROOT.equals(Session.getSessionBean().getUserId()))
-            return;
-        throw new AuthException(Session.getSessionBean().getUserId()+" has no rights to use cluster monitor");
+        String userId = Session.getSessionBean().getUserId();
+        boolean ok = false;
+        if(Session.ROOT.equals(userId))
+            ok = true;
+        String s = Objects.get(config,"accessScript");
+        if(!Objects.isNullOrEmpty(s)){
+            try{
+                new S1ScriptEngine().eval(s,Objects.newHashMap(String.class,Object.class,"userId",userId));
+                ok = true;
+            }catch (Throwable e){
+                if(LOG.isDebugEnabled())
+                    LOG.debug("Access script error: "+e.getMessage(),e);
+            }
+        }
+        if(!ok)
+            throw new AuthException(userId+" has no rights to use cluster monitor");
     }
 
 }

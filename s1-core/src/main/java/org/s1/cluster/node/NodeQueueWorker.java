@@ -70,6 +70,22 @@ class NodeQueueWorker {
 
     /**
      *
+     * @return
+     */
+    Map<String,Object> getStatistic(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("status",status);
+        if("started".equals(status)){
+            m.put("priorityTable",priorityTable);
+            m.put("transactionPriority",transactionPriority);
+            m.put("threads",threads);
+            m.put("queueDepth",list.size());
+        }
+        return m;
+    }
+
+    /**
+     *
      */
     synchronized void start(){
         if(status.equals("started"))

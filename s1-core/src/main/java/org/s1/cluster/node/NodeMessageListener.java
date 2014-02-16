@@ -5,8 +5,11 @@ import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.s1.cluster.HazelcastWrapper;
+import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Cluster node message listener.
@@ -35,6 +38,20 @@ class NodeMessageListener{
     private NodeQueueWorker queueWorker;
 
     private volatile String status = "stopped";
+
+    /**
+     *
+     * @return
+     */
+    Map<String,Object> getStatistic(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("status",status);
+        if("started".equals(status)){
+            m.put("currentId",idGen.get());
+            m.put("listenerId",listenerId);
+        }
+        return m;
+    }
 
     /**
      *

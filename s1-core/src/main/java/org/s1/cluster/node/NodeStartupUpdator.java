@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,19 @@ class NodeStartupUpdator {
     private volatile boolean run = false;
     private volatile boolean running = false;
     private volatile String status = "stopped";
+
+    /**
+     *
+     * @return
+     */
+    Map<String,Object> getStatistic(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("status",status);
+        if("started".equals(status)){
+            m.put("watcherRunning",running);
+        }
+        return m;
+    }
 
     /**
      *

@@ -37,8 +37,9 @@ public class Loggers {
                 "fileName",e.getLocationInformation().getFileName(),
                 "methodName",e.getLocationInformation().getMethodName(),
                 "lineNumber",e.getLocationInformation().getLineNumber(),
-                "id",e.getMDC("id"),
+                "requestId",e.getMDC("requestId"),
                 "sessionId",e.getMDC("sessionId"),
+                "freeMemory",Runtime.getRuntime().freeMemory(),
                 "throwable",null
         );
         if(e.getThrowableInformation()!=null && e.getThrowableInformation().getThrowable()!=null){

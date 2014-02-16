@@ -18,6 +18,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -79,6 +80,21 @@ public class NodeFileExchange {
     private volatile boolean run = false;
     private volatile String status = "stopped";
     private ServerSocket serverSocket;
+
+    /**
+     *
+     * @return
+     */
+    Map<String,Object> getStatistic(){
+        Map<String,Object> m = Objects.newHashMap();
+        m.put("status",status);
+        if("started".equals(status)){
+            m.put("port",serverSocket.getLocalPort());
+            m.put("address",serverSocket.getInetAddress().getHostAddress());
+            m.put("threads",threads);
+        }
+        return m;
+    }
 
     /**
      * Start server
