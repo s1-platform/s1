@@ -57,8 +57,9 @@ public class LogStorageTest extends ServerTest {
                 ), null);
 
                 //get
-                Map<String, Object> m = client.postJSON(getContext() + "/dispatcher/Log.list", Objects.newHashMap(
-                        String.class, Object.class
+                Map<String, Object> m = client.postJSON(getContext() + "/dispatcher/Monitor.nodeLogs", Objects.newHashMap(
+                        String.class, Object.class,
+                        "nodeId","node-1"
                         //,"search",Objects.newHashMap("name","MongoDBConnectionHelper")
                 ), null);
 
