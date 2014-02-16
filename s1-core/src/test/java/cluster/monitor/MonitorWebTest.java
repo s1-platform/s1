@@ -1,4 +1,4 @@
-package log;
+package cluster.monitor;
 
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
@@ -15,10 +15,10 @@ import java.util.Map;
  * Date: 24.01.14
  * Time: 10:45
  */
-public class LogWebTest extends ServerTest {
+public class MonitorWebTest extends ServerTest {
 
     public void testLog(){
-        int p = 100;
+        int p = 1;
         title("Log, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
@@ -26,9 +26,8 @@ public class LogWebTest extends ServerTest {
                 TestHttpClient client = client();
                 boolean b = true;
                 try{
-                    client.postJSON(getContext()+"/dispatcher/Log.set",Objects.newHashMap(
-                            String.class,Object.class,
-                            "level","ERROR"
+                    client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
+                            String.class,Object.class
                     ),null);
                     b = false;
                 }catch (RuntimeException e){
@@ -44,21 +43,37 @@ public class LogWebTest extends ServerTest {
                         "password","root"
                 ),null);
 
-                //root logger
-                client.postJSON(getContext()+"/dispatcher/Log.set",Objects.newHashMap(
+                //cluster info
+                Map<String,Object> m = client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
                         String.class,Object.class,
+                        "nodeId","node-1"
+                ),null);
+
+
+                //node indicators
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.nodeIndicators",Objects.newHashMap(
+                        String.class,Object.class,
+                        "nodeId","node-1"
+                ),null);
+
+                //root logger
+                client.postJSON(getContext()+"/dispatcher/Monitor.setLogLevel",Objects.newHashMap(
+                        String.class,Object.class,
+                        "nodeId","node-1",
                         "level","ERROR"
                 ),null);
 
                 //org.s1.web.DispatcherServlet
-                client.postJSON(getContext()+"/dispatcher/Log.set",Objects.newHashMap(
+                client.postJSON(getContext()+"/dispatcher/Monitor.setLogLevel",Objects.newHashMap(
                         String.class,Object.class,
+                        "nodeId","node-1",
                         "level","TRACE","name","org.s1.web.DispatcherServlet"
                 ),null);
 
                 //get
-                Map<String,Object> m = client.postJSON(getContext()+"/dispatcher/Log.get",Objects.newHashMap(
-                        String.class,Object.class
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.getLoggers",Objects.newHashMap(
+                        String.class,Object.class,
+                        "nodeId","node-1"
                 ),null);
 
                 assertEquals("ERROR",Objects.get(m,"level"));

@@ -9,8 +9,9 @@ import java.util.*;
 
 /**
  * Node local operation log.
- * If you want to provide custom implementation -
- * you should override this class and put its name to 'cluster.operationLogClass' options
+ * You should provide custom implementation -
+ * you should override this class and put its name to 'cluster.operationLogClass' options.
+ * <b>Do not use this class in production - its log is in-memory.</b>
  * <pre>
  * INFO - init
  * DEBUG - add,markDone

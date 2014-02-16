@@ -34,6 +34,7 @@ public class ClusterNode {
     private static NodeMessageListener messageListener;
     private static NodeStartupUpdator startupUpdator;
     private static NodeFileExchange fileExchange;
+    private static NodeMonitor monitor;
 
     public static String getCurrentNodeId(){
         return nodeId;
@@ -68,6 +69,9 @@ public class ClusterNode {
         int fileThreads = Options.getStorage().getSystem("cluster.fileThreads", 10);
         String fileAddress = Options.getStorage().getSystem("cluster.fileAddress");
         fileExchange = new NodeFileExchange(nodeId,fileThreads,fileAddress);
+        int monitorThreads = Options.getStorage().getSystem("cluster.monitorThreads", 10);
+        String monitorAddress = Options.getStorage().getSystem("cluster.monitorAddress");
+        monitor = new NodeMonitor(nodeId,monitorThreads,monitorAddress);
         initialized = true;
     }
 
@@ -104,6 +108,7 @@ public class ClusterNode {
         queueWorker.start();
         startupUpdator.start();
         fileExchange.start();
+        monitor.start();
 
         status = "started";
         LOG.info("Cluster node "+nodeId+" started ("+(System.currentTimeMillis()-t)+" ms.)");
@@ -120,6 +125,7 @@ public class ClusterNode {
         startupUpdator.stop();
         messageListener.stop();
         fileExchange.stop();
+        monitor.stop();
         queueWorker.stop();
 
         status = "stopped";
