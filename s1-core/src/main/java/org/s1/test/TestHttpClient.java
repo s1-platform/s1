@@ -216,7 +216,7 @@ public class TestHttpClient {
             post.setEntity(request);
             client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "Test Browser");
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
+            //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
 
             if(before!=null)
                 before.callQuite(post);

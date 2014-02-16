@@ -23,7 +23,7 @@ import java.util.Map;
 public class MonitorWebTest extends ServerTest {
 
     public void testMonitor(){
-        int p = 30;
+        int p = 10;
         title("Log, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
@@ -48,22 +48,21 @@ public class MonitorWebTest extends ServerTest {
                         "name","root",
                         "password","root"
                 ),null);
-
+                Map<String,Object> m =null;
                 //cluster info
-                Map<String,Object> m = client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);
                 assertEquals(1,Objects.get(List.class,m,"nodes").size());
-                assertEquals("node-1",Objects.get(m,"nodes",Objects.newArrayList(Map.class)).get(0).get("nodeId"));
-
+                assertEquals("node-1", Objects.get(m, "nodes", Objects.newArrayList(Map.class)).get(0).get("nodeId"));
 
                 //node indicators
                 m = client.postJSON(getContext()+"/dispatcher/Monitor.nodeInfo",Objects.newHashMap(
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);
-                assertEquals("node-1",Objects.get(m,"nodeId"));
+                assertEquals("node-1",Objects.get(m, "nodeId"));
                 assertNotNull(Objects.get(m, "freeMemory"));
 
                 //root logger

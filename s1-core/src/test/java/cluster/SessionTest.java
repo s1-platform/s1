@@ -3,6 +3,8 @@ package cluster;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
+import org.s1.objects.Objects;
+import org.s1.options.Options;
 import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
@@ -99,7 +101,7 @@ public class SessionTest extends ClusterTest {
         }));
 
         try {
-            Thread.sleep(15000);
+            Thread.sleep(Options.getStorage().getSystem(Long.class,"session.ttl")+2000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
