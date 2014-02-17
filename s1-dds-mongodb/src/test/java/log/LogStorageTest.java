@@ -36,7 +36,7 @@ public class LogStorageTest extends ServerTest {
     protected void setUp() throws Exception {
         super.setUp();
         DB db = MongoDBConnectionHelper.getConnection(MongoDBLogStorage.DB_INSTANCE);
-        DBCollection coll = db.getCollection(MongoDBLogStorage.getCollectionName());
+        DBCollection coll = db.getCollection(MongoDBLogStorage.COLLECTION);
         coll.drop();
         trace("log4j collection cleared");
     }

@@ -17,10 +17,11 @@ import java.util.Map;
 public class MongoDBLogStorage extends LogStorage {
 
     public static final String DB_INSTANCE = "log4j";
+    public static final String COLLECTION = "log4j";
 
     public MongoDBLogStorage() {
         DBCollection coll = MongoDBConnectionHelper.getConnection(MongoDBLogStorage.DB_INSTANCE)
-                .getCollection(getCollectionName());
+                .getCollection(COLLECTION);
         coll.ensureIndex(new BasicDBObject("date",1));
         coll.ensureIndex(new BasicDBObject("level",1));
         coll.ensureIndex(new BasicDBObject("fileName",1));
@@ -29,18 +30,13 @@ public class MongoDBLogStorage extends LogStorage {
         coll.ensureIndex(new BasicDBObject("name",1));
     }
 
-    public static String getCollectionName(){
-        String collection = Options.getStorage().get("MongoDB",DB_INSTANCE+".collection");
-        return collection;
-    }
-
     @Override
     public long list(List<Map<String, Object>> list, Object search, int skip, int max) {
         Map<String,Object> s = null;
         if(search instanceof Map){
             s = (Map<String,Object>)search;
         }
-        return MongoDBQueryHelper.list(list,DB_INSTANCE,getCollectionName(),
+        return MongoDBQueryHelper.list(list,DB_INSTANCE,COLLECTION,
                 s,
                 Objects.newHashMap(String.class,Object.class,"date",-1), null, skip, max);
     }

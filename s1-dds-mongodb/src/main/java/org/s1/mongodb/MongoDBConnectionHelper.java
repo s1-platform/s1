@@ -2,6 +2,7 @@ package org.s1.mongodb;
 
 import com.mongodb.*;
 import org.s1.S1SystemError;
+import org.s1.mongodb.log.MongoDBLog4jAppender;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -71,6 +72,7 @@ public class MongoDBConnectionHelper {
                 }
             }
             LOG.info("MongoDB connected " + cl.getAddress().getHost() + ":" + cl.getAddress().getPort());
+
             connections.put(instance,db);
         }
     }

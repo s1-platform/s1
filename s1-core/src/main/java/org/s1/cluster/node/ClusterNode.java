@@ -7,7 +7,9 @@ import org.s1.options.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.net.BindException;
+import java.nio.file.FileSystem;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +57,16 @@ public class ClusterNode {
         if(full){
             m.put("env",System.getenv());
             m.put("properties",System.getProperties());
+            List<Map> roots = Objects.newArrayList();
+            for(File f:File.listRoots()){
+                roots.add(Objects.newHashMap(
+                        "path",f.getAbsolutePath(),
+                        "totalSpace",f.getTotalSpace(),
+                        "freeSpace",f.getFreeSpace(),
+                        "usableSpace",f.getUsableSpace()
+                ));
+            }
+            m.put("fileSystemRoots", roots);
         }
         if("started".equals(status) ){
             m.put("monitor",monitor.getStatistic());
