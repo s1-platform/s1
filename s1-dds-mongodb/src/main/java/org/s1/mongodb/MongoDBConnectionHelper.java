@@ -25,6 +25,8 @@ public class MongoDBConnectionHelper {
      */
     private static Map<String,DB> connections = new ConcurrentHashMap<String, DB>();
 
+    public static final String OPTIONS = "MongoDB";
+
     /**
      *
      * @param instance
@@ -32,7 +34,7 @@ public class MongoDBConnectionHelper {
     private static synchronized void initialize(String instance) {
         if(!connections.containsKey(instance)){
 
-            Map<String,Object> mopt = Options.getStorage().getMap("MongoDB");
+            Map<String,Object> mopt = Options.getStorage().getMap(OPTIONS);
             Map<String,Object> m = Objects.get(mopt,instance);
             if(Objects.isNullOrEmpty(m)){
                 m = Objects.get(mopt,DEFAULT_INSTANCE);
