@@ -21,7 +21,7 @@ public class SearchTest extends ClusterTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        /*FullTextSearcher s = SearcherFactory.getSearcher("test1");
+        FullTextSearcher s = SearcherFactory.getSearcher("test1");
         for(int i=0;i<100;i++){
             s.removeDocument(""+i);
         }
@@ -42,7 +42,7 @@ public class SearchTest extends ClusterTest {
                     "created", new Date()
             ));
         }
-        trace("set done");*/
+        trace("set done");
     }
 
 
