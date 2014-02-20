@@ -70,6 +70,14 @@ public class ObjectSchema implements Serializable{
 
     protected MapAttribute rootMapAttribute = new MapAttribute(null,null);
 
+    /**
+     *
+     * @return
+     */
+    public MapAttribute getRootMapAttribute(){
+        return rootMapAttribute;
+    }
+
     protected void setAttributesSchema(){
         rootMapAttribute.attributes = attributes;
         rootMapAttribute.setSchema(this);
