@@ -272,6 +272,18 @@ public class ScriptSystemFunctions extends ScriptFunctions{
     }
 
     /**
+     *
+     * @param o
+     */
+    public void clear(Object o){
+        if(o instanceof Map){
+            ((Map) o).clear();
+        }else if(o instanceof List){
+            ((List) o).clear();
+        }
+    }
+
+    /**
      * Map keys
      *
      * @param m

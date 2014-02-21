@@ -30,13 +30,22 @@ public class MongoDBTable extends Table{
     }
 
     @Override
+    protected void enrich(Map<String, Object> record, boolean list, Map<String, Object> ctx) {
+        super.enrich(record, list, ctx);
+        record.remove("_id");
+    }
+
+    @Override
     protected long collectionList(String collection, List<Map<String, Object>> result, Map<String, Object> search, Map<String, Object> sort, Map<String, Object> fields, int skip, int max) {
         return MongoDBQueryHelper.list(result,null,collection,search,sort,fields,skip,max);
     }
 
     @Override
-    protected Map<String, Object> getFieldEqualsSearch(String name, String value) {
-        return Objects.newHashMap(String.class,Object.class,name,value);
+    protected Map<String, Object> setFieldEqualsSearch(Map<String,Object> search, String name, String value) {
+        if(search==null)
+            search = Objects.newHashMap();
+        search.put(name,value);
+        return search;
     }
 
     @Override

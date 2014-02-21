@@ -60,7 +60,7 @@ public abstract class Table {
     public static final String EXPAND_KEY = "expand";
 
     public static final String HISTORY_SUFFIX = "_history";
-    public static final String REMOVED_SUFFIX = "_removed";
+    public static final String TRASH_SUFFIX = "_removed";
 
     /**
      * @return
@@ -489,7 +489,7 @@ public abstract class Table {
                      Map<String, Object> fields, int skip, int max, Map<String, Object> ctx) throws AccessDeniedException {
         if (ctx == null)
             ctx = Objects.newHashMap();
-        checkRegistryAccess();
+        checkAccess();
         if (search == null)
             search = Objects.newHashMap();
         search = filter(search);
@@ -543,13 +543,15 @@ public abstract class Table {
      * @return
      * @throws NotFoundException
      */
-    public long listLog(List<Map<String, Object>> result, String id,
+    public long listLog(List<Map<String, Object>> result, String id, Map<String,Object> search,
                         int skip, int max) throws NotFoundException, AccessDeniedException {
-        checkRegistryAccess();
+        checkAccess();
         Map<String, Object> oldObject = get(id);
         checkLogAccess(oldObject);
+        if(search==null)
+            search = Objects.newHashMap();
 
-        Map<String, Object> search = getFieldEqualsSearch("record", id);
+        setFieldEqualsSearch(search, "record", id);
         long count = collectionList(collection + HISTORY_SUFFIX, result, search, Objects.newHashMap(String.class, Object.class,
                 "date", -1
         ), null, skip, max);
@@ -565,8 +567,8 @@ public abstract class Table {
     public Map<String, Object> get(String id, Map<String, Object> ctx) throws NotFoundException, AccessDeniedException {
         if (ctx == null)
             ctx = Objects.newHashMap();
-        checkRegistryAccess();
-        Map<String, Object> search = getFieldEqualsSearch("id",id);
+        checkAccess();
+        Map<String, Object> search = setFieldEqualsSearch(null,"id", id);
         search = filter(search);
         Map<String, Object> m = null;
         try {
@@ -597,7 +599,7 @@ public abstract class Table {
      * @param value
      * @return
      */
-    protected abstract Map<String,Object> getFieldEqualsSearch(String name, String value);
+    protected abstract Map<String,Object> setFieldEqualsSearch(Map<String, Object> search, String name, String value);
 
     /**
      * @param collection
@@ -611,7 +613,7 @@ public abstract class Table {
      * @return
      */
     public Map<String, Object> aggregate(String field, Map<String, Object> search) throws AccessDeniedException {
-        checkRegistryAccess();
+        checkAccess();
         if (search == null)
             search = Objects.newHashMap();
         search = filter(search);
@@ -632,7 +634,7 @@ public abstract class Table {
      * @return
      */
     public List<Map<String, Object>> countGroup(String field, Map<String, Object> search) throws AccessDeniedException {
-        checkRegistryAccess();
+        checkAccess();
         if (search == null)
             search = Objects.newHashMap();
         search = filter(search);
@@ -710,7 +712,7 @@ public abstract class Table {
     public Map<String, Object> changeState(final String id, final String action,
                                            final Map<String, Object> data, final Map<String, Object> foundation)
             throws AccessDeniedException, ObjectSchemaValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException {
-        checkRegistryAccess();
+        checkAccess();
         try {
             return (Map<String, Object>) Locks.waitAndRun(getLockName(id), new Closure<String, Object>() {
                 @Override
@@ -749,12 +751,20 @@ public abstract class Table {
      */
     protected Map<String, Object> changeRecordState(String id, String action,
                                                     Map<String, Object> data, Map<String, Object> foundation)
-            throws ObjectSchemaValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException, ClosureException {
+            throws ObjectSchemaValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException, ClosureException, AccessDeniedException {
         if (data == null)
             data = Objects.newHashMap();
 
         Map<String, Object> oldObject = Objects.newHashMap();
         ActionBean a = getAction(id, action, oldObject);
+        final boolean isFrom = !Objects.isNullOrEmpty(a.getFrom());
+        final boolean isTo = !Objects.isNullOrEmpty(a.getTo());
+        if(!isFrom){
+            //add
+            oldObject = null;
+            if(Objects.isNullOrEmpty(id))
+                id = newId();
+        }
 
         //state
         StateBean state = getStateByName(a.getTo());
@@ -764,7 +774,7 @@ public abstract class Table {
             data = a.getSchema().validate(data, Objects.newHashMap(String.class, Object.class, "record", oldObject));
 
         //validate foundation
-        if (a.isLog() && !Objects.isNullOrEmpty(a.getFrom())) {
+        if (a.isLog() && isTo) {
             if (foundation == null)
                 foundation = Objects.newHashMap();
             //validate foundation
@@ -774,43 +784,40 @@ public abstract class Table {
                         "data", data));
         }
 
-        //brules
-        runBefore(a, oldObject, data, foundation);
-
         Map<String, Object> newObject = null;
-
-        //set or add
-        if (!Objects.isNullOrEmpty(a.getTo())) {
-            Map<String, Object> object = Objects.copy(oldObject);
-            if (Objects.isNullOrEmpty(object))
-                object = Objects.newHashMap("id", newId());
-
+        if(isTo){
+            newObject = Objects.newHashMap("id",id,STATE,state.getName());
+            if(isFrom)
+                newObject = Objects.copy(oldObject);
             //merge
-            newObject = merge(a, object, data);
+            newObject = merge(a, newObject, data);
+
             //validate
             if (state.getSchema() != null)
                 newObject = state.getSchema().validate(newObject);
             newObject = schema.validate(newObject);
 
             newObject.put(STATE, state.getName());
+            newObject.put("id", id);
+        }
 
+        //brules
+        runBefore(a, oldObject, data, foundation);
+
+        if(isTo){
             final Map<String, Object> _newObject = newObject;
-            final ActionBean _a = a;
             final String _id = id;
             try {
                 Locks.waitAndRun(getLockName(null), new Closure<String, Object>() {
                     @Override
                     public Object call(String input) throws ClosureException {
                         try {
-                            checkUnique(_newObject, Objects.isNullOrEmpty(_a.getFrom()));
+                            checkUnique(_newObject, !isFrom);
                             //save
-                            if (!Objects.isNullOrEmpty(_a.getFrom())) {
-                                //set
+                            if(isFrom)
                                 collectionSet(collection, _id, _newObject);
-                            } else {
-                                //add
+                            else
                                 collectionAdd(collection, _newObject);
-                            }
                         } catch (Throwable e) {
                             throw ClosureException.wrap(e);
                         }
@@ -827,20 +834,18 @@ public abstract class Table {
                 }
                 throw e.toSystemError();
             }
-
-            //add log
-            if (!Objects.isNullOrEmpty(a.getFrom()) && a.isLog()) {
-                //log
-                log(id, a, oldObject, newObject, data, foundation);
-            }
-        } else {
-            //remove
+        }else{
             collectionRemove(collection, id);
-            collectionAdd(collection + REMOVED_SUFFIX, oldObject);
+            collectionAdd(collection + TRASH_SUFFIX, oldObject);
         }
-        //brules after
+
+        //add log
+        if(a.isLog() && isTo)
+            log(id, a, oldObject, newObject, data, foundation);
+
         runAfter(a, oldObject, newObject, data, foundation);
-        return newObject != null ? newObject : oldObject;
+
+        return isTo?newObject:oldObject;
     }
 
     /**
@@ -899,7 +904,7 @@ public abstract class Table {
                         break;
                     }
                 }
-                label += a.getName();
+                label += a.getLabel();
                 if (j != null && j.length > 0) {
                     for (int k : j) {
                         a = ((ListAttribute) a).getList().get(k);
@@ -924,8 +929,19 @@ public abstract class Table {
      */
     protected void log(String id, ActionBean action, Map<String, Object> oldObject, Map<String, Object> newObject,
                        Map<String, Object> data, Map<String, Object> foundation) {
-        List<ObjectDiff.DiffBean> diff = Objects.diff(oldObject, newObject);
-        List<Map<String, Object>> changes = Objects.newArrayList();
+        List<Map<String, Object>> changes = null;
+        if(newObject!=null && oldObject!=null){
+            List<ObjectDiff.DiffBean> diff = Objects.diff(oldObject, newObject);
+            changes = Objects.newArrayList();
+            for (ObjectDiff.DiffBean b : diff) {
+                changes.add(Objects.newHashMap(String.class, Object.class,
+                        "label", getAttributeLabel(b.getPath()),
+                        "new", b.getNewValue(),
+                        "old", b.getOldValue(),
+                        "path", b.getPath()
+                ));
+            }
+        }
         Map<String, Object> h = Objects.newHashMap(
                 "action", Objects.newHashMap(
                 "from", action.getFrom(),
@@ -945,14 +961,6 @@ public abstract class Table {
                 "changes", changes,
                 "data", data
         );
-        for (ObjectDiff.DiffBean b : diff) {
-            changes.add(Objects.newHashMap(String.class, Object.class,
-                    "label", getAttributeLabel(b.getPath()),
-                    "new", b.getOldValue(),
-                    "old", b.getOldValue(),
-                    "path", b.getPath()
-            ));
-        }
         collectionAdd(collection + HISTORY_SUFFIX, h);
     }
 
@@ -969,7 +977,7 @@ public abstract class Table {
     /**
      * @return
      */
-    public boolean isRegistryAccessAllowed() {
+    public boolean isAccessAllowed() {
         if (access != null) {
             return access.callQuite(null);
         }
@@ -980,9 +988,28 @@ public abstract class Table {
     /**
      * @throws AccessDeniedException
      */
-    protected void checkRegistryAccess() throws AccessDeniedException {
-        if (!isRegistryAccessAllowed())
+    protected void checkAccess() throws AccessDeniedException {
+        if (!isAccessAllowed())
             throw new AccessDeniedException("Access to " + name + " table is denied for: " + Session.getSessionBean().getUserId());
+    }
+
+    /**
+     * @return
+     */
+    public boolean isTrashAccessAllowed() {
+        if (access != null) {
+            return access.callQuite(null);
+        }
+        return true;
+    }
+
+
+    /**
+     * @throws AccessDeniedException
+     */
+    protected void checkTrashAccess() throws AccessDeniedException {
+        if (!isTrashAccessAllowed())
+            throw new AccessDeniedException("Access to " + name + " table trash is denied for: " + Session.getSessionBean().getUserId());
     }
 
     /**
@@ -1066,16 +1093,18 @@ public abstract class Table {
             if (ind.isUnique()) {
                 //check unique
                 Map<String, Object> search = Objects.newHashMap();
-                String err = ind.getUniqueErrorMessage();
-                if (Objects.isNullOrEmpty(err)) {
-                    int i = 0;
-                    for (String f : ind.getFields()) {
-                        i++;
-                        search.put(f, Objects.get(object, f));
-                        err += getAttributeLabel(f);
-                        if (i < ind.getFields().size())
-                            err += "; ";
-                    }
+                String err = "";
+
+                int i = 0;
+                for (String f : ind.getFields()) {
+                    i++;
+                    search.put(f, Objects.get(object, f));
+                    err += getAttributeLabel(f);
+                    if (i < ind.getFields().size())
+                        err += "; ";
+                }
+                if (!Objects.isNullOrEmpty(ind.getUniqueErrorMessage())) {
+                    err = ind.getUniqueErrorMessage();
                 }
 
                 String id = Objects.get(object, "id");
@@ -1141,6 +1170,8 @@ public abstract class Table {
      * @return
      */
     public ActionBean getAction(String id, String action, Map<String, Object> obj) throws ActionNotAvailableException, NotFoundException {
+        if(obj==null)
+            obj = Objects.newHashMap();
         ActionBean a = null;
         for (ActionBean it : actions) {
             if (it.getName().equals(action)) {
@@ -1153,7 +1184,7 @@ public abstract class Table {
 
         Map<String, Object> oldObject = null;
         if (!Objects.isNullOrEmpty(a.getFrom())) {
-            Map<String, Object> search = getFieldEqualsSearch("id",id);
+            Map<String, Object> search = setFieldEqualsSearch(null,"id", id);
             filter(search);
             try {
                 oldObject = collectionGet(collection, search);
@@ -1192,7 +1223,7 @@ public abstract class Table {
                 break;
             }
         }
-        if (state == null)
+        if (!Objects.isNullOrEmpty(s) && state == null)
             throw new S1SystemError("State " + s + " not found in table " + name);
         return state;
     }
