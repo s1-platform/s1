@@ -1,7 +1,12 @@
 package org.s1.table;
 
 import org.s1.misc.Closure;
+import org.s1.misc.ClosureException;
+import org.s1.objects.Objects;
 import org.s1.objects.schema.ObjectSchema;
+import org.s1.objects.schema.ObjectSchemaFormatException;
+import org.s1.script.S1ScriptEngine;
+import org.s1.script.ScriptException;
 
 import java.util.Map;
 
@@ -21,6 +26,105 @@ public class ActionBean {
     private ObjectSchema foundationSchema;
     private boolean log;
     private Closure<MergeBean,Object> merge;
+
+    /**
+     *
+     * @param it
+     */
+    public void fromMap(final S1ScriptEngine scriptEngine, Map<String,Object> it) throws ObjectSchemaFormatException{
+        this.setName(Objects.get(String.class, it, "name"));
+        this.setLabel(Objects.get(String.class, it, "label"));
+
+        this.setFrom(Objects.get(String.class, it, "from"));
+        this.setTo(Objects.get(String.class,it,"to"));
+
+        final String accessStr = Objects.get(it,"access");
+        if(!Objects.isNullOrEmpty(accessStr)){
+            this.setAccess(new Closure<Map<String, Object>, Boolean>() {
+                @Override
+                public Boolean call(Map<String, Object> input) throws ClosureException {
+                    try{
+                        scriptEngine.eval(accessStr,Objects.newHashMap(String.class,Object.class,
+                                "record",input));
+                        return true;
+                    }catch (ScriptException e){
+                        return false;
+                    }
+                }
+            });
+        }
+
+        final String beforeStr = Objects.get(it,"before");
+        if(!Objects.isNullOrEmpty(beforeStr)){
+            this.setBefore(new Closure<ActionBean.BeforeBean, Object>() {
+                @Override
+                public Object call(ActionBean.BeforeBean input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(beforeStr, Objects.newHashMap(String.class, Object.class,
+                                "oldRecord", input.getOldRecord(),
+                                "foundation", input.getFoundation(),
+                                "data", input.getData()));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        final String afterStr = Objects.get(it,"after");
+        if(!Objects.isNullOrEmpty(afterStr)){
+            this.setAfter(new Closure<ActionBean.AfterBean, Object>() {
+                @Override
+                public Object call(ActionBean.AfterBean input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(afterStr, Objects.newHashMap(String.class, Object.class,
+                                "newRecord", input.getNewRecord(),
+                                "oldRecord", input.getOldRecord(),
+                                "foundation", input.getFoundation(),
+                                "data", input.getData()));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        final String mergeStr = Objects.get(it,"merge");
+        if(!Objects.isNullOrEmpty(mergeStr)){
+            this.setMerge(new Closure<ActionBean.MergeBean, Object>() {
+                @Override
+                public Object call(ActionBean.MergeBean input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(mergeStr, Objects.newHashMap(String.class, Object.class,
+                                "newRecord", input.getNewRecord(),
+                                "oldRecord", input.getOldRecord(),
+                                "data", input.getData()));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        Map<String,Object> sm = Objects.get(it,"schema");
+        if(!Objects.isNullOrEmpty(sm)){
+            ObjectSchema s = new ObjectSchema();
+            s.fromMap(sm);
+            this.setSchema(s);
+        }
+
+        //log
+        this.setLog(Objects.get(Boolean.class, it, "log"));
+        Map<String,Object> fsm = Objects.get(it,"foundationSchema");
+        if(!Objects.isNullOrEmpty(fsm)){
+            ObjectSchema fs = new ObjectSchema();
+            fs.fromMap(fsm);
+            this.setFoundationSchema(fs);
+        }
+    }
 
     /**
      *
@@ -205,20 +309,20 @@ public class ActionBean {
         private Map<String,Object> data;
         private Map<String,Object> foundation;
         private ActionBean action;
-        private Map<String,Object> oldObject;
+        private Map<String,Object> oldRecord;
 
         /**
          *
          * @param data
          * @param foundation
          * @param action
-         * @param oldObject
+         * @param oldRecord
          */
-        public BeforeBean(Map<String, Object> data, Map<String, Object> foundation, ActionBean action, Map<String, Object> oldObject) {
+        public BeforeBean(Map<String, Object> data, Map<String, Object> foundation, ActionBean action, Map<String, Object> oldRecord) {
             this.data = data;
             this.foundation = foundation;
             this.action = action;
-            this.oldObject = oldObject;
+            this.oldRecord = oldRecord;
         }
 
         /**
@@ -233,8 +337,8 @@ public class ActionBean {
          *
          * @return
          */
-        public Map<String, Object> getOldObject() {
-            return oldObject;
+        public Map<String, Object> getOldRecord() {
+            return oldRecord;
         }
 
         /**
@@ -258,7 +362,7 @@ public class ActionBean {
      *
      */
     public static class AfterBean extends BeforeBean{
-        private Map<String,Object> newObject;
+        private Map<String,Object> newRecord;
 
         /**
          *
@@ -266,11 +370,19 @@ public class ActionBean {
          * @param foundation
          * @param action
          * @param oldObject
-         * @param newObject
+         * @param newRecord
          */
-        public AfterBean(Map<String, Object> data, Map<String, Object> foundation, ActionBean action, Map<String, Object> oldObject, Map<String, Object> newObject) {
+        public AfterBean(Map<String, Object> data, Map<String, Object> foundation, ActionBean action, Map<String, Object> oldObject, Map<String, Object> newRecord) {
             super(data, foundation, action, oldObject);
-            this.newObject = newObject;
+            this.newRecord = newRecord;
+        }
+
+        /**
+         *
+         * @return
+         */
+        public Map<String, Object> getNewRecord() {
+            return newRecord;
         }
     }
 
@@ -278,19 +390,19 @@ public class ActionBean {
      *
      */
     public static class MergeBean {
-        private Map<String,Object> result;
-        private Map<String,Object> oldObject;
+        private Map<String,Object> newRecord;
+        private Map<String,Object> oldRecord;
         private Map<String,Object> data;
 
         /**
          *
-         * @param result
-         * @param oldObject
+         * @param newRecord
+         * @param oldRecord
          * @param data
          */
-        public MergeBean(Map<String, Object> result, Map<String, Object> oldObject, Map<String, Object> data) {
-            this.result = result;
-            this.oldObject = oldObject;
+        public MergeBean(Map<String, Object> newRecord, Map<String, Object> oldRecord, Map<String, Object> data) {
+            this.newRecord = newRecord;
+            this.oldRecord = oldRecord;
             this.data = data;
         }
 
@@ -298,16 +410,16 @@ public class ActionBean {
          *
          * @return
          */
-        public Map<String, Object> getResult() {
-            return result;
+        public Map<String, Object> getNewRecord() {
+            return newRecord;
         }
 
         /**
          *
          * @return
          */
-        public Map<String, Object> getOldObject() {
-            return oldObject;
+        public Map<String, Object> getOldRecord() {
+            return oldRecord;
         }
 
         /**

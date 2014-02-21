@@ -12,6 +12,8 @@ import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.*;
+import org.s1.script.S1ScriptEngine;
+import org.s1.script.ScriptException;
 import org.s1.user.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,11 @@ import java.util.concurrent.TimeoutException;
 public abstract class Table {
 
     private static final Logger LOG = LoggerFactory.getLogger(Table.class);
+
+    /**
+     * LOCK TIMEOUT
+     */
+    public static int LOCK_TIMEOUT = 30000;
 
     private String name;
     private String collection;
@@ -231,14 +238,193 @@ public abstract class Table {
     }
 
     /**
-     * LOCK TIMEOUT
-     */
-    public static int LOCK_TIMEOUT = 30000;
-
-    /**
      * @param m
      */
     public void fromMap(Map<String, Object> m) {
+        collection = Objects.get(m,"collection");
+
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine("table.scriptEngine");
+
+        //indexes
+        indexes = Objects.newArrayList(IndexBean.class,
+                new IndexBean(Objects.newArrayList(String.class, "id"), true, "id"));
+        List<Map<String,Object>> indList = Objects.get(m,"indexes");
+        if(indList!=null){
+            for(Map<String,Object> it:indList){
+                List<String> fields = Objects.get(it,"fields");
+                boolean unique = Objects.get(Boolean.class, it,"unique");
+                String msg = Objects.get(it,"message");
+                if(!Objects.isNullOrEmpty(fields)){
+                    indexes.add(new IndexBean(fields, unique, msg));
+                }
+            }
+        }
+
+        //actions
+        actions = Objects.newArrayList();
+        List<Map<String,Object>> actList = Objects.get(m,"actions");
+        if(actList!=null){
+            for(Map<String,Object> it:actList){
+                ActionBean a = new ActionBean();
+                try {
+                    a.fromMap(scriptEngine, it);
+                } catch (ObjectSchemaFormatException e) {
+                    LOG.warn("Table " + name + ", action " + a.getName() + " schema format problem: " + e.getMessage() + ", " + e.getClass().getName());
+                }
+                actions.add(a);
+            }
+        }
+
+        states = Objects.newArrayList();
+        List<Map<String,Object>> stList = Objects.get(m,"states");
+        if(stList!=null){
+            for(Map<String,Object> it:stList){
+                StateBean s = new StateBean();
+                try {
+                    s.fromMap(it);
+                } catch (ObjectSchemaFormatException e) {
+                    LOG.warn("Table "+name+", state "+s.getName()+" schema format problem: "+e.getMessage()+", "+e.getClass().getName());
+                }
+                states.add(s);
+            }
+        }
+
+        Map<String,Object> sm = Objects.get(m,"schema");
+        if(!Objects.isNullOrEmpty(sm)){
+            ObjectSchema s = new ObjectSchema();
+            try {
+                s.fromMap(sm);
+                this.setSchema(s);
+            } catch (ObjectSchemaFormatException e) {
+                LOG.warn("Table " + name + " schema format problem: " + e.getMessage() + ", " + e.getClass().getName());
+            }
+        }
+
+        Map<String,Object> ism = Objects.get(m,"importSchema");
+        if(!Objects.isNullOrEmpty(ism)){
+            ObjectSchema s = new ObjectSchema();
+            try {
+                s.fromMap(ism);
+                this.setImportSchema(s);
+            } catch (ObjectSchemaFormatException e) {
+                LOG.warn("Table "+name+" importSchema format problem: "+e.getMessage()+", "+e.getClass().getName());
+            }
+        }
+
+        final String accessStr = Objects.get(m,"access");
+        if(!Objects.isNullOrEmpty(accessStr)){
+            this.setAccess(new Closure<Object, Boolean>() {
+                @Override
+                public Boolean call(Object input) throws ClosureException {
+                    try{
+                        scriptEngine.eval(accessStr,null);
+                        return true;
+                    }catch (ScriptException e){
+                        return false;
+                    }
+                }
+            });
+        }
+
+        final String importAccessStr = Objects.get(m,"importAccess");
+        if(!Objects.isNullOrEmpty(importAccessStr)){
+            this.setImportAccess(new Closure<Object, Boolean>() {
+                @Override
+                public Boolean call(Object input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(importAccessStr, null);
+                        return true;
+                    } catch (ScriptException e) {
+                        return false;
+                    }
+                }
+            });
+        }
+
+        final String logAccessStr = Objects.get(m,"logAccess");
+        if(!Objects.isNullOrEmpty(logAccessStr)){
+            this.setLogAccess(new Closure<Map<String, Object>, Boolean>() {
+                @Override
+                public Boolean call(Map<String, Object> input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(accessStr, Objects.newHashMap(String.class, Object.class,
+                                "record", input));
+                        return true;
+                    } catch (ScriptException e) {
+                        return false;
+                    }
+                }
+            });
+        }
+
+        final String importActionStr = Objects.get(m,"importAction");
+        if(!Objects.isNullOrEmpty(importActionStr)){
+            this.setImportAction(new Closure<ImportBean, Object>() {
+                @Override
+                public Object call(ImportBean input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(importActionStr, Objects.newHashMap(String.class, Object.class,
+                                "newRecord", input.getNewRecord(),
+                                "oldRecord", input.getOldRecord(),
+                                "id", input.getId(),
+                                "state", input.getState(),
+                                "data", input.getData()));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        final String enrichStr = Objects.get(m,"enrich");
+        if(!Objects.isNullOrEmpty(enrichStr)){
+            this.setEnrich(new Closure<EnrichBean, Object>() {
+                @Override
+                public Object call(EnrichBean input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(enrichStr, Objects.newHashMap(String.class, Object.class,
+                                "context", input.getContext(),
+                                "record", input.getRecord()));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        final String filterStr = Objects.get(m,"filter");
+        if(!Objects.isNullOrEmpty(filterStr)){
+            this.setFilter(new Closure<Map<String, Object>, Object>() {
+                @Override
+                public Object call(Map<String, Object> input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(filterStr, Objects.newHashMap(String.class, Object.class,
+                                "search", input));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
+        final String sortStr = Objects.get(m,"sort");
+        if(!Objects.isNullOrEmpty(sortStr)){
+            this.setSort(new Closure<Map<String, Object>, Object>() {
+                @Override
+                public Object call(Map<String, Object> input) throws ClosureException {
+                    try {
+                        scriptEngine.eval(sortStr, Objects.newHashMap(String.class, Object.class,
+                                "sort", input));
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
 
     }
 
@@ -363,7 +549,7 @@ public abstract class Table {
         Map<String, Object> oldObject = get(id);
         checkLogAccess(oldObject);
 
-        Map<String, Object> search = Objects.newHashMap("record", id);
+        Map<String, Object> search = getFieldEqualsSearch("record", id);
         long count = collectionList(collection + HISTORY_SUFFIX, result, search, Objects.newHashMap(String.class, Object.class,
                 "date", -1
         ), null, skip, max);
@@ -380,7 +566,7 @@ public abstract class Table {
         if (ctx == null)
             ctx = Objects.newHashMap();
         checkRegistryAccess();
-        Map<String, Object> search = Objects.newHashMap("id", id);
+        Map<String, Object> search = getFieldEqualsSearch("id",id);
         search = filter(search);
         Map<String, Object> m = null;
         try {
@@ -405,6 +591,13 @@ public abstract class Table {
     public Map<String, Object> get(String id) throws NotFoundException, AccessDeniedException {
         return get(id, null);
     }
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    protected abstract Map<String,Object> getFieldEqualsSearch(String name, String id);
 
     /**
      * @param collection
@@ -962,7 +1155,7 @@ public abstract class Table {
 
         Map<String, Object> oldObject = null;
         if (!Objects.isNullOrEmpty(a.getFrom())) {
-            Map<String, Object> search = Objects.newHashMap("id", id);
+            Map<String, Object> search = getFieldEqualsSearch("id",id);
             filter(search);
             try {
                 oldObject = collectionGet(collection, search);

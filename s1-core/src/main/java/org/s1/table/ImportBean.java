@@ -7,23 +7,23 @@ import java.util.Map;
  */
 public class ImportBean {
     private String id;
-    private Map<String,Object> newObject;
-    private Map<String,Object> oldObject;
+    private Map<String,Object> newRecord;
+    private Map<String,Object> oldRecord;
     private String state;
     private Map<String,Object> data;
 
     /**
      *
      * @param id
-     * @param newObject
-     * @param oldObject
+     * @param newRecord
+     * @param oldRecord
      * @param state
      * @param data
      */
-    public ImportBean(String id, Map<String, Object> newObject, Map<String, Object> oldObject, String state, Map<String, Object> data) {
+    public ImportBean(String id, Map<String, Object> newRecord, Map<String, Object> oldRecord, String state, Map<String, Object> data) {
         this.id = id;
-        this.newObject = newObject;
-        this.oldObject = oldObject;
+        this.newRecord = newRecord;
+        this.oldRecord = oldRecord;
         this.state = state;
         this.data = data;
     }
@@ -40,16 +40,16 @@ public class ImportBean {
      *
      * @return
      */
-    public Map<String, Object> getNewObject() {
-        return newObject;
+    public Map<String, Object> getNewRecord() {
+        return newRecord;
     }
 
     /**
      *
      * @return
      */
-    public Map<String, Object> getOldObject() {
-        return oldObject;
+    public Map<String, Object> getOldRecord() {
+        return oldRecord;
     }
 
     /**

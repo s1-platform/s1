@@ -1,6 +1,10 @@
 package org.s1.table;
 
+import org.s1.objects.Objects;
 import org.s1.objects.schema.ObjectSchema;
+import org.s1.objects.schema.ObjectSchemaFormatException;
+
+import java.util.Map;
 
 /**
  * Table state
@@ -10,6 +14,21 @@ public class StateBean {
     private ObjectSchema schema;
     private String name;
     private String label;
+
+    /**
+     *
+     * @param it
+     */
+    public void fromMap(Map<String,Object> it) throws ObjectSchemaFormatException{
+        this.setName(Objects.get(String.class, it, "name"));
+        this.setLabel(Objects.get(String.class, it, "label"));
+        Map<String,Object> sm = Objects.get(it,"schema");
+        if(!Objects.isNullOrEmpty(sm)){
+            ObjectSchema s = new ObjectSchema();
+            s.fromMap(sm);
+            this.setSchema(s);
+        }
+    }
 
     /**
      *
