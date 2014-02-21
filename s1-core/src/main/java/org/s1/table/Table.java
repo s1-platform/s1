@@ -594,10 +594,10 @@ public abstract class Table {
 
     /**
      *
-     * @param id
+     * @param value
      * @return
      */
-    protected abstract Map<String,Object> getFieldEqualsSearch(String name, String id);
+    protected abstract Map<String,Object> getFieldEqualsSearch(String name, String value);
 
     /**
      * @param collection
@@ -1079,11 +1079,7 @@ public abstract class Table {
                 }
 
                 String id = Objects.get(object, "id");
-                search = getUniqueSearch(id, search);
-                /*Objects.newHashMap("$and",search);
-                if(!isNew){
-                    search["\$and"].add([id:["\$ne":object.id]]);
-                }*/
+                search = getUniqueSearch(isNew, id, search);
                 try {
                     try {
                         collectionGet(collection, search);
@@ -1098,11 +1094,13 @@ public abstract class Table {
     }
 
     /**
+     *
+     * @param isNew
      * @param id
      * @param pathsAndValues
      * @return
      */
-    protected abstract Map<String, Object> getUniqueSearch(String id, Map<String, Object> pathsAndValues);
+    protected abstract Map<String, Object> getUniqueSearch(boolean isNew, String id, Map<String, Object> pathsAndValues);
 
     /**
      * @param id
