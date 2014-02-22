@@ -50,6 +50,7 @@ public abstract class Table {
     private ObjectSchema schema;
     private ObjectSchema importSchema;
     private Closure<ImportBean, Object> importAction;
+    private FullTextTableSearcher fullTextSearcher;
 
     private List<ActionBean> actions = Objects.newArrayList();
     private List<StateBean> states = Objects.newArrayList();
@@ -61,6 +62,22 @@ public abstract class Table {
 
     public static final String HISTORY_SUFFIX = "_history";
     public static final String TRASH_SUFFIX = "_removed";
+
+    /**
+     *
+     * @return
+     */
+    public FullTextTableSearcher getFullTextSearcher() {
+        return fullTextSearcher;
+    }
+
+    /**
+     *
+     * @param fullTextSearcher
+     */
+    public void setFullTextSearcher(FullTextTableSearcher fullTextSearcher) {
+        this.fullTextSearcher = fullTextSearcher;
+    }
 
     /**
      * @return
@@ -426,6 +443,16 @@ public abstract class Table {
             });
         }
 
+        String scls = Objects.get(m,"fullTextSearcher.class",FullTextTableSearcher.class.getName());
+        Map<String,Object> scfg = Objects.get(m,"fullTextSearcher.config",Objects.newHashMap(String.class,Object.class));
+        try{
+            fullTextSearcher = (FullTextTableSearcher)Class.forName(scls).newInstance();
+        }catch (Exception e){
+            LOG.warn("Cannot initialize fullTextSearcher ("+scls+") for table "+name+": "+e.getClass().getName()+": "+e.getMessage());
+            fullTextSearcher = new FullTextTableSearcher();
+        }
+        fullTextSearcher.setConfig(scfg);
+
     }
 
     /**
@@ -485,7 +512,7 @@ public abstract class Table {
      * @param max
      * @return
      */
-    public long list(List<Map<String, Object>> result, Map<String, Object> search, Map<String, Object> sort,
+    public long list(List<Map<String, Object>> result, String fullTextQuery, Map<String, Object> search, Map<String, Object> sort,
                      Map<String, Object> fields, int skip, int max, Map<String, Object> ctx) throws AccessDeniedException {
         if (ctx == null)
             ctx = Objects.newHashMap();
@@ -517,10 +544,12 @@ public abstract class Table {
      * @param max
      * @return
      */
-    public long list(List<Map<String, Object>> result, Map<String, Object> search, Map<String, Object> sort,
+    public long list(List<Map<String, Object>> result, String fullTextQuery, Map<String, Object> search, Map<String, Object> sort,
                      Map<String, Object> fields, int skip, int max) throws AccessDeniedException {
-        return list(result, search, sort, fields, skip, max, null);
+        return list(result, fullTextQuery, search, sort, fields, skip, max, null);
     }
+
+
 
     /**
      * @param collection

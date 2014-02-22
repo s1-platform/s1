@@ -112,7 +112,7 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals(1L,TablesFactory.getTable("test1").list(l,null,null,null,0,10));
+            assertEquals(1L,TablesFactory.getTable("test1").list(l,null,null,null,null,0,10));
             assertEquals("a",Objects.get(l.get(0),"a"));
             assertEquals(1,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -203,7 +203,7 @@ public class TableTest extends ClusterTest {
 
                             //list
                             List<Map<String, Object>> l = Objects.newArrayList();
-                            c = t.list(l, Objects.newHashMap(String.class, Object.class,
+                            c = t.list(l, null, Objects.newHashMap(String.class, Object.class,
                                     "a", "a_" + input
                             ), null, null, 0, 10);
                             assertEquals(1L, c);
@@ -212,7 +212,7 @@ public class TableTest extends ClusterTest {
 
                             //list all
                             l.clear();
-                            c = t.list(l, null, Objects.newHashMap(String.class, Object.class,
+                            c = t.list(l, null, null, Objects.newHashMap(String.class, Object.class,
                                     "a", 1
                             ), null, 0, 10);
                             assertEquals((long) p, c);
@@ -352,7 +352,7 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,Objects.newHashMap(String.class,Object.class,
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,null,Objects.newHashMap(String.class,Object.class,
                     "b",1),null,0,10));
             assertEquals("test_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
@@ -383,7 +383,7 @@ public class TableTest extends ClusterTest {
         }));
 
         try{
-            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,Objects.newHashMap(String.class,Object.class,
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,null,Objects.newHashMap(String.class,Object.class,
                     "b",1),null,0,10));
             assertEquals("qwer_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
