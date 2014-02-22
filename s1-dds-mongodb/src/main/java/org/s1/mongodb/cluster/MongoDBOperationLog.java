@@ -28,7 +28,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     }
 
     @Override
-    public synchronized void listFrom(long id, Closure<MessageBean, Object> cl) {
+    public void listFrom(long id, Closure<MessageBean, Object> cl) {
         DBCollection coll = getCollection();
         DBCursor cur = coll.find(new BasicDBObject("id",new BasicDBObject("$gt",id)))
             .sort(new BasicDBObject("id", 1));
@@ -41,7 +41,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     }
 
     @Override
-    public synchronized void listUndone(Closure<MessageBean, Object> cl) {
+    public void listUndone(Closure<MessageBean, Object> cl) {
         DBCollection coll = getCollection();
         DBCursor cur = coll.find(new BasicDBObject("done",false))
                 .sort(new BasicDBObject("id", 1));
@@ -54,7 +54,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     }
 
     @Override
-    public synchronized void addToLocalLog(MessageBean m) {
+    public void addToLocalLog(MessageBean m) {
         DBCollection coll = getCollection();
         Map<String,Object> m1 = m.toMap();
         m1.put("done",false);
@@ -67,7 +67,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     }
 
     @Override
-    public synchronized void markDone(long id) {
+    public void markDone(long id) {
         DBCollection coll = getCollection();
         coll.update(new BasicDBObject("id",id),
                 new BasicDBObject("$set",new BasicDBObject("done",true)),false,false, WriteConcern.FSYNC_SAFE);
@@ -76,7 +76,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     }
 
     @Override
-    public synchronized long getLastId() {
+    public long getLastId() {
         DBCollection coll = getCollection();
         DBCursor cur = coll.find().sort(new BasicDBObject("id", -1)).limit(1);
         DBObject o = null;

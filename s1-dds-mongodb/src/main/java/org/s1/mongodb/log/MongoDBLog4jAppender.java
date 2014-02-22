@@ -1,9 +1,6 @@
 package org.s1.mongodb.log;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
+import com.mongodb.*;
 import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
 import org.s1.S1SystemError;
@@ -34,7 +31,7 @@ public class MongoDBLog4jAppender extends AppenderSkeleton{
     protected void append(LoggingEvent loggingEvent) {
         try{
             Map<String,Object> m = Loggers.toMap(loggingEvent);
-            collection.insert(new BasicDBObject(m));
+            collection.insert(new BasicDBObject(m), WriteConcern.NONE);
         }catch (Throwable e){
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             System.err.println(sdf.format(new Date())+": MongoDBLog4jAppender error");

@@ -1,4 +1,3 @@
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import org.s1.misc.Closure;
@@ -7,12 +6,13 @@ import org.s1.mongodb.MongoDBAggregationHelper;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.mongodb.MongoDBFormat;
 import org.s1.objects.Objects;
-import org.s1.test.BasicTest;
+import org.s1.table.AggregationBean;
+import org.s1.table.CountGroupBean;
+import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * s1v2
@@ -20,7 +20,7 @@ import java.util.Map;
  * Date: 14.02.14
  * Time: 15:13
  */
-public class AggregationTest extends BasicTest{
+public class AggregationTest extends ClusterTest{
 
     private static final String COLL = "coll_aggr";
 
@@ -54,74 +54,74 @@ public class AggregationTest extends BasicTest{
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
-                Map<String,Object> r = MongoDBAggregationHelper.aggregate(null,COLL,"str",null);
+                AggregationBean r = MongoDBAggregationHelper.aggregate(null,COLL,"str",null);
                 if(input==0)
                     trace(r);
-                assertEquals("test_0",r.get("min"));
-                assertEquals("test_99",r.get("max"));
-                assertEquals(100L,r.get("count"));
+                assertEquals("test_0",r.getMin());
+                assertEquals("test_99",r.getMax());
+                assertEquals(100L,r.getCount());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"str2",null);
                 if(input==0)
                     trace(r);
-                assertEquals("test_0",r.get("min"));
-                assertEquals("test_9",r.get("max"));
-                assertEquals(100L,r.get("count"));
-                assertEquals(0.0,r.get("avg"));
-                assertEquals(0,r.get("sum"));
+                assertEquals("test_0",r.getMin());
+                assertEquals("test_9",r.getMax());
+                assertEquals(100L,r.getCount());
+                assertEquals(0.0,r.getAvg());
+                assertEquals(0,r.getSum());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"int",null);
                 if(input==0)
                     trace(r);
-                assertEquals(0,r.get("min"));
-                assertEquals(99,r.get("max"));
-                assertEquals(100L,r.get("count"));
-                assertEquals(49.5,r.get("avg"));
-                assertEquals(4950,r.get("sum"));
+                assertEquals(0,r.getMin());
+                assertEquals(99,r.getMax());
+                assertEquals(100L,r.getCount());
+                assertEquals(49.5,r.getAvg());
+                assertEquals(4950,r.getSum());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"float",null);
                 if(input==0)
                     trace(r);
-                assertEquals(0D,r.get("min"));
-                assertEquals(9.9D,r.get("max"));
-                assertEquals(100L,r.get("count"));
-                assertEquals(4.95D,r.get("avg"));
-                assertEquals(495D,r.get("sum"));
+                assertEquals(0D,r.getMin());
+                assertEquals(9.9D,r.getMax());
+                assertEquals(100L,r.getCount());
+                assertEquals(4.95D,r.getAvg());
+                assertEquals(495D,r.getSum());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"double",null);
                 if(input==0)
                     trace(r);
-                assertEquals(0D,r.get("min"));
-                assertEquals(0.99D,r.get("max"));
-                assertEquals(100L,r.get("count"));
-                assertEquals(0.495D,r.get("avg"));
-                assertEquals(49.5D,r.get("sum"));
+                assertEquals(0D,r.getMin());
+                assertEquals(0.99D,r.getMax());
+                assertEquals(100L,r.getCount());
+                assertEquals(0.495D,r.getAvg());
+                assertEquals(49.5D,r.getSum());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"long",null);
                 if(input==0)
                     trace(r);
-                assertEquals(0L,r.get("min"));
-                assertEquals(9900000L,r.get("max"));
-                assertEquals(100L,r.get("count"));
-                assertEquals(4950000.0,r.get("avg"));
-                assertEquals(495000000L,r.get("sum"));
+                assertEquals(0L,r.getMin());
+                assertEquals(9900000L,r.getMax());
+                assertEquals(100L,r.getCount());
+                assertEquals(4950000.0,r.getAvg());
+                assertEquals(495000000L,r.getSum());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"bool",null);
                 if(input==0)
                     trace(r);
-                assertEquals(false,r.get("min"));
-                assertEquals(true,r.get("max"));
-                assertEquals(100L,r.get("count"));
+                assertEquals(false,r.getMin());
+                assertEquals(true,r.getMax());
+                assertEquals(100L,r.getCount());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"date",null);
                 if(input==0)
                     trace(r);
-                assertEquals(100L,r.get("count"));
+                assertEquals(100L,r.getCount());
 
                 r = MongoDBAggregationHelper.aggregate(null,COLL,"date2",null);
                 if(input==0)
                     trace(r);
-                assertEquals(100L,r.get("count"));
+                assertEquals(100L,r.getCount());
                 return null;
             }
         }));
@@ -134,36 +134,40 @@ public class AggregationTest extends BasicTest{
             @Override
             public Object call(Integer input) throws ClosureException {
 
-                List<Map<String,Object>> l = MongoDBAggregationHelper.countGroup(null,COLL,"str",null);
+                List<CountGroupBean> l = MongoDBAggregationHelper.countGroup(null,COLL,"str",null);
                 if(input==0)
                     trace(l);
                 assertEquals(21,l.size());
-                assertEquals(1L,l.get(0).get("count"));
-                assertEquals(80L,l.get(l.size() - 1).get("other"));
+                assertEquals(1L,l.get(0).getCount());
+                assertFalse(l.get(0).isOther());
+                assertNotNull(l.get(0).getValue());
+                assertEquals(80L,l.get(l.size() - 1).getCount());
+                assertTrue(l.get(l.size() - 1).isOther());
+                assertNull(l.get(l.size() - 1).getValue());
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"int",null);
                 if(input==0)
                     trace(l);
                 assertEquals(21,l.size());
-                assertEquals(4L,l.get(0).get("count"));
+                assertEquals(4L,l.get(0).getCount());
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"float",null);
                 if(input==0)
                     trace(l);
                 assertEquals(21,l.size());
-                assertEquals(5L,l.get(0).get("count"));
+                assertEquals(5L,l.get(0).getCount());
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"double",null);
                 if(input==0)
                     trace(l);
                 assertEquals(21,l.size());
-                assertEquals(5L,l.get(0).get("count"));
+                assertEquals(5L,l.get(0).getCount());
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"long",null);
                 if(input==0)
                     trace(l);
                 assertEquals(21,l.size());
-                assertEquals(5L,l.get(0).get("count"));
+                assertEquals(5L,l.get(0).getCount());
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"bool",null);
                 if(input==0)
@@ -173,12 +177,12 @@ public class AggregationTest extends BasicTest{
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"date",null);
                 if(input==0)
                     trace(l);
-                assertTrue(l.size()>=1);
+                assertTrue(l.size() >= 1);
 
                 l = MongoDBAggregationHelper.countGroup(null,COLL,"date2",null);
                 if(input==0)
                     trace(l);
-                assertTrue(l.size()>=1);
+                assertTrue(l.size() >= 1);
 
                 return null;
             }

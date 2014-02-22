@@ -612,7 +612,7 @@ public abstract class Table {
      * @param search
      * @return
      */
-    public Map<String, Object> aggregate(String field, Map<String, Object> search) throws AccessDeniedException {
+    public AggregationBean aggregate(String field, Map<String, Object> search) throws AccessDeniedException {
         checkAccess();
         if (search == null)
             search = Objects.newHashMap();
@@ -626,14 +626,14 @@ public abstract class Table {
      * @param search
      * @return
      */
-    protected abstract Map<String, Object> collectionAggregate(String collection, String field, Map<String, Object> search);
+    protected abstract AggregationBean collectionAggregate(String collection, String field, Map<String, Object> search);
 
     /**
      * @param field
      * @param search
      * @return
      */
-    public List<Map<String, Object>> countGroup(String field, Map<String, Object> search) throws AccessDeniedException {
+    public List<CountGroupBean> countGroup(String field, Map<String, Object> search) throws AccessDeniedException {
         checkAccess();
         if (search == null)
             search = Objects.newHashMap();
@@ -647,7 +647,7 @@ public abstract class Table {
      * @param search
      * @return
      */
-    protected abstract List<Map<String, Object>> collectionCountGroup(String collection, String field, Map<String, Object> search);
+    protected abstract List<CountGroupBean> collectionCountGroup(String collection, String field, Map<String, Object> search);
 
     /**
      * @param record
@@ -714,16 +714,22 @@ public abstract class Table {
             throws AccessDeniedException, ObjectSchemaValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException {
         checkAccess();
         try {
-            return (Map<String, Object>) Locks.waitAndRun(getLockName(id), new Closure<String, Object>() {
-                @Override
-                public Object call(String input) throws ClosureException {
-                    try {
-                        return changeRecordState(id, action, data, foundation);
-                    } catch (Throwable e) {
-                        throw ClosureException.wrap(e);
+            if(Objects.isNullOrEmpty(id)){
+                //add
+                return changeRecordState(id, action, data, foundation);
+            }else{
+                //lock and set
+                return (Map<String, Object>) Locks.waitAndRun(getLockName(id), new Closure<String, Object>() {
+                    @Override
+                    public Object call(String input) throws ClosureException {
+                        try {
+                            return changeRecordState(id, action, data, foundation);
+                        } catch (Throwable e) {
+                            throw ClosureException.wrap(e);
+                        }
                     }
-                }
-            }, LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                }, LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            }
         } catch (TimeoutException e) {
             throw S1SystemError.wrap(e);
         } catch (ClosureException e) {
@@ -1111,7 +1117,7 @@ public abstract class Table {
                 search = getUniqueSearch(isNew, id, search);
                 try {
                     try {
-                        collectionGet(collection, search);
+                        Map<String,Object> m = collectionGet(collection, search);
                     } catch (MoreThanOneFoundException e) {
                     }
                     throw new AlreadyExistsException(err);
@@ -1302,12 +1308,18 @@ public abstract class Table {
     protected void importRecord(final String id, final Map<String, Object> oldObject, final String state, final Map<String, Object> data)
             throws ObjectSchemaValidationException, AlreadyExistsException {
         Map<String, Object> newObject = Objects.newHashMap("id", id);
+        newObject = Objects.merge(newObject,oldObject,data);
+        newObject.put("id",id);
+        newObject.put(STATE,state);
         importAction.callQuite(new ImportBean(id, newObject, oldObject, state, data));
 
         if (!newObject.containsKey(STATE)) {
             throw new IllegalStateException("New object must contain _state field after import action (table: " + name + ")");
         }
         StateBean st = getStateByName(Objects.get(String.class, newObject, STATE));
+        if(st==null){
+            throw new S1SystemError("Table import: _state field must be not null (set it for newRecord in importAction)");
+        }
         //validate state
         if (st.getSchema() != null)
             newObject = st.getSchema().validate(newObject);

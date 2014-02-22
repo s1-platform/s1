@@ -2,10 +2,11 @@ package org.s1.mongodb;
 
 import com.mongodb.*;
 import org.s1.objects.Objects;
+import org.s1.table.AggregationBean;
+import org.s1.table.CountGroupBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -26,7 +27,7 @@ public class MongoDBAggregationHelper {
      * @param search
      * @return {max,min,sum,count,avg}
      */
-    public static Map<String, Object> aggregate(String instance, String collection, String field,
+    public static AggregationBean aggregate(String instance, String collection, String field,
                              Map<String, Object> search) {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
 
@@ -56,7 +57,14 @@ public class MongoDBAggregationHelper {
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB aggregation result ("+"instance: "+instance+", collection: "+collection+", search: "+search+
                     ") \n\t> "+res);
-        return MongoDBFormat.toMap(res);
+        Map<String,Object> m = MongoDBFormat.toMap(res);
+        AggregationBean a = new AggregationBean();
+        a.setMin(Objects.get(m,"min"));
+        a.setMax(Objects.get(m, "max"));
+        a.setAvg(Objects.get(m, "avg"));
+        a.setSum(Objects.get(m, "sum"));
+        a.setCount(Objects.get(Long.class, m, "count"));
+        return a;
     }
 
     /**
@@ -75,7 +83,7 @@ public class MongoDBAggregationHelper {
      * @param search
      * @return [{value, count},...]
      */
-    public static List<Map<String, Object>> countGroup(String instance, String collection,
+    public static List<CountGroupBean> countGroup(String instance, String collection,
                                                        String field, Map<String, Object> search){
 
 
@@ -94,7 +102,7 @@ public class MongoDBAggregationHelper {
                 new BasicDBObject("$group", group));
 
         List<Map<String,Object>> result = Objects.newArrayList();
-                BasicDBList result_list = (BasicDBList) out.getCommandResult().get("result");
+        BasicDBList result_list = (BasicDBList) out.getCommandResult().get("result");
         for(Object o:result_list){
             DBObject dbo = (DBObject)o;
             dbo.put("value",dbo.get("_id"));
@@ -144,7 +152,7 @@ public class MongoDBAggregationHelper {
                 for (int i = 0; i < GROUP_COUNT; i++) {
                     cuttedResult.add(result.get(i));
                 }
-                cuttedResult.add(Objects.newHashMap(String.class,Object.class, "other", valSum - firstValSum));
+                cuttedResult.add(Objects.newHashMap(String.class,Object.class, "other",true, "count", valSum - firstValSum));
             } else {
                 List<Map<String,Object>> result2 = Objects.newArrayList();
                 for(Map<String,Object> o:result){
@@ -384,7 +392,17 @@ public class MongoDBAggregationHelper {
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB countGroup result ("+"instance: "+instance+", collection: "+collection+", search: "+search+
                     ") \n\t> "+result);
-        return result;
+        List<CountGroupBean> l = Objects.newArrayList();
+        for(Map<String,Object> m:result){
+            CountGroupBean e = new CountGroupBean();
+            e.setValue(Objects.get(m, "value"));
+            e.setCount(Objects.get(Long.class, m, "count"));
+            e.setFrom(Objects.get(m, "valueFrom"));
+            e.setTo(Objects.get(m, "valueTo"));
+            e.setOther(Objects.get(Boolean.class,m,"other"));
+            l.add(e);
+        }
+        return l;
     }
 
 

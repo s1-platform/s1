@@ -9,6 +9,8 @@ import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.mongodb.MongoDBDDS;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
+import org.s1.table.AggregationBean;
+import org.s1.table.CountGroupBean;
 import org.s1.table.IndexBean;
 import org.s1.table.Table;
 
@@ -54,12 +56,12 @@ public class MongoDBTable extends Table{
     }
 
     @Override
-    protected Map<String, Object> collectionAggregate(String collection, String field, Map<String, Object> search) {
+    protected AggregationBean collectionAggregate(String collection, String field, Map<String, Object> search) {
         return MongoDBAggregationHelper.aggregate(null,collection,field,search);
     }
 
     @Override
-    protected List<Map<String, Object>> collectionCountGroup(String collection, String field, Map<String, Object> search) {
+    protected List<CountGroupBean> collectionCountGroup(String collection, String field, Map<String, Object> search) {
         return MongoDBAggregationHelper.countGroup(null, collection, field, search);
     }
 
@@ -88,4 +90,5 @@ public class MongoDBTable extends Table{
         }
         return s;
     }
+
 }

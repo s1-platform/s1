@@ -1,13 +1,18 @@
 package table;
 
 import com.mongodb.DB;
+import org.s1.S1SystemError;
 import org.s1.cluster.Session;
+import org.s1.cluster.datasource.AlreadyExistsException;
 import org.s1.cluster.datasource.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
+import org.s1.mongodb.MongoDBAggregationHelper;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.AggregationBean;
+import org.s1.table.CountGroupBean;
 import org.s1.table.Table;
 import org.s1.table.TablesFactory;
 import org.s1.test.ClusterTest;
@@ -65,9 +70,59 @@ public class TableTest extends ClusterTest {
         }));
     }
 
+    public void testUnique() {
+        final int p = 100;
+        title("Unique, parallel: " + p);
+        TablesFactory.getTable("test1");
+
+        //add, set
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(final Integer input) throws ClosureException {
+                Session.run("s_" + input, new Closure<String, Object>() {
+                    @Override
+                    public Object call(String s) throws ClosureException {
+
+                        try {
+                            String id = null;
+                            Map<String, Object> m = null;
+
+                            boolean b = false;
+                            Table t = TablesFactory.getTable("test1");
+                            try{
+                                //add
+                                m = t.changeState(null, "add", Objects.newHashMap(String.class, Object.class,
+                                        "a", "a",
+                                        "b", 1
+                                ), null);
+                            }catch (AlreadyExistsException e){
+
+                            }
+
+                        } catch (Throwable e) {
+                            throw ClosureException.wrap(e);
+                        }
+
+                        return null;
+                    }
+                });
+                return null;
+            }
+        }));
+
+        final List<Map<String,Object>> l = Objects.newArrayList();
+        try{
+            assertEquals(1L,TablesFactory.getTable("test1").list(l,null,null,null,0,10));
+            assertEquals("a",Objects.get(l.get(0),"a"));
+            assertEquals(1,Objects.get(l.get(0),"b"));
+        }catch (Exception e){
+            throw S1SystemError.wrap(e);
+        }
+    }
+
     public void testComplex() {
-        final int p = 5;
-        title("Factory, parallel: " + p);
+        final int p = 100;
+        title("Complex, parallel: " + p);
         TablesFactory.getTable("test1");
 
         final Map<Integer, String> ids = Objects.newHashMap();
@@ -129,6 +184,8 @@ public class TableTest extends ClusterTest {
                 return null;
             }
         }));
+        //if(1==1)
+        //    return;
 
         //list, log
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
@@ -161,6 +218,27 @@ public class TableTest extends ClusterTest {
                             assertEquals((long) p, c);
                             assertEquals(Math.min(10,p), l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
+
+                            //aggregate
+                            AggregationBean ab = t.aggregate("b",null);
+                            assertEquals(0,ab.getMin());
+                            assertEquals(p-1,ab.getMax());
+                            double avg = 0;
+                            for(int i=0;i<p;i++){
+                                avg+=i;
+                            }
+                            avg = avg/p;
+                            assertEquals(avg,ab.getAvg());
+                            assertTrue((Integer) ab.getSum() >= p);
+                            assertEquals(p,ab.getCount());
+
+                            //count group
+                            List<CountGroupBean> lc = t.countGroup("b",null);
+                            if(input==0)
+                                trace(lc);
+                            lc = t.countGroup("a",null);
+                            if(input==0)
+                                trace(lc);
 
                             //log
                             l.clear();
@@ -232,6 +310,86 @@ public class TableTest extends ClusterTest {
                 return null;
             }
         }));
+    }
+
+    public void testExpImport() {
+        final int p = 1;
+        final int c = 10;
+        title("Export/import, parallel: " + p);
+        TablesFactory.getTable("test1");
+
+        //import new
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(final Integer input) throws ClosureException {
+                Session.run("s_" + input, new Closure<String, Object>() {
+                    @Override
+                    public Object call(String s) throws ClosureException {
+
+                        try {
+                            List<Map<String,Object>> l = Objects.newArrayList();
+                            for(int i=0;i<c;i++){
+                                l.add(Objects.newHashMap(String.class,Object.class,
+                                        "a","test_"+i,
+                                        "b",i
+                                        ));
+                            }
+                            l.add(Objects.newHashMap(String.class,Object.class,
+                                    "a1","test_"
+                            ));
+                            l = TablesFactory.getTable("test1").doImport(l);
+                            assertEquals(c+1,l.size());
+                        } catch (Throwable e) {
+                            throw ClosureException.wrap(e);
+                        }
+
+                        return null;
+                    }
+                });
+                return null;
+            }
+        }));
+
+        final List<Map<String,Object>> l = Objects.newArrayList();
+        try{
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,Objects.newHashMap(String.class,Object.class,
+                    "b",1),null,0,10));
+            assertEquals("test_0",Objects.get(l.get(0),"a"));
+            assertEquals(0,Objects.get(l.get(0),"b"));
+        }catch (Exception e){
+            throw S1SystemError.wrap(e);
+        }
+
+        //import - update existing
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(final Integer input) throws ClosureException {
+                Session.run("s_" + input, new Closure<String, Object>() {
+                    @Override
+                    public Object call(String s) throws ClosureException {
+
+                        try {
+                            Objects.set(l.get(0),"a","qwer_0");
+                            TablesFactory.getTable("test1").doImport(l);
+                        } catch (Throwable e) {
+                            throw ClosureException.wrap(e);
+                        }
+
+                        return null;
+                    }
+                });
+                return null;
+            }
+        }));
+
+        try{
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,Objects.newHashMap(String.class,Object.class,
+                    "b",1),null,0,10));
+            assertEquals("qwer_0",Objects.get(l.get(0),"a"));
+            assertEquals(0,Objects.get(l.get(0),"b"));
+        }catch (Exception e){
+            throw S1SystemError.wrap(e);
+        }
     }
 
 }
