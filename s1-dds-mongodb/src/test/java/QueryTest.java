@@ -1,3 +1,4 @@
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import org.s1.S1SystemError;
@@ -10,6 +11,7 @@ import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
 import org.s1.test.BasicTest;
+import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
 import java.util.Date;
@@ -22,7 +24,7 @@ import java.util.Map;
  * Date: 14.02.14
  * Time: 13:21
  */
-public class QueryTest extends BasicTest {
+public class QueryTest extends ClusterTest {
 
     private static final String COLL = "coll_query";
 
@@ -38,6 +40,7 @@ public class QueryTest extends BasicTest {
                     "id", i,
                     "str", "test_" + i,
                     "str2", "test_" + (i % 50),
+                    "text", "hello world test! "+(i%2==0?"red":"blue"),
                     "int", i,
                     "float", i / 10.0F,
                     "double", i / 100.0D,
@@ -47,6 +50,11 @@ public class QueryTest extends BasicTest {
                     "bool", i % 3 == 0
             )));
         }
+        coll.ensureIndex(new BasicDBObject(Objects.newHashMap(
+                "str","text",
+                "str2","text",
+                "text","text"
+        )));
         trace("data inserted");
     }
 
@@ -111,6 +119,25 @@ public class QueryTest extends BasicTest {
                 assertEquals(51L,c);
                 assertEquals(10,res.size());
                 assertEquals(50,res.get(0).get("id"));
+                return null;
+            }
+        }));
+    }
+
+    public void testFullText(){
+        int p=100;
+        title("Full-text, parallel:"+p);
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                List<Map<String,Object>> res = Objects.newArrayList();
+                long c = MongoDBQueryHelper.list(res,null,COLL,"test red",Objects.newHashMap(String.class,Object.class,
+                        "id",Objects.newHashMap("$lte",50)),
+                        Objects.newHashMap(String.class,Object.class,"str2",0),0,10);
+                assertEquals(51L,c);
+                assertEquals(10,res.size());
+                if(input==0)
+                    trace(res);
                 return null;
             }
         }));

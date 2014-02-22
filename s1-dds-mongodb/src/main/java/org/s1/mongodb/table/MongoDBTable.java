@@ -1,6 +1,7 @@
 package org.s1.mongodb.table;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import org.s1.cluster.datasource.MoreThanOneFoundException;
 import org.s1.cluster.datasource.NotFoundException;
@@ -22,6 +23,60 @@ import java.util.Map;
  */
 public class MongoDBTable extends Table{
 
+    private List<String> fullTextFields = Objects.newArrayList();
+    private String fullTextLanguage;
+
+    /**
+     *
+     * @return
+     */
+    public List<String> getFullTextFields() {
+        return fullTextFields;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String getFullTextLanguage() {
+        return fullTextLanguage;
+    }
+
+    /**
+     *
+     * @param fullTextLanguage
+     */
+    public void setFullTextLanguage(String fullTextLanguage) {
+        this.fullTextLanguage = fullTextLanguage;
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        //create full-text indexes
+        BasicDBObject o = new BasicDBObject();
+        BasicDBObject opt = new BasicDBObject();
+        for(String s:fullTextFields){
+            o.put(s,"text");
+        }
+        if(!Objects.isNullOrEmpty(fullTextLanguage)){
+            opt.put("default_language",fullTextLanguage);
+        }
+        DBCollection coll = MongoDBConnectionHelper.getConnection(null).getCollection(getCollection());
+        coll.ensureIndex(o,opt);
+    }
+
+    @Override
+    public void fromMap(Map<String, Object> m) {
+        super.fromMap(m);
+        fullTextLanguage = Objects.get(m,"fullText.language");
+        List<String> l = Objects.get(m,"fullText.fields");
+        fullTextFields.clear();
+        if(l!=null){
+            fullTextFields.addAll(l);
+        }
+    }
+
     @Override
     protected void collectionIndex(String collection, String name, IndexBean ind) {
         DBObject i = new BasicDBObject();
@@ -38,8 +93,12 @@ public class MongoDBTable extends Table{
     }
 
     @Override
-    protected long collectionList(String collection, List<Map<String, Object>> result, Map<String, Object> search, Map<String, Object> sort, Map<String, Object> fields, int skip, int max) {
-        return MongoDBQueryHelper.list(result,null,collection,search,sort,fields,skip,max);
+    protected long collectionList(String collection, List<Map<String, Object>> result, String fullTextQuery, Map<String, Object> search, Map<String, Object> sort, Map<String, Object> fields, int skip, int max) {
+        if(Objects.isNullOrEmpty(fullTextQuery)){
+            return MongoDBQueryHelper.list(result,null,collection,search,sort,fields,skip,max);
+        }else{
+            return MongoDBQueryHelper.list(result,null,collection,fullTextQuery,search,fields,skip,max);
+        }
     }
 
     @Override

@@ -219,6 +219,13 @@ public class TableTest extends ClusterTest {
                             assertEquals(Math.min(10,p), l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
 
+                            //list full-text
+                            l.clear();
+                            c = t.list(l, "a_0", null, null, null, 0, 10);
+                            assertEquals(1L, c);
+                            assertEquals(1, l.size());
+                            assertEquals("a_0", Objects.get(l.get(0), "a"));
+
                             //aggregate
                             AggregationBean ab = t.aggregate("b",null);
                             assertEquals(0,ab.getMin());

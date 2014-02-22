@@ -10,6 +10,7 @@ import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,59 @@ public class MongoDBQueryHelper {
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB get result (collection:"+collection+",search:"+search+"\n\t> "+m);
         return m;
+    }
+
+    public static final String SCORE = "_score";
+
+    /**
+     *
+     * @param res
+     * @param instance
+     * @param collection
+     * @param fullTextQuery
+     * @param search
+     * @param fields
+     * @param skip
+     * @param max
+     * @return
+     */
+    public static long list(List<Map<String, Object>> res, String instance, String collection,
+                            String fullTextQuery,
+                            Map<String, Object> search,
+                            Map<String, Object> fields, int skip, int max) {
+        DB db = MongoDBConnectionHelper.getConnection(instance);
+        BasicDBObject request = new BasicDBObject();
+        request.put("text", collection);
+        request.put("search", fullTextQuery);
+        //request.put("limit", max + skip);
+        request.put("filter", search);
+        request.put("project", Objects.newHashMap("_id", 1));
+        CommandResult cr = db.command(request);
+        List<Map<String,Object>> l = Objects.get(cr,"results",new ArrayList<Map<String, Object>>());
+        int i=0;
+        for(Map<String,Object> m:l){
+            if(++i<skip)
+                continue;
+            Map<String,Object> _m = Objects.newHashMap();
+            DBObject o = db.getCollection(collection).findOne(new BasicDBObject("_id",Objects.get(m,"obj._id")),
+                    new BasicDBObject(fields==null?Objects.newHashMap():fields));
+            if(o!=null){
+                _m.putAll(MongoDBFormat.toMap(o));
+                res.add(_m);
+            }
+            _m.put(SCORE,Objects.get(m,"score"));
+            if(i>=skip+max)
+                break;
+        }
+        long cnt = Objects.get(Long.class,cr,"stats.n",0L);
+
+        if(LOG.isDebugEnabled())
+            LOG.debug("MongoDB list result (collection:"+collection+", search:"+search+", full-text:"+fullTextQuery+", fields:"+fields+", max:"+max+", skip:"+skip +
+                    "\n\t>command result: "+cr +
+                    "\n\t>count: "+cnt +
+                    "\n\t> "+res);
+
+        return cnt;
     }
 
     /**
