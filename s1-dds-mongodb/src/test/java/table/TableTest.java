@@ -1,5 +1,6 @@
 package table;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import org.s1.S1SystemError;
 import org.s1.cluster.Session;
@@ -33,7 +34,7 @@ public class TableTest extends ClusterTest {
     protected void setUp() throws Exception {
         super.setUp();
         MongoDBConnectionHelper.getConnection(null)
-                .getCollection(Options.getStorage().get(String.class, "table/test1", "collection")).drop();
+                .getCollection(Options.getStorage().get(String.class, "table/test1", "collection")).remove(new BasicDBObject());
         trace("Cleared");
     }
 
@@ -121,7 +122,7 @@ public class TableTest extends ClusterTest {
     }
 
     public void testComplex() {
-        final int p = 100;
+        final int p = 10;
         title("Complex, parallel: " + p);
         TablesFactory.getTable("test1");
 
@@ -184,8 +185,6 @@ public class TableTest extends ClusterTest {
                 return null;
             }
         }));
-        //if(1==1)
-        //    return;
 
         //list, log
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {

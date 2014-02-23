@@ -14,6 +14,8 @@ import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
 import org.s1.table.IndexBean;
 import org.s1.table.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,8 @@ import java.util.Map;
  * MongoDB Table implementation
  */
 public class MongoDBTable extends Table{
+
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBTable.class);
 
     private List<String> fullTextFields = Objects.newArrayList();
     private String fullTextLanguage;
@@ -53,17 +57,56 @@ public class MongoDBTable extends Table{
     @Override
     public void init() {
         super.init();
-        //create full-text indexes
-        BasicDBObject o = new BasicDBObject();
-        BasicDBObject opt = new BasicDBObject();
-        for(String s:fullTextFields){
-            o.put(s,"text");
-        }
-        if(!Objects.isNullOrEmpty(fullTextLanguage)){
-            opt.put("default_language",fullTextLanguage);
-        }
         DBCollection coll = MongoDBConnectionHelper.getConnection(null).getCollection(getCollection());
-        coll.ensureIndex(o,opt);
+        List<DBObject> ftlist = coll.getIndexInfo();
+
+        boolean exists = false;
+
+        for(DBObject o: ftlist){
+            if("full_text_index".equals(o.get("name"))){
+                exists = true;
+                List<String> keys = Objects.newArrayList();
+                Map<String,Object> ks = (Map<String,Object>)o.get("weights");
+                for(String k:ks.keySet()){
+                    keys.add(k);
+                }
+                boolean rm = false;
+                if(keys.size() == fullTextFields.size()){
+                    for(String k:keys){
+                        if(!fullTextFields.contains(k)){
+                            rm = true;
+                            break;
+                        }
+                    }
+                }else{
+                    rm = true;
+                }
+                if(rm){
+                    //drop index
+                    if(LOG.isDebugEnabled())
+                        LOG.debug("Drop full_text_index for collection "+getCollection());
+                    coll.dropIndex("full_text_index");
+                    exists = false;
+                }
+            }
+        }
+
+        if(!exists){
+            //create full-text indexes
+            BasicDBObject o = new BasicDBObject();
+            BasicDBObject opt = new BasicDBObject("name","full_text_index");
+
+            //add index
+            for(String s:fullTextFields){
+                o.put(s,"text");
+            }
+            if(!Objects.isNullOrEmpty(fullTextLanguage)){
+                opt.put("default_language",fullTextLanguage);
+            }
+            if(LOG.isDebugEnabled())
+                LOG.debug("Ensure full_text_index for collection "+getCollection()+", fields: "+fullTextFields+", language: "+fullTextLanguage);
+            coll.ensureIndex(o,opt);
+        }
     }
 
     @Override
