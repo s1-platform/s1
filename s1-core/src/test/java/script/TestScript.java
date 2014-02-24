@@ -118,6 +118,22 @@ public class TestScript extends BasicTest{
         }));
     }
 
+    public void testEvalInFunction(){
+        final File dir = new File(getTestClassesHome()+"/script/templates");
+        int p=1;
+        title("Eval in function, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                assertEquals(10,scriptEngine.evalInFunction(Integer.class,"return 10;",null).intValue());
+                assertTrue(scriptEngine.evalInFunction(Boolean.class,"return true;",null));
+                assertFalse(scriptEngine.evalInFunction(Boolean.class,"return false;",null));
+                return null;
+            }
+        }));
+    }
+
     public void testTimeLimit(){
         int p=1;
         title("Time limit test, parallel: "+p);

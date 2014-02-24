@@ -8,6 +8,7 @@ import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
+import org.s1.table.format.*;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * MongoDB Format
@@ -112,21 +114,94 @@ public class MongoDBFormat {
     }
 
     /**
-     * Removes where to prevent possible injection
+     *
      * @param query
      * @return
      */
-    public static Map<String,Object> removeWhere(Map<String,Object> query){
-        return Objects.iterate(query, new Closure<ObjectIterator.IterateBean, Object>() {
-            @Override
-            public Object call(ObjectIterator.IterateBean input) throws ClosureException {
-                Object o = input.getValue();
-                if(o instanceof Map && ((Map)o).containsKey("$where")){
-                    ((Map)o).remove("$where");
-                }
-                return o;
+    public static DBObject formatSearch(Query query){
+        DBObject o = new BasicDBObject();
+        List<DBObject> l = Objects.newArrayList();
+        if(query.getNode()!=null){
+            l.add(formatQueryNode(query.getNode()));
+        }
+        if(query.getCustom()!=null){
+            l.add(fromMap(query.getCustom()));
+        }
+        if(l.size()>0){
+            o.put("$and",l);
+        }
+
+        return o;
+    }
+
+    /**
+     *
+     * @param qn
+     * @return
+     */
+    public static DBObject formatQueryNode(QueryNode qn){
+        DBObject o = new BasicDBObject();
+        if(qn instanceof GroupQueryNode){
+            List<DBObject> l = Objects.newArrayList();
+            for(QueryNode n:((GroupQueryNode) qn).getChildren()){
+                l.add(formatQueryNode(n));
             }
-        });
+            if(l.size()>0)
+                o.put(((GroupQueryNode) qn).getOperation()== GroupQueryNode.GroupOperation.OR?"$or":"$and",l);
+        }else if(qn instanceof FieldQueryNode){
+            FieldQueryNode.FieldOperation op = ((FieldQueryNode) qn).getOperation();
+            String f = ((FieldQueryNode) qn).getField();
+            Object val = ((FieldQueryNode) qn).getValue();
+            if(op == FieldQueryNode.FieldOperation.EQUALS){
+                o.put(f,val);
+            }else if(op == FieldQueryNode.FieldOperation.CONTAINS){
+                o.put(f, Pattern.compile(".*"+Pattern.quote(Objects.cast(val,String.class))+".*"));
+            }else if(op == FieldQueryNode.FieldOperation.NULL){
+                o.put(f,null);
+            }else if(op == FieldQueryNode.FieldOperation.GT){
+                o.put(f,new BasicDBObject("$gt",val));
+            }else if(op == FieldQueryNode.FieldOperation.GTE){
+                o.put(f,new BasicDBObject("$gte",val));
+            }else if(op == FieldQueryNode.FieldOperation.LT){
+                o.put(f,new BasicDBObject("$lt",val));
+            }else if(op == FieldQueryNode.FieldOperation.LTE){
+                o.put(f,new BasicDBObject("$lte",val));
+            }
+        }
+        if(qn.isNot()){
+            o = new BasicDBObject("$not",o);
+        }
+        return o;
+    }
+
+    /**
+     *
+     * @param sort
+     * @return
+     */
+    public static DBObject formatSort(Sort sort){
+        DBObject o = new BasicDBObject();
+        if(sort!=null && !Objects.isNullOrEmpty(sort.getName())){
+            o.put(sort.getName(),sort.isDesc()?-1:1);
+        }
+        return o;
+    }
+
+    /**
+     *
+     * @param fieldsMask
+     * @return
+     */
+    public static DBObject formatFieldsMask(FieldsMask fieldsMask){
+        DBObject o = new BasicDBObject();
+        if(fieldsMask!=null){
+            int i = fieldsMask.isShow()?1:0;
+            for(String f: fieldsMask.getFields()){
+                if(!Objects.isNullOrEmpty(f))
+                    o.put(f,i);
+            }
+        }
+        return o;
     }
 
 }

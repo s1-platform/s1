@@ -175,7 +175,7 @@ public abstract class ObjectSchemaAttribute<T> {
         }
 
         final S1ScriptEngine scriptEngine = new S1ScriptEngine("objectSchema.scriptEngine");
-        final String script = Objects.get(m, "script");
+        final String script = Objects.get(m, "script","").trim();
         if(!Objects.isNullOrEmpty(script)){
             this.script = new Closure<ObjectSchemaAttribute, ObjectSchemaAttribute>() {
                 @Override
@@ -193,7 +193,7 @@ public abstract class ObjectSchemaAttribute<T> {
             };
         }
 
-        final String validate = Objects.get(m, "validate");
+        final String validate = Objects.get(m, "validate","").trim();
         if(!Objects.isNullOrEmpty(validate)){
             this.validate = new Closure<ObjectSchemaAttribute, String>() {
                 @Override

@@ -7,6 +7,7 @@ import org.s1.log.LogStorage;
 import org.s1.log.Loggers;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.format.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,9 +213,11 @@ public class NodeMonitor {
             int skip = Objects.get(params,"skip");
             int max = Objects.get(params,"max");
             Map<String,Object> search = Objects.get(params,"search");
-
+            Query q = new Query();
+            if(search!=null)
+                q.fromMap(search);
             List<Map<String,Object>> list = Objects.newArrayList();
-            long count = getLogStorage().list(list,search,skip,max);
+            long count = getLogStorage().list(list,q,skip,max);
             result.put("count",count);
             result.put("list",list);
         }else if("nodeInfo".equals(command)){

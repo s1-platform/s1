@@ -6,6 +6,7 @@ import org.s1.S1SystemError;
 import org.s1.cluster.datasource.MoreThanOneFoundException;
 import org.s1.cluster.datasource.NotFoundException;
 import org.s1.log.LogStorage;
+import org.s1.log.Loggers;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.mongodb.MongoDBConnectionHelper;
@@ -17,6 +18,7 @@ import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
 import org.s1.test.TestHttpClient;
+import org.s1.weboperation.WebOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,13 @@ public class LogStorageTest extends ServerTest {
         DBCollection coll = db.getCollection(MongoDBLogStorage.COLLECTION);
         coll.drop();
         trace("log4j collection cleared");
+        Loggers.setLogLevel(WebOperation.class.getName(),"DEBUG");
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        Loggers.setLogLevel(WebOperation.class.getName(),"INFO");
     }
 
     public void testLog(){
@@ -48,7 +57,6 @@ public class LogStorageTest extends ServerTest {
             @Override
             public Object call(Integer input) throws ClosureException {
                 TestHttpClient client = client();
-
                 //authenticate
                 client.postJSON(getContext() + "/dispatcher/Auth.login", Objects.newHashMap(
                         String.class, Object.class,
@@ -64,7 +72,7 @@ public class LogStorageTest extends ServerTest {
                 ), null);
 
                 assertTrue(Objects.get(Long.class,m, "count")>0);
-                assertEquals(10,Objects.get(List.class, m, "list").size());
+                assertTrue(Objects.get(List.class, m, "list").size()>0);
                 assertNotNull(Objects.get(m,"list[0].name"));
                 if(input==0)
                     trace(Objects.get(m,"list[0]"));

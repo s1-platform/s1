@@ -1,3 +1,4 @@
+import com.mongodb.BasicDBObject;
 import org.s1.S1SystemError;
 import org.s1.cluster.Locks;
 import org.s1.cluster.datasource.NotFoundException;
@@ -38,7 +39,7 @@ public class WriteTest extends ClusterTest {
                 //
                 Map<String,Object> m = null;
                 try{
-                    m = MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                    m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
                             "id",input
                     ));
                 }catch (Exception e){
@@ -54,7 +55,7 @@ public class WriteTest extends ClusterTest {
                 ), m);
 
                 try{
-                    m = MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                    m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
                             "id",input
                     ));
                 }catch (Exception e){
@@ -72,7 +73,7 @@ public class WriteTest extends ClusterTest {
 
                 boolean b = false;
                 try{
-                    MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                    MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
                             "id",input
                     ));
                 }catch (NotFoundException e){
@@ -111,7 +112,7 @@ public class WriteTest extends ClusterTest {
 
                             Map<String,Object> m = null;
                             try{
-                                m = MongoDBQueryHelper.get(null,COLL,s);
+                                m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(s));
                             }catch (Exception e){
                                 throw S1SystemError.wrap(e);
                             }
@@ -135,7 +136,7 @@ public class WriteTest extends ClusterTest {
 
         Map<String,Object> m = null;
         try{
-            m = MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+            m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
                     "id","test"
             ));
         }catch (Exception e){

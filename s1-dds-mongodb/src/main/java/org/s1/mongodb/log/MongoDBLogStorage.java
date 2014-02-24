@@ -4,9 +4,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import org.s1.log.LogStorage;
 import org.s1.mongodb.MongoDBConnectionHelper;
+import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.format.Query;
+import org.s1.table.format.Sort;
 
 import java.util.List;
 import java.util.Map;
@@ -31,13 +34,9 @@ public class MongoDBLogStorage extends LogStorage {
     }
 
     @Override
-    public long list(List<Map<String, Object>> list, Object search, int skip, int max) {
-        Map<String,Object> s = null;
-        if(search instanceof Map){
-            s = (Map<String,Object>)search;
-        }
+    public long list(List<Map<String, Object>> list, Query search, int skip, int max) {
         return MongoDBQueryHelper.list(list,DB_INSTANCE,COLLECTION,
-                s,
-                Objects.newHashMap(String.class,Object.class,"date",-1), null, skip, max);
+                MongoDBFormat.formatSearch(search),
+                MongoDBFormat.formatSort(new Sort("date",true)), null, skip, max);
     }
 }

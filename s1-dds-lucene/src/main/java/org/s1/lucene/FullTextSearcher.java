@@ -10,6 +10,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Fragmenter;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
@@ -25,6 +26,7 @@ import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.format.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,7 @@ public class FullTextSearcher {
     private IndexSearcher searcher;
     private long readerCreated = 0;
     private Analyzer analyzer;
+    private Closure<org.s1.table.format.Query, Object> prepareFilter;
 
     public static final int WRITE_LOCK_TIMEOUT = 120000;
 
@@ -104,6 +107,14 @@ public class FullTextSearcher {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Closure<org.s1.table.format.Query, Object> getPrepareFilter() {
+        return prepareFilter;
+    }
+
+    public void setPrepareFilter(Closure<org.s1.table.format.Query, Object> prepareFilter) {
+        this.prepareFilter = prepareFilter;
     }
 
     /**
@@ -286,18 +297,17 @@ public class FullTextSearcher {
      * @param filter
      * @return
      */
-    public Filter getFilter(Map<String,Object> filter){
-        if(filter==null)
-            filter = Objects.newHashMap();
-
+    public Filter getFilter(org.s1.table.format.Query filter){
         Filter f = null;
-
-        List<Term> terms = Objects.newArrayList();
-        for(String k:filter.keySet()){
-            terms.add(new Term(k,Objects.cast(filter.get(k),String.class)));
+        if(filter==null)
+            filter = new org.s1.table.format.Query();
+        if(prepareFilter!=null){
+            prepareFilter.callQuite(filter);
         }
-        if(terms.size()>0)
-            f = new TermsFilter(terms);
+
+        Query q = LuceneFormat.formatSearch(filter);
+        if(q!=null)
+            f = new QueryWrapperFilter(q);
         return f;
     }
 
@@ -344,7 +354,7 @@ public class FullTextSearcher {
      * @param max
      * @return
      */
-    public Map<String,Object> search(String query, Map<String,Object> filter, boolean highlight, boolean lastWildcard, boolean fuzzyIfNotFound, int skip, int max){
+    public Map<String,Object> search(String query, org.s1.table.format.Query filter, boolean highlight, boolean lastWildcard, boolean fuzzyIfNotFound, int skip, int max){
         List<Map<String,Object>> list = Objects.newArrayList();
         Map<String,Object> result = Objects.newHashMap(
                 "list",list

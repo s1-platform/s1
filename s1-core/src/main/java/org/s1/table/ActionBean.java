@@ -38,15 +38,14 @@ public class ActionBean {
         this.setFrom(Objects.get(String.class, it, "from"));
         this.setTo(Objects.get(String.class,it,"to"));
 
-        final String accessStr = Objects.get(it,"access");
+        final String accessStr = Objects.get(it,"access","").trim();
         if(!Objects.isNullOrEmpty(accessStr)){
             this.setAccess(new Closure<Map<String, Object>, Boolean>() {
                 @Override
                 public Boolean call(Map<String, Object> input) throws ClosureException {
                     try{
-                        scriptEngine.eval(accessStr,Objects.newHashMap(String.class,Object.class,
+                        return scriptEngine.evalInFunction(Boolean.class,accessStr,Objects.newHashMap(String.class,Object.class,
                                 "record",input));
-                        return true;
                     }catch (ScriptException e){
                         return false;
                     }
@@ -54,7 +53,7 @@ public class ActionBean {
             });
         }
 
-        final String beforeStr = Objects.get(it,"before");
+        final String beforeStr = Objects.get(it,"before","").trim();
         if(!Objects.isNullOrEmpty(beforeStr)){
             this.setBefore(new Closure<ActionBean.BeforeBean, Object>() {
                 @Override
@@ -72,7 +71,7 @@ public class ActionBean {
             });
         }
 
-        final String afterStr = Objects.get(it,"after");
+        final String afterStr = Objects.get(it,"after","").trim();
         if(!Objects.isNullOrEmpty(afterStr)){
             this.setAfter(new Closure<ActionBean.AfterBean, Object>() {
                 @Override
@@ -91,7 +90,7 @@ public class ActionBean {
             });
         }
 
-        final String mergeStr = Objects.get(it,"merge");
+        final String mergeStr = Objects.get(it,"merge","").trim();
         if(!Objects.isNullOrEmpty(mergeStr)){
             this.setMerge(new Closure<ActionBean.MergeBean, Object>() {
                 @Override

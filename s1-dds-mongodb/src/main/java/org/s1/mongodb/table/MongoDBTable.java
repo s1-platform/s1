@@ -5,15 +5,16 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import org.s1.cluster.datasource.MoreThanOneFoundException;
 import org.s1.cluster.datasource.NotFoundException;
-import org.s1.mongodb.MongoDBAggregationHelper;
-import org.s1.mongodb.MongoDBConnectionHelper;
-import org.s1.mongodb.MongoDBDDS;
-import org.s1.mongodb.MongoDBQueryHelper;
+import org.s1.mongodb.*;
 import org.s1.objects.Objects;
 import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
 import org.s1.table.IndexBean;
 import org.s1.table.Table;
+import org.s1.table.format.FieldsMask;
+import org.s1.table.format.Query;
+import org.s1.table.format.QueryNode;
+import org.s1.table.format.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,41 +131,33 @@ public class MongoDBTable extends Table{
     }
 
     @Override
-    protected void enrich(Map<String, Object> record, boolean list, Map<String, Object> ctx) {
-        super.enrich(record, list, ctx);
-        record.remove("_id");
-    }
-
-    @Override
-    protected long collectionList(String collection, List<Map<String, Object>> result, String fullTextQuery, Map<String, Object> search, Map<String, Object> sort, Map<String, Object> fields, int skip, int max) {
+    protected long collectionList(String collection, List<Map<String, Object>> result, String fullTextQuery,
+                                  Query search, Sort sort, FieldsMask fields, int skip, int max) {
         if(Objects.isNullOrEmpty(fullTextQuery)){
-            return MongoDBQueryHelper.list(result,null,collection,search,sort,fields,skip,max);
+            return MongoDBQueryHelper.list(result,null,collection,
+                    MongoDBFormat.formatSearch(search),
+                    MongoDBFormat.formatSort(sort),
+                    MongoDBFormat.formatFieldsMask(fields),skip,max);
         }else{
-            return MongoDBQueryHelper.list(result,null,collection,fullTextQuery,search,fields,skip,max);
+            return MongoDBQueryHelper.fullTextSearch(result, null, collection, fullTextQuery,
+                    MongoDBFormat.formatSearch(search),
+                    MongoDBFormat.formatFieldsMask(fields), skip, max);
         }
     }
 
     @Override
-    protected Map<String, Object> setFieldEqualsSearch(Map<String,Object> search, String name, String value) {
-        if(search==null)
-            search = Objects.newHashMap();
-        search.put(name,value);
-        return search;
+    protected Map<String, Object> collectionGet(String collection, Query search) throws NotFoundException, MoreThanOneFoundException {
+        return MongoDBQueryHelper.get(null,collection,MongoDBFormat.formatSearch(search));
     }
 
     @Override
-    protected Map<String, Object> collectionGet(String collection, Map<String, Object> search) throws NotFoundException, MoreThanOneFoundException {
-        return MongoDBQueryHelper.get(null,collection,search);
+    protected AggregationBean collectionAggregate(String collection, String field, Query search) {
+        return MongoDBAggregationHelper.aggregate(null,collection,field,MongoDBFormat.formatSearch(search));
     }
 
     @Override
-    protected AggregationBean collectionAggregate(String collection, String field, Map<String, Object> search) {
-        return MongoDBAggregationHelper.aggregate(null,collection,field,search);
-    }
-
-    @Override
-    protected List<CountGroupBean> collectionCountGroup(String collection, String field, Map<String, Object> search) {
-        return MongoDBAggregationHelper.countGroup(null, collection, field, search);
+    protected List<CountGroupBean> collectionCountGroup(String collection, String field, Query search) {
+        return MongoDBAggregationHelper.countGroup(null, collection, field, MongoDBFormat.formatSearch(search));
     }
 
     @Override
@@ -180,17 +173,6 @@ public class MongoDBTable extends Table{
     @Override
     protected void collectionRemove(String collection, String id) {
         MongoDBDDS.remove(null, collection, Objects.newHashMap(String.class, Object.class, "id", id));
-    }
-
-    @Override
-    protected Map<String, Object> getUniqueSearch(boolean isNew, String id, Map<String, Object> pathsAndValues) {
-        Map<String,Object> s = pathsAndValues;
-        if(!isNew){
-            s = Objects.newHashMap("$and",Objects.newArrayList(pathsAndValues, Objects.newHashMap(
-                    "$ne", Objects.newHashMap("id",id)
-           ))); 
-        }
-        return s;
     }
 
 }

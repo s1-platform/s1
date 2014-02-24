@@ -1,14 +1,12 @@
 package table;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import org.s1.S1SystemError;
 import org.s1.cluster.Session;
 import org.s1.cluster.datasource.AlreadyExistsException;
 import org.s1.cluster.datasource.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
-import org.s1.mongodb.MongoDBAggregationHelper;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -16,6 +14,9 @@ import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
 import org.s1.table.Table;
 import org.s1.table.TablesFactory;
+import org.s1.table.format.FieldQueryNode;
+import org.s1.table.format.Query;
+import org.s1.table.format.Sort;
 import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
@@ -57,11 +58,12 @@ public class TableTest extends ClusterTest {
                 assertEquals("test1", t.getName());
                 assertEquals("coll1", t.getCollection());
                 assertNotNull(t.getAccess());
-                assertNotNull(t.getEnrich());
-                assertNotNull(t.getFilter());
+                assertNotNull(t.getEnrichRecord());
+                assertNotNull(t.getPrepareSearch());
+                assertNotNull(t.getPrepareSort());
                 assertNotNull(t.getImportAccess());
+                assertNotNull(t.getLogAccess());
                 assertNotNull(t.getImportAction());
-                assertNotNull(t.getSort());
                 assertNotNull(t.getSchema());
                 assertEquals(3, t.getActions().size());
                 assertEquals(1, t.getStates().size());
@@ -113,7 +115,7 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals(1L,TablesFactory.getTable("test1").list(l,null,null,null,null,0,10));
+            assertEquals(1L,TablesFactory.getTable("test1").list(l, null, null, null, null, 0, 10));
             assertEquals("a",Objects.get(l.get(0),"a"));
             assertEquals(1,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -202,18 +204,16 @@ public class TableTest extends ClusterTest {
 
                             //list
                             List<Map<String, Object>> l = Objects.newArrayList();
-                            c = t.list(l, null, Objects.newHashMap(String.class, Object.class,
-                                    "a", "a_" + input
-                            ), null, null, 0, 10);
+                            c = t.list(l, null, new Query(new FieldQueryNode(
+                                    "a", FieldQueryNode.FieldOperation.EQUALS, "a_"+input
+                            )), null, null, 0, 10);
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
                             assertEquals(id, Objects.get(l.get(0), "id"));
 
                             //list all
                             l.clear();
-                            c = t.list(l, null, null, Objects.newHashMap(String.class, Object.class,
-                                    "a", 1
-                            ), null, 0, 10);
+                            c = t.list(l, null, null, new Sort("a",false), null, 0, 10);
                             assertEquals((long) p, c);
                             assertEquals(Math.min(10,p), l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
@@ -226,7 +226,7 @@ public class TableTest extends ClusterTest {
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
 
                             //aggregate
-                            AggregationBean ab = t.aggregate("b",null);
+                            AggregationBean ab = t.aggregate("b", null);
                             assertEquals(0,ab.getMin());
                             assertEquals(p-1,ab.getMax());
                             double avg = 0;
@@ -239,7 +239,7 @@ public class TableTest extends ClusterTest {
                             assertEquals(p,ab.getCount());
 
                             //count group
-                            List<CountGroupBean> lc = t.countGroup("b",null);
+                            List<CountGroupBean> lc = t.countGroup("b", null);
                             if(input==0)
                                 trace(lc);
                             lc = t.countGroup("a",null);
@@ -358,8 +358,7 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,null,Objects.newHashMap(String.class,Object.class,
-                    "b",1),null,0,10));
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l, null, null, new Sort("b", false), null, 0, 10));
             assertEquals("test_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -389,8 +388,7 @@ public class TableTest extends ClusterTest {
         }));
 
         try{
-            assertEquals((long)c,TablesFactory.getTable("test1").list(l,null,null,Objects.newHashMap(String.class,Object.class,
-                    "b",1),null,0,10));
+            assertEquals((long)c,TablesFactory.getTable("test1").list(l, null, null, new Sort("b", false), null, 0, 10));
             assertEquals("qwer_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
         }catch (Exception e){

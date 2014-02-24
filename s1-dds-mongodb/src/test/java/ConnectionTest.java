@@ -55,15 +55,7 @@ public class ConnectionTest extends BasicTest {
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
-                boolean b= false;
-                try{
-                    MongoDBConnectionHelper.getConnection("test1");
-                }catch (S1SystemError e){
-                    if(input==0)
-                        trace(e.getMessage());
-                    b = true;
-                }
-                assertTrue(b);
+                MongoDBConnectionHelper.getConnection("test_not_found");
                 return null;
             }
         }));

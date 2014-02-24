@@ -32,13 +32,13 @@ public class MongoDBQueryHelper {
      * @throws MoreThanOneFoundException
      * @return
      */
-    public static Map<String, Object> get(String instance, String collection, Map<String, Object> search)
+    public static Map<String, Object> get(String instance, String collection, DBObject search)
     throws NotFoundException, MoreThanOneFoundException {
         ensureOnlyOne(instance,collection,search);
 
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
 
-        Map<String,Object> m = MongoDBFormat.toMap(coll.findOne(MongoDBFormat.fromMap(search)));
+        Map<String,Object> m = MongoDBFormat.toMap(coll.findOne(search));
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB get result (collection:"+collection+",search:"+search+"\n\t> "+m);
         return m;
@@ -58,14 +58,15 @@ public class MongoDBQueryHelper {
      * @param max
      * @return
      */
-    public static long list(List<Map<String, Object>> res, String instance, String collection,
-                            String fullTextQuery,
-                            Map<String, Object> search,
-                            Map<String, Object> fields, int skip, int max) {
+    public static long fullTextSearch(List<Map<String, Object>> res, String instance, String collection,
+                                      String fullTextQuery,
+                                      DBObject search,
+                                      DBObject fields, int skip, int max) {
         DB db = MongoDBConnectionHelper.getConnection(instance);
         BasicDBObject request = new BasicDBObject();
         request.put("text", collection);
         request.put("search", fullTextQuery);
+        //comment to get valid count
         //request.put("limit", max + skip);
         request.put("filter", search);
         request.put("project", Objects.newHashMap("_id", 1));
@@ -77,7 +78,7 @@ public class MongoDBQueryHelper {
                 continue;
             Map<String,Object> _m = Objects.newHashMap();
             DBObject o = db.getCollection(collection).findOne(new BasicDBObject("_id",Objects.get(m,"obj._id")),
-                    new BasicDBObject(fields==null?Objects.newHashMap():fields));
+                    fields);
             if(o!=null){
                 _m.putAll(MongoDBFormat.toMap(o));
                 res.add(_m);
@@ -110,8 +111,8 @@ public class MongoDBQueryHelper {
      * @return
      */
     public static long list(List<Map<String, Object>> res, String instance, String collection,
-                            Map<String, Object> search, Map<String, Object> sort,
-                            Map<String, Object> fields, int skip, int max) {
+                            DBObject search, DBObject sort,
+                            DBObject fields, int skip, int max) {
         return list(res, instance, collection,search,sort,fields,skip,max,null);
     }
 
@@ -129,26 +130,21 @@ public class MongoDBQueryHelper {
      * @return
      */
     public static long list(List<Map<String, Object>> res, String instance, String collection,
-                                         Map<String, Object> search, Map<String, Object> sort,
-                                         Map<String, Object> fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
+                                         DBObject search, DBObject sort,
+                                         DBObject fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
 
-        DBObject s = new BasicDBObject();
-        if (search != null){
-            s = MongoDBFormat.fromMap(search);
-        }
+        if (search == null)
+            search = new BasicDBObject();
 
-        DBObject f = MongoDBFormat.fromMap(fields);
-
-        DBCursor cur = coll.find(s, f);
+        DBCursor cur = coll.find(search, fields);
         if (max > 0)
             cur.limit(max);
         if (skip >= 0)
             cur.skip(skip);
 
         if (sort != null){
-            DBObject srt = MongoDBFormat.fromMap(sort);
-            cur = cur.sort(srt);
+            cur = cur.sort(sort);
         }
 
         if(prepareCursor!=null){
@@ -180,12 +176,11 @@ public class MongoDBQueryHelper {
      * @param search
      * @throws AlreadyExistsException
      */
-    public static void ensureNotExists(String instance, String collection, Map<String,Object> search) throws AlreadyExistsException {
+    public static void ensureNotExists(String instance, String collection, DBObject search) throws AlreadyExistsException {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
-        DBObject s = MongoDBFormat.fromMap(search);
-        if(s==null)
-            s = new BasicDBObject();
-        long cnt = coll.count(s);
+        if(search==null)
+            search = new BasicDBObject();
+        long cnt = coll.count(search);
         if(cnt>0){
             if(LOG.isDebugEnabled())
                 LOG.debug("Record already exists: "+collection+", search: "+search);
@@ -201,13 +196,12 @@ public class MongoDBQueryHelper {
      * @throws NotFoundException
      * @throws MoreThanOneFoundException
      */
-    public static void ensureOnlyOne(String instance, String collection, Map<String,Object> search)
+    public static void ensureOnlyOne(String instance, String collection, DBObject search)
             throws NotFoundException, MoreThanOneFoundException{
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
-        DBObject s = MongoDBFormat.fromMap(search);
-        if(s==null)
-            s = new BasicDBObject();
-        long cnt = coll.count(s);
+        if(search==null)
+            search = new BasicDBObject();
+        long cnt = coll.count(search);
         if(cnt==0){
             if(LOG.isDebugEnabled())
                 LOG.debug("Record not found instance: "+instance+", collection: "+collection+", search: "+search);

@@ -1,9 +1,14 @@
 package org.s1.lucene;
 
 import org.s1.S1SystemError;
+import org.s1.misc.Closure;
+import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.script.S1ScriptEngine;
+import org.s1.script.ScriptException;
+import org.s1.table.format.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +23,8 @@ public class SearcherFactory {
     private static final Logger LOG = LoggerFactory.getLogger(SearcherFactory.class);
 
     private static final Map<String,FullTextSearcher> local = Objects.newHashMap();
+
+    public static final String SCRIPT_ENGINE_PATH = "lucene.scriptEngine";
 
     /**
      *
@@ -72,6 +79,26 @@ public class SearcherFactory {
         s.setReaderLivetime(Objects.get(Long.class, m, "readerLivetime", 600000L));
         s.setWriterLivetime(Objects.get(Long.class, m, "writerLivetime", 1800000L));
         s.setFields(fields);
+
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine(SCRIPT_ENGINE_PATH);
+        final String filterStr = Objects.get(m,"prepareFilter","").trim();
+        if(!Objects.isNullOrEmpty(filterStr)){
+            s.setPrepareFilter(new Closure<Query, Object>() {
+                @Override
+                public Object call(Query input) throws ClosureException {
+                    try {
+                        Map<String, Object> m = input.toMap();
+                        scriptEngine.eval(filterStr, Objects.newHashMap(String.class, Object.class,
+                                "filter", m));
+                        input.fromMap(m);
+                    } catch (ScriptException e) {
+                        ClosureException.wrap(e);
+                    }
+                    return null;
+                }
+            });
+        }
+
         s.init();
 
         local.put(name,s);

@@ -114,6 +114,29 @@ public class S1ScriptEngine {
     }
 
     /**
+     *
+     * @param cls
+     * @param script
+     * @param data
+     * @param <T>
+     * @return
+     */
+    public <T> T evalInFunction(Class<T> cls, String script, Map<String,Object> data){
+        return Objects.cast(evalInFunction(script,data),cls);
+    }
+
+    /**
+     *
+     * @param script
+     * @param data
+     * @param <T>
+     * @return
+     */
+    public <T> T evalInFunction(String script, Map<String,Object> data){
+        return eval("(function(){"+script+"\n})();",data);
+    }
+
+    /**
      * Eval script and cast result
      *
      * @param cls

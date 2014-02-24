@@ -28,7 +28,7 @@ public class MongoDBAggregationHelper {
      * @return {max,min,sum,count,avg}
      */
     public static AggregationBean aggregate(String instance, String collection, String field,
-                             Map<String, Object> search) {
+                             DBObject search) {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
 
         Map<String,Object> gr = Objects.newHashMap(
@@ -41,11 +41,10 @@ public class MongoDBAggregationHelper {
         );
 
         //search
-        BasicDBObject s = new BasicDBObject();
-        if (search != null)
-            s = new BasicDBObject(search);
+        if (search == null)
+            search = new BasicDBObject();
 
-        AggregationOutput out = coll.aggregate(new BasicDBObject("$match", s),
+        AggregationOutput out = coll.aggregate(new BasicDBObject("$match", search),
                 new BasicDBObject("$group", gr));
 
         BasicDBList l = (BasicDBList) out.getCommandResult().get("result");
@@ -84,7 +83,7 @@ public class MongoDBAggregationHelper {
      * @return [{value, count},...]
      */
     public static List<CountGroupBean> countGroup(String instance, String collection,
-                                                       String field, Map<String, Object> search){
+                                                       String field, DBObject search){
 
 
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
@@ -94,11 +93,10 @@ public class MongoDBAggregationHelper {
         );
 
         //search
-        BasicDBObject s = new BasicDBObject();
-        if (search != null)
-            s = new BasicDBObject(search);
+        if (search == null)
+            search = new BasicDBObject();
 
-        AggregationOutput out = coll.aggregate(new BasicDBObject("$match", s),
+        AggregationOutput out = coll.aggregate(new BasicDBObject("$match", search),
                 new BasicDBObject("$group", group));
 
         List<Map<String,Object>> result = Objects.newArrayList();

@@ -10,7 +10,6 @@ import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
-import org.s1.test.BasicTest;
 import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
@@ -67,7 +66,7 @@ public class QueryTest extends ClusterTest {
 
                 Map<String,Object> m = null;
                 try {
-                    m = MongoDBQueryHelper.get(null, COLL, Objects.newHashMap(String.class, Object.class,
+                    m = MongoDBQueryHelper.get(null, COLL, new BasicDBObject(
                             "id", 10));
                 } catch (NotFoundException e) {
                     e.printStackTrace();
@@ -80,7 +79,7 @@ public class QueryTest extends ClusterTest {
                 //not found
                 boolean b = false;
                 try {
-                    MongoDBQueryHelper.get(null, COLL, Objects.newHashMap(String.class, Object.class,
+                    MongoDBQueryHelper.get(null, COLL, new BasicDBObject(
                             "id", -10));
                 } catch (NotFoundException e) {
                     b = true;
@@ -92,7 +91,7 @@ public class QueryTest extends ClusterTest {
                 //>1
                 b = false;
                 try {
-                    MongoDBQueryHelper.get(null, COLL, Objects.newHashMap(String.class, Object.class));
+                    MongoDBQueryHelper.get(null, COLL, null);
                 } catch (NotFoundException e) {
                     throw S1SystemError.wrap(e);
                 } catch (MoreThanOneFoundException e) {
@@ -112,10 +111,10 @@ public class QueryTest extends ClusterTest {
             @Override
             public Object call(Integer input) throws ClosureException {
                 List<Map<String,Object>> res = Objects.newArrayList();
-                long c = MongoDBQueryHelper.list(res,null,COLL,Objects.newHashMap(String.class,Object.class,
+                long c = MongoDBQueryHelper.list(res,null,COLL,new BasicDBObject(
                         "id",Objects.newHashMap("$lte",50)),
-                        Objects.newHashMap(String.class,Object.class,"id",-1),
-                        Objects.newHashMap(String.class,Object.class,"str2",0),0,10);
+                        new BasicDBObject("id",-1),
+                        new BasicDBObject("str2",0),0,10);
                 assertEquals(51L,c);
                 assertEquals(10,res.size());
                 assertEquals(50,res.get(0).get("id"));
@@ -131,9 +130,9 @@ public class QueryTest extends ClusterTest {
             @Override
             public Object call(Integer input) throws ClosureException {
                 List<Map<String,Object>> res = Objects.newArrayList();
-                long c = MongoDBQueryHelper.list(res,null,COLL,"test red",Objects.newHashMap(String.class,Object.class,
-                        "id",Objects.newHashMap("$lte",50)),
-                        Objects.newHashMap(String.class,Object.class,"str2",0),0,10);
+                long c = MongoDBQueryHelper.fullTextSearch(res, null, COLL, "test red", new BasicDBObject(
+                        "id", Objects.newHashMap("$lte", 50)),
+                        new BasicDBObject("str2", 0), 0, 10);
                 assertEquals(51L,c);
                 assertEquals(10,res.size());
                 if(input==0)

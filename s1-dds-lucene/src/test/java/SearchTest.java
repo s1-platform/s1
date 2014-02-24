@@ -3,6 +3,9 @@ import org.s1.lucene.SearcherFactory;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
+import org.s1.table.format.FieldQueryNode;
+import org.s1.table.format.GroupQueryNode;
+import org.s1.table.format.Query;
 import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
@@ -20,6 +23,8 @@ public class SearchTest extends ClusterTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if(1==1)
+            return;
 
         FullTextSearcher s = SearcherFactory.getSearcher("test1");
         for(int i=0;i<100;i++){
@@ -47,7 +52,7 @@ public class SearchTest extends ClusterTest {
 
 
     public void testSearch(){
-        int p = 100;
+        int p = 1;
         title("Write, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -59,10 +64,53 @@ public class SearchTest extends ClusterTest {
                 assertTrue(Objects.equals(100,Objects.get(m,"count")));
 
                 //filter
-                m = s.search("hello",Objects.newHashMap(String.class,Object.class,
-                        "id","5"
-                        ),false,false,false,0,10);
+                m = s.search("hello",new Query(new FieldQueryNode("id", FieldQueryNode.FieldOperation.EQUALS,"5")),
+                        false,false,false,0,10);
                 assertTrue(Objects.equals(1,Objects.get(m,"count")));
+
+                //filter2
+                m = s.search("hello",new Query(new FieldQueryNode("size", FieldQueryNode.FieldOperation.GT,980)),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(1,Objects.get(m,"count")));
+
+                //filter3
+                m = s.search("hello",new Query(new FieldQueryNode("size", FieldQueryNode.FieldOperation.GTE,980)),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(2,Objects.get(m,"count")));
+
+                //filter4
+                m = s.search("hello",new Query(new FieldQueryNode("size", FieldQueryNode.FieldOperation.LT,20)),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(2,Objects.get(m,"count")));
+
+                //filter5
+                m = s.search("hello",new Query(new FieldQueryNode("size", FieldQueryNode.FieldOperation.LTE,20)),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(3,Objects.get(m,"count")));
+
+                //filter6
+                m = s.search("hello",new Query(new FieldQueryNode("created", FieldQueryNode.FieldOperation.LTE,new Date())),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(100,Objects.get(m,"count")));
+
+                //filter7
+                m = s.search("hello",new Query(
+                        new GroupQueryNode(GroupQueryNode.GroupOperation.AND,
+                                new FieldQueryNode("created", FieldQueryNode.FieldOperation.LTE,new Date()),
+                                new FieldQueryNode("size", FieldQueryNode.FieldOperation.LTE,20),
+                                new FieldQueryNode("size", FieldQueryNode.FieldOperation.GTE,10)
+                                )),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(2,Objects.get(m,"count")));
+
+                //filter8
+                m = s.search("hello",new Query(
+                        new GroupQueryNode(GroupQueryNode.GroupOperation.OR,
+                                new FieldQueryNode("size", FieldQueryNode.FieldOperation.LTE,20),
+                                new FieldQueryNode("size", FieldQueryNode.FieldOperation.GTE,980)
+                        )),
+                        false,false,false,0,10);
+                assertTrue(Objects.equals(5,Objects.get(m,"count")));
 
                 //fuzzy
                 m = s.search("hllo",null,false,false,true,0,10);
