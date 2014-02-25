@@ -1,12 +1,14 @@
 package script;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
 import org.s1.script.*;
 import org.s1.test.BasicTest;
+import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
 import java.io.File;
@@ -59,25 +61,31 @@ public class TestScript extends BasicTest{
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
-                File[] fs = dir.listFiles(new FileFilter() {
+                Session.run("script_"+input,new Closure<String, Object>() {
                     @Override
-                    public boolean accept(File f) {
-                        return !f.isDirectory() && f.getName().endsWith(".js");
+                    public Object call(String input) throws ClosureException {
+                        File[] fs = dir.listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File f) {
+                                return !f.isDirectory() && f.getName().endsWith(".js");
+                            }
+                        });
+                        for(File f:fs){
+                            String script = null;
+                            try {
+                                script = FileUtils.readFileToString(f,"UTF-8");
+                            } catch (IOException e) {
+                                throw S1SystemError.wrap(e);
+                            }
+                            try{
+                                scriptEngine.eval(script,data);
+                            }catch (RuntimeException e){
+                                throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
+                            }
+                        }
+                        return null;
                     }
                 });
-                for(File f:fs){
-                    String script = null;
-                    try {
-                        script = FileUtils.readFileToString(f,"UTF-8");
-                    } catch (IOException e) {
-                        throw S1SystemError.wrap(e);
-                    }
-                    try{
-                        scriptEngine.eval(script,data);
-                    }catch (RuntimeException e){
-                        throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
-                    }
-                }
                 return null;
             }
         }));

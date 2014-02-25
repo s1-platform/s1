@@ -4,6 +4,9 @@ import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.AstRoot;
 import org.s1.S1SystemError;
+import org.s1.cluster.Session;
+import org.s1.misc.Closure;
+import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.options.OptionsStorage;
@@ -204,14 +207,30 @@ public class S1ScriptEngine {
 
         //system functions
         addFunctions(SYSTEM_FUNCTION_NS+".", ctx, ScriptSystemFunctions.class);
-
-        //run script
-        Future<Object> f = executeTask(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                return new ASTEvaluator().eval(root,ctx);
-            }
-        },getTimeLimit());
+        final Session.SessionBean sb = Session.getSessionBean();
+        Future<Object> f = null;
+        if(sb!=null){
+            //run script
+            f = executeTask(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    return Session.run(sb.getId(),new Closure<String, Object>() {
+                        @Override
+                        public Object call(String input) throws ClosureException {
+                            return new ASTEvaluator().eval(root,ctx);
+                        }
+                    });
+                }
+            },getTimeLimit());
+        }else{
+            //run script
+            f = executeTask(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    return new ASTEvaluator().eval(root,ctx);
+                }
+            },getTimeLimit());
+        }
 
         try {
             T result = (T)f.get();

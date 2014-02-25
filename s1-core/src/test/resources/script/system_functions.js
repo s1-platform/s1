@@ -58,3 +58,7 @@ s1.remove(arr,s1.length(arr)-1)
 s1.remove(arr,s1.length(arr)-1)
 print(arr);
 assert("remove",s1.length(arr)==5)
+
+//user
+assert("whoAmI",s1.whoAmI().id=='anonymous');
+assert("inRole",!s1.inRole('test'));

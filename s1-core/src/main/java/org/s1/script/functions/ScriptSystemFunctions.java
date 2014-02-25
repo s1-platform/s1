@@ -1,5 +1,7 @@
 package org.s1.script.functions;
 
+import org.s1.cluster.Session;
+import org.s1.cluster.datasource.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectDiff;
@@ -8,6 +10,8 @@ import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.s1.script.Context;
 import org.s1.script.ScriptFunction;
+import org.s1.user.UserBean;
+import org.s1.user.Users;
 
 import java.util.Date;
 import java.util.List;
@@ -356,6 +360,25 @@ public class ScriptSystemFunctions extends ScriptFunctions{
         getContext().getMemoryHeap().take(path);
         getContext().getMemoryHeap().take(val);
         Objects.set(m, path, val);
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<String,Object> whoAmI() throws NotFoundException{
+        String id = Session.getSessionBean().getUserId();
+        return Users.getUser(id);
+    }
+
+    /**
+     *
+     * @return
+     */
+    public boolean inRole(String role) throws NotFoundException{
+        String id = Session.getSessionBean().getUserId();
+        UserBean ub = Users.getUser(id);
+        return Users.isUserInRole(ub,role);
     }
     
 }
