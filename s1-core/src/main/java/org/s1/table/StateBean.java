@@ -17,6 +17,18 @@ public class StateBean {
 
     /**
      *
+     * @return
+     */
+    public Map<String,Object> toMap(){
+        return Objects.newHashMap(
+                "name",name,
+                "label",label,
+                "schema",schema==null?null:schema.toMap()
+        );
+    }
+
+    /**
+     *
      * @param it
      */
     public void fromMap(Map<String,Object> it) throws ObjectSchemaFormatException{

@@ -12,6 +12,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -265,6 +267,37 @@ public abstract class WebOperation<I, O> {
      */
     public static void throwMethodNotFound(String method) throws MethodNotFoundException {
         throw new MethodNotFoundException("Method " + method + " not found");
+    }
+
+    /**
+     *
+     * @param method
+     * @param params
+     * @param request
+     * @param response
+     * @return
+     * @throws Exception
+     */
+    public static <I,O> O processClassMethods(WebOperation<I,O> T, String method, I params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        Method mt = null;
+        for(Method m:T.getClass().getDeclaredMethods()){
+            if(m.getName().equals(method) && m.getAnnotation(WebOperationMethod.class)!=null){
+                mt = m;
+                break;
+            }
+        }
+        if(mt!=null){
+            try{
+                return (O)mt.invoke(T,params,request,response);
+            }catch (InvocationTargetException e){
+                if(e.getCause()!=null)
+                    throw (Exception)e.getCause();
+                throw e;
+            }
+        } else{
+            throwMethodNotFound(method);
+        }
+        return null;
     }
 
 }

@@ -29,6 +29,22 @@ public class ActionBean {
 
     /**
      *
+     * @return
+     */
+    public Map<String,Object> toMap(){
+        return Objects.newHashMap(
+            "name",name,
+                "label",label,
+                "from",from,
+                "to",to,
+                "schema",schema==null?null:schema.toMap(),
+                "foundationSchema",foundationSchema==null?null:foundationSchema.toMap(),
+                "log",log
+        );
+    }
+
+    /**
+     *
      * @param it
      */
     public void fromMap(final S1ScriptEngine scriptEngine, Map<String,Object> it) throws ObjectSchemaFormatException{
@@ -44,8 +60,8 @@ public class ActionBean {
                 @Override
                 public Boolean call(Map<String, Object> input) throws ClosureException {
                     try{
-                        return scriptEngine.evalInFunction(Boolean.class,accessStr,Objects.newHashMap(String.class,Object.class,
-                                "record",input));
+                        return scriptEngine.evalInFunction(Boolean.class, accessStr, Objects.newHashMap(String.class, Object.class,
+                                "record", input));
                     }catch (ScriptException e){
                         return false;
                     }

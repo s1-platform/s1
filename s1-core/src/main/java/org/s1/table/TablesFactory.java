@@ -44,7 +44,7 @@ public class TablesFactory {
         }
 
         if(Objects.isNullOrEmpty(m)){
-            throw new IllegalArgumentException("Table config file not found: "+name);
+            throw new S1SystemError("Table config file not found: "+name);
         }
 
         //parse config

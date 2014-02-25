@@ -194,7 +194,7 @@ public class MongoDBFormat {
      */
     public static DBObject formatFieldsMask(FieldsMask fieldsMask){
         DBObject o = new BasicDBObject();
-        if(fieldsMask!=null){
+        if(fieldsMask!=null && fieldsMask.getFields()!=null){
             int i = fieldsMask.isShow()?1:0;
             for(String f: fieldsMask.getFields()){
                 if(!Objects.isNullOrEmpty(f))
