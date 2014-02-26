@@ -164,6 +164,10 @@ public class FileStorage extends DistributedDataSource {
 
         public FileMetaBean(){}
 
+        public FileMetaBean(String name, String ext, String contentType, Map<String, Object> info) {
+            this(name,ext,contentType,0,info);
+        }
+
         public FileMetaBean(String name, String ext, String contentType, long size, Map<String, Object> info) {
             if(Objects.isNullOrEmpty(contentType))
                 contentType = "application/octet-stream";
