@@ -29,11 +29,8 @@ public class SOAPOperationTest extends ServerTest {
             public Object call(Integer input) throws ClosureException {
 
                 String s = null;
-                try {
-                    s = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?wsdl", null, null, null).getEntity().getContent(),"UTF-8");
-                } catch (IOException e) {
-                    throw S1SystemError.wrap(e);
-                }
+                s = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?wsdl", null, null, null).getData(),"UTF-8");
+
                 if(input==0)
                     trace(s);
                 assertTrue(s.contains("<wsdl:definitions "));
@@ -41,11 +38,8 @@ public class SOAPOperationTest extends ServerTest {
                 assertTrue(s.contains("<soap:address location=\"http://localhost:"+getPort()+getContext()+"/dispatcher/ws1\""));
 
                 String s1 = null;
-                try {
-                    s1 = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?import=schema.xsd", null, null, null).getEntity().getContent(),"UTF-8");
-                } catch (IOException e) {
-                    throw S1SystemError.wrap(e);
-                }
+                s1 = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?import=schema.xsd", null, null, null).getData(),"UTF-8");
+
                 if(input==0)
                     trace(s1);
                 assertTrue(s1.contains("<xs:schema "));

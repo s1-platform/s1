@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2013 Pykhov Gregory
+  ~
+  ~ This file is subject to the terms and conditions defined in
+  ~ file 'LICENSE', which is part of this source code package.
+  -->
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
+    <filter>
+        <filter-name>CharsetEncodingFilter</filter-name>
+        <filter-class>org.s1.misc.CharsetEncodingFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CharsetEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <listener>
+        <listener-class>org.s1.background.BackgroundListener</listener-class>
+    </listener>
+
+    <!-- Main dispatcher servlet. Serves business logic of application. -->
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>org.s1.weboperation.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>/dispatcher/*</url-pattern>
+    </servlet-mapping>
+
+
+</web-app>
