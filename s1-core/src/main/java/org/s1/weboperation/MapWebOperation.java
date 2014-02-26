@@ -35,21 +35,20 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
 
         Map<String, Object> inParams = new HashMap<String, Object>();
 
-        if(request.getMethod().equalsIgnoreCase("get")){
-            //GET
-            String q = request.getQueryString();
-            if(!org.s1.objects.Objects.isNullOrEmpty(q)){
-                String [] arr = q.split("&");
-                for(String it:arr){
-                    String nv [] = it.split("=");
-                    try {
-                        inParams.put(nv[0], URLDecoder.decode(nv[1], "UTF-8"));
-                    } catch (UnsupportedEncodingException e) {
-                        throw S1SystemError.wrap(e);
-                    }
+        //GET
+        String q = request.getQueryString();
+        if(!org.s1.objects.Objects.isNullOrEmpty(q)){
+            String [] arr = q.split("&");
+            for(String it:arr){
+                String nv [] = it.split("=");
+                try {
+                    inParams.put(nv[0], URLDecoder.decode(nv[1], "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    throw S1SystemError.wrap(e);
                 }
             }
-        } else if (request.getContentType()!=null && request.getContentType().contains("application/json")) {
+        }
+        if (request.getContentType()!=null && request.getContentType().contains("application/json")) {
             //JSON
             String s = IOUtils.toString(request.getInputStream(), "UTF-8");
             inParams = JSONFormat.evalJSON(s);

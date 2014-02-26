@@ -34,7 +34,7 @@ public abstract class ExpImpFormat {
     protected abstract void doImport(List<Map<String,Object>> list, FileStorage.FileReadBean file, Table table)
         throws AccessDeniedException;
 
-    protected abstract String getContentType();
+    protected abstract void setFileMeta(FileStorage.FileMetaBean meta);
 
     protected abstract void prepareExport(ObjectSchema schema, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response);
 

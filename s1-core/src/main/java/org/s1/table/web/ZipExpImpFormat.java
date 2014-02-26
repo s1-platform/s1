@@ -59,7 +59,7 @@ public class ZipExpImpFormat extends ExpImpFormat{
             while ((entry = zis.getNextEntry()) != null) {
                 if(entry.getName().startsWith("list_") && !entry.isDirectory()){
                     List<Map<String,Object>> l = Objects.get(Objects.fromWire(JSONFormat.evalJSON(IOUtils.toString(zis,"UTF-8"))),"list");
-                    table.doImport(l);
+                    list.addAll(table.doImport(l));
                 }
             }
         }catch (IOException e){
@@ -70,8 +70,9 @@ public class ZipExpImpFormat extends ExpImpFormat{
     }
 
     @Override
-    protected String getContentType() {
-        return "application/zip";
+    protected void setFileMeta(FileStorage.FileMetaBean meta) {
+        meta.setContentType("application/zip");
+        meta.setExt("zip");
     }
 
     private ZipOutputStream zos;
@@ -84,6 +85,7 @@ public class ZipExpImpFormat extends ExpImpFormat{
             zos = new ZipOutputStream(os);
             zos.putNextEntry(new ZipEntry("schema.json"));
             zos.write(JSONFormat.toJSON(Objects.toWire(schema.toMap())).getBytes("UTF-8"));
+            zos.closeEntry();
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
@@ -92,10 +94,10 @@ public class ZipExpImpFormat extends ExpImpFormat{
     @Override
     protected void addPortionToExport(int i, List<Map<String, Object>> list) {
         try{
-            zos = new ZipOutputStream(new ByteArrayOutputStream());
             zos.putNextEntry(new ZipEntry("list_"+i+".json"));
             zos.write(JSONFormat.toJSON(
                     Objects.toWire(Objects.newHashMap(String.class,Object.class,"list",list))).getBytes("UTF-8"));
+            zos.closeEntry();
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
@@ -104,10 +106,12 @@ public class ZipExpImpFormat extends ExpImpFormat{
     @Override
     protected void finishExport(int files, long count) {
         try{
-            zos = new ZipOutputStream(new ByteArrayOutputStream());
             zos.putNextEntry(new ZipEntry("info.json"));
             zos.write(JSONFormat.toJSON(
                     Objects.toWire(Objects.newHashMap(String.class,Object.class,"count",count,"files",files))).getBytes("UTF-8"));
+            zos.closeEntry();
+            zos.flush();
+            zos.close();
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
