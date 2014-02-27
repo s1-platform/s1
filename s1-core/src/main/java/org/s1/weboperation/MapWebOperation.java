@@ -24,6 +24,9 @@ import java.util.Map;
  */
 public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Map<String,Object>> {
 
+    public static final String CALLBACK_PARAMETER = "_callback";
+    public static final String PARAMS_PARAMETER = "_params";
+
     /**
      * Parse request to make Map. Try application/json, url params, application/x-www-form-urlencoded, multipart/form-data
      *
@@ -41,10 +44,17 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
             String [] arr = q.split("&");
             for(String it:arr){
                 String nv [] = it.split("=");
+                String n = nv[0];
+                String v = nv[1];
                 try {
-                    inParams.put(nv[0], URLDecoder.decode(nv[1], "UTF-8"));
+                    v = URLDecoder.decode(v, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     throw S1SystemError.wrap(e);
+                }
+                if(PARAMS_PARAMETER.equals(n)){
+                    inParams.putAll(Objects.fromWire(JSONFormat.evalJSON(v)));
+                }else{
+                    inParams.put(n,v);
                 }
             }
         }
@@ -155,7 +165,7 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
             /*if (request.getContentType() != null
                     && request.getContentType().contains("application/json"))*/
             response.setCharacterEncoding("UTF-8");
-            String callback = request.getParameter("callback");
+            String callback = request.getParameter(CALLBACK_PARAMETER);
             m = Objects.toWire(m);
             if(request.getMethod().equalsIgnoreCase("get") && !Objects.isNullOrEmpty(callback)){
                 response.setContentType("text/javascript");

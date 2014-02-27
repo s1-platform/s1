@@ -74,8 +74,7 @@ public class MonitorOperation extends MapWebOperation {
         String s = Objects.get(config,"accessScript");
         if(!Objects.isNullOrEmpty(s)){
             try{
-                new S1ScriptEngine().eval(s,Objects.newHashMap(String.class,Object.class,"userId",userId));
-                ok = true;
+                ok = new S1ScriptEngine().evalInFunction(Boolean.class,s,Objects.newHashMap(String.class,Object.class,"userId",userId));
             }catch (Throwable e){
                 if(LOG.isDebugEnabled())
                     LOG.debug("Access script error: "+e.getMessage(),e);

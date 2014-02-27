@@ -151,24 +151,6 @@ public class TableWebOperation extends MapWebOperation{
         return getTable(params).getSchema().toMap();
     }
 
-    /*@WebOperationMethod
-    public Map<String,Object> exportData(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        List<Map<String,Object>> list = Objects.newArrayList();
-        String text = Objects.get(params,"text");
-        Map<String,Object> ctx = Objects.get(params,"context");
-
-        long c = getTable(params).list(list, text, getQuery(params), getSort(params), getFieldsMask(params), 0, 0, ctx);
-
-        return null;
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> importData(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        List<Map<String,Object>> list = Objects.newArrayList();
-
-        return Objects.newHashMap("list",getTable(params).doImport(list));
-    }*/
-
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         return processClassMethods(this,method,params,request,response);

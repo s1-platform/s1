@@ -200,11 +200,10 @@ public abstract class ObjectSchemaAttribute<T> {
                 public String call(ObjectSchemaAttribute input) {
                     Map<String,Object> m = input.getScriptMap();
                     try{
-                        scriptEngine.eval(validate,m);
+                        return scriptEngine.evalInFunction(validate,m);
                     }catch (ScriptException e){
                         return ""+e.getData();
                     }
-                    return null;
                 }
             };
         }

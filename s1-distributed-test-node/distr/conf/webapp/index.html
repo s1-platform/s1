@@ -1,1 +1,132 @@
-hello!!
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <script src="app.js"></script>
+
+    <title>S1 node</title>
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>S1 distributed test: node console</h1>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#monitor" data-toggle="tab"><i class="fa fa-desktop"></i> Monitor</a></li>
+            <li><a href="#accounts" data-toggle="tab"><i class="fa fa-th-list"></i> Accounts</a></li>
+            <li><a href="#request" data-toggle="tab"><i class="fa fa-external-link"></i> Request</a></li>
+            <li><a href="#tests" data-toggle="tab"><i class="fa fa-cogs"></i> Tests</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div class="tab-pane fade in active" id="monitor">
+                <h2>Monitor Data</h2>
+                <p>
+                    <button id="refresh-monitor" type="button" class="btn btn-primary"><i class="fa fa-refresh"></i> Refresh monitor data</button>
+                </p>
+                <p>
+                    Nodes count: <b class="nodes-count">?</b>
+                </p>
+                <pre id="monitor-data"></pre>
+            </div>
+            <div class="tab-pane fade" id="accounts">
+                <h2>Accounts</h2>
+                <p>
+                    <button id="refresh-accounts" type="button" class="btn btn-primary"><i class="fa fa-refresh"></i> Refresh accounts statistic</button>
+                </p>
+                <p>
+                    Accounts count: <b class="accounts-count">?</b>
+                </p>
+                <pre id="accounts-data"></pre>
+            </div>
+            <div class="tab-pane fade" id="request">
+                <h2>Request</h2>
+                <p>
+                    <h4>URL:</h4>
+                    <div class="input-group">
+                        <span class="input-group-addon">dispatcher/</span>
+                        <input id="request-url" class="form-control" placeholder="Type web operation path here" type="text">
+                    </div>
+                </p>
+                <p>
+                    <h4>Data:</h4>
+                    <textarea id="request-data" style="max-width:100%;min-height:50px;" class="form-control"></textarea>
+                </p>
+                <button id="request-run" type="button" class="btn btn-primary bt-sm"><i class="fa fa-external-link"></i> Run request</button>
+                <br><br>
+                <pre id="request-response"></pre>
+            </div>
+            <div class="tab-pane fade" id="tests">
+                <h2>Tests</h2>
+                <p>
+                    Accounts count: <b class="accounts-count">?</b>
+                    <small>(Go to Accounts tab to refresh)</small>
+                </p>
+                <p>
+                    Nodes count: <b class="nodes-count">?</b>
+                    <small>(Go to Monitor tab to refresh)</small>
+                </p>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="input-group">
+                            <span class="input-group-addon">Test add, count: </span>
+                            <input id="count-add" class="form-control" placeholder="0" type="number">
+                            <span class="input-group-btn">
+                                <button id="run-add" type="button" class="btn btn-primary"><i class="fa fa-cog"></i> Run</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <pre id="test-result-add"></pre>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="input-group">
+                            <span class="input-group-addon">Test get, count: </span>
+                            <input id="count-get" class="form-control" placeholder="0" type="number">
+                            <span class="input-group-btn">
+                                <button id="run-get" type="button" class="btn btn-primary"><i class="fa fa-cog"></i> Run</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <pre id="test-result-get"></pre>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="input-group">
+                            <span class="input-group-addon">Complex test, count: </span>
+                            <input id="count-complex" class="form-control" placeholder="0" type="number">
+                            <span class="input-group-btn">
+                                <button id="run-complex" type="button" class="btn btn-primary"><i class="fa fa-cog"></i> Run</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <pre id="test-result-complex"></pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

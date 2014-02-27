@@ -106,7 +106,8 @@ public class MongoDBTable extends Table{
             }
             if(LOG.isDebugEnabled())
                 LOG.debug("Ensure full_text_index for collection "+getCollection()+", fields: "+fullTextFields+", language: "+fullTextLanguage);
-            coll.ensureIndex(o,opt);
+            if(!o.isEmpty())
+                coll.ensureIndex(o,opt);
         }
     }
 
