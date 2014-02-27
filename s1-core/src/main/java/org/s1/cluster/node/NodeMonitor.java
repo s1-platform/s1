@@ -314,6 +314,7 @@ public class NodeMonitor {
                         if(LOG.isDebugEnabled())
                             LOG.debug("Monitor response recieved");
                         response = resp.getResult();
+                        response.put("address",ip);
                         nodeResponses.add(response);
                         if(nodeId!=null)
                             done = true;

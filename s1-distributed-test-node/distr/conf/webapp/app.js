@@ -111,7 +111,7 @@ $(document).ready(function(){
 
     var callTest = function(res,i,test){
         var t = new Date().getTime();
-        var url = "http://"+getRandomNode().monitor.address+":"+9000+"/s1/dispatcher/Table.";
+        var url = "http://"+getRandomNode().address+":"+9000+"/s1/dispatcher/Table.";
         var data = {table:"accounts"};
         if(test=="get"){
             url+="get";
