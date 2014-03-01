@@ -101,7 +101,7 @@ class TableHistory {
                 "schema", action.getSchema() == null ? null : action.getSchema().toMap(),
                 "foundationSchema", action.getFoundationSchema() == null ? null : action.getFoundationSchema().toMap()
         ),
-                "id", UUID.randomUUID().toString(),
+                "id", table.newId(),
                 "record", id,
                 "date", new Date(),
                 "user", Session.getSessionBean().getUserId(),

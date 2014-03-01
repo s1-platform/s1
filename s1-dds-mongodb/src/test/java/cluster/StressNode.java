@@ -49,8 +49,8 @@ public class StressNode {
                 public Object call(String input) throws ClosureException {
                     for(int i=0;i<5;i++){
                         System.out.println(">>"+i);
-                        MongoDBDDS.add(null,collection, Objects.newHashMap(String.class,Object.class,"id",i),
-                                Objects.newHashMap(String.class,Object.class,"id",i,"name","test_"+i));
+                        MongoDBDDS.add(null,collection, ""+i,
+                                Objects.newHashMap(String.class,Object.class,"name","test_"+i));
                         if(i==3){
                             //throw new RuntimeException("test");
                             //System.exit(-1);

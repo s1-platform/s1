@@ -25,6 +25,27 @@ public class MongoDBFormat {
 
     /**
      *
+     * @return
+     */
+    public static String newId(){
+        return ObjectId.get().toString();
+    }
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    public static ObjectId parseId(String id){
+        try{
+            return new ObjectId(id);
+        }catch (Throwable e){
+        }
+        return null;
+    }
+
+    /**
+     *
      * @param obj
      * @return
      */
@@ -32,8 +53,10 @@ public class MongoDBFormat {
         if(obj==null)
             return null;
         Map<String,Object> m = obj.toMap();
-        if(m.get("_id")!=null)
-            m.put("_id",m.get("_id").toString());
+        if(m.get("_id")!=null){
+            m.put("id",m.get("_id").toString());
+            m.remove("_id");
+        }
 
         m = Objects.iterate(m, new Closure<ObjectIterator.IterateBean, Object>() {
             @Override
@@ -55,11 +78,6 @@ public class MongoDBFormat {
                         }
                     }
                 }
-                /*if(o instanceof Integer || o instanceof Long){
-                    o = Objects.cast(o,BigInteger.class);
-                }else if(o instanceof Float || o instanceof Double){
-                    o = Objects.cast(o,BigDecimal.class);
-                }*/
                 return o;
             }
         });
@@ -90,6 +108,7 @@ public class MongoDBFormat {
                         && !(o instanceof Boolean)
                         && !(o instanceof Date)
                         && !(o instanceof Number)
+                        && !(o instanceof ObjectId)
                         && !(o instanceof byte[])){
                     if(o instanceof Serializable){
                         try {
@@ -107,8 +126,9 @@ public class MongoDBFormat {
             }
         });
         DBObject obj = new BasicDBObject(m);
-        if(m.get("_id")!=null){
-            obj.put("_id",new ObjectId(""+m.get("_id")));
+        if(m.get("id")!=null){
+            obj.put("_id",parseId(""+m.get("id")));
+            obj.removeField("id");
         }
         return obj;
     }
@@ -118,14 +138,14 @@ public class MongoDBFormat {
      * @param query
      * @return
      */
-    public static DBObject formatSearch(Query query){
-        DBObject o = new BasicDBObject();
-        List<DBObject> l = Objects.newArrayList();
+    public static Map<String,Object> formatSearch(Query query){
+        Map<String,Object> o = Objects.newHashMap();
+        List<Map<String,Object>> l = Objects.newArrayList();
         if(query.getNode()!=null){
             l.add(formatQueryNode(query.getNode()));
         }
         if(query.getCustom()!=null){
-            l.add(fromMap(query.getCustom()));
+            l.add(query.getCustom());
         }
         if(l.size()>0){
             o.put("$and",l);
@@ -139,10 +159,10 @@ public class MongoDBFormat {
      * @param qn
      * @return
      */
-    public static DBObject formatQueryNode(QueryNode qn){
-        DBObject o = new BasicDBObject();
+    public static Map<String,Object> formatQueryNode(QueryNode qn){
+        Map<String,Object> o = Objects.newHashMap();
         if(qn instanceof GroupQueryNode){
-            List<DBObject> l = Objects.newArrayList();
+            List<Map<String,Object>> l = Objects.newArrayList();
             for(QueryNode n:((GroupQueryNode) qn).getChildren()){
                 l.add(formatQueryNode(n));
             }
@@ -152,6 +172,10 @@ public class MongoDBFormat {
             FieldQueryNode.FieldOperation op = ((FieldQueryNode) qn).getOperation();
             String f = ((FieldQueryNode) qn).getField();
             Object val = ((FieldQueryNode) qn).getValue();
+            if(f.equals("id")){
+                f = "_id";
+                val = parseId(""+val);
+            }
             if(op == FieldQueryNode.FieldOperation.EQUALS){
                 o.put(f,val);
             }else if(op == FieldQueryNode.FieldOperation.CONTAINS){
@@ -179,10 +203,13 @@ public class MongoDBFormat {
      * @param sort
      * @return
      */
-    public static DBObject formatSort(Sort sort){
-        DBObject o = new BasicDBObject();
+    public static Map<String,Object> formatSort(Sort sort){
+        Map<String,Object> o = Objects.newHashMap();
         if(sort!=null && !Objects.isNullOrEmpty(sort.getName())){
-            o.put(sort.getName(),sort.isDesc()?-1:1);
+            String n = sort.getName();
+            if(n.equals("id"))
+                n = "_id";
+            o.put(n,sort.isDesc()?-1:1);
         }
         return o;
     }
@@ -192,13 +219,16 @@ public class MongoDBFormat {
      * @param fieldsMask
      * @return
      */
-    public static DBObject formatFieldsMask(FieldsMask fieldsMask){
-        DBObject o = new BasicDBObject();
+    public static Map<String,Object> formatFieldsMask(FieldsMask fieldsMask){
+        Map<String,Object> o = Objects.newHashMap();
         if(fieldsMask!=null && fieldsMask.getFields()!=null){
             int i = fieldsMask.isShow()?1:0;
             for(String f: fieldsMask.getFields()){
-                if(!Objects.isNullOrEmpty(f))
+                if(!Objects.isNullOrEmpty(f)){
+                    if(f.equals("id"))
+                        f = "_id";
                     o.put(f,i);
+                }
             }
         }
         return o;

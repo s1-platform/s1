@@ -22,7 +22,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     public void initialize() {
         super.initialize();
         DBCollection coll = getCollection();
-        coll.ensureIndex(new BasicDBObject("id",1));
+        coll.ensureIndex(new BasicDBObject("messageId",1));
         coll.ensureIndex(new BasicDBObject("done",1));
         LOG.info("Operation write log initialized, indexes checked");
     }
@@ -30,12 +30,15 @@ public class MongoDBOperationLog extends NodeOperationLog{
     @Override
     public void listFrom(long id, Closure<MessageBean, Object> cl) {
         DBCollection coll = getCollection();
-        DBCursor cur = coll.find(new BasicDBObject("id",new BasicDBObject("$gt",id)))
-            .sort(new BasicDBObject("id", 1));
+        DBCursor cur = coll.find(new BasicDBObject("messageId",new BasicDBObject("$gt",id)))
+            .sort(new BasicDBObject("messageId", 1));
         while(cur.hasNext()){
             DBObject o = cur.next();
             MessageBean m = new MessageBean();
-            m.fromMap(MongoDBFormat.toMap(o));
+            Map<String,Object> m1 = MongoDBFormat.toMap(o);
+            m1.put("id",m1.get("messageId"));
+            m1.remove("messageId");
+            m.fromMap(m1);
             cl.callQuite(m);
         }
     }
@@ -44,11 +47,14 @@ public class MongoDBOperationLog extends NodeOperationLog{
     public void listUndone(Closure<MessageBean, Object> cl) {
         DBCollection coll = getCollection();
         DBCursor cur = coll.find(new BasicDBObject("done",false))
-                .sort(new BasicDBObject("id", 1));
+                .sort(new BasicDBObject("messageId", 1));
         while(cur.hasNext()){
             DBObject o = cur.next();
             MessageBean m = new MessageBean();
-            m.fromMap(MongoDBFormat.toMap(o));
+            Map<String,Object> m1 = MongoDBFormat.toMap(o);
+            m1.put("id",m1.get("messageId"));
+            m1.remove("messageId");
+            m.fromMap(m1);
             cl.callQuite(m);
         }
     }
@@ -58,6 +64,8 @@ public class MongoDBOperationLog extends NodeOperationLog{
         DBCollection coll = getCollection();
         Map<String,Object> m1 = m.toMap();
         m1.put("done",false);
+        m1.put("messageId",m1.get("id"));
+        m1.remove("id");
         coll.insert(MongoDBFormat.fromMap(m1), WriteConcern.FSYNC_SAFE);
         if(LOG.isTraceEnabled()){
             LOG.trace("Node write log new record: "+m.toString(true));
@@ -69,7 +77,7 @@ public class MongoDBOperationLog extends NodeOperationLog{
     @Override
     public void markDone(long id) {
         DBCollection coll = getCollection();
-        coll.update(new BasicDBObject("id",id),
+        coll.update(new BasicDBObject("messageId",id),
                 new BasicDBObject("$set",new BasicDBObject("done",true)),false,false, WriteConcern.FSYNC_SAFE);
         if(LOG.isDebugEnabled())
             LOG.debug("Node write log record #"+id+" marked as done:true");
@@ -78,18 +86,21 @@ public class MongoDBOperationLog extends NodeOperationLog{
     @Override
     public long getLastId() {
         DBCollection coll = getCollection();
-        DBCursor cur = coll.find().sort(new BasicDBObject("id", -1)).limit(1);
+        DBCursor cur = coll.find().sort(new BasicDBObject("messageId", -1)).limit(1);
         DBObject o = null;
         if(cur.hasNext())
             o = cur.next();
         if(o!=null){
-            return (Long)o.get("id");
+            return (Long)o.get("messageId");
         }
         return 0;
     }
 
+    public static final String DB_INSTANCE = "clusterLog";
+    public static final String COLLECTION = "clusterLog";
+
     private DBCollection getCollection(){
-        DBCollection coll = MongoDBConnectionHelper.getConnection("clusterLog").getCollection("clusterLog");
+        DBCollection coll = MongoDBConnectionHelper.getConnection(DB_INSTANCE).getCollection(COLLECTION);
         return coll;
     }
 }

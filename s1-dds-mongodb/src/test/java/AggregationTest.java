@@ -33,7 +33,7 @@ public class AggregationTest extends ClusterTest{
         long t = System.currentTimeMillis();
         for(int i=0;i<100;i++){
             coll.insert(MongoDBFormat.fromMap(Objects.newHashMap(String.class, Object.class,
-                    "id", i,
+                    "index", i,
                     "str", "test_" + i,
                     "str2", "test_" + (i % 50),
                     "int", i,

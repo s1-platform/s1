@@ -288,6 +288,16 @@ public class ScriptSystemFunctions extends ScriptFunctions{
     }
 
     /**
+     * Put all
+     *
+     * @param m
+     * @param m2
+     */
+    public void putAll(Map<String,Object> m, Map<String,Object> m2){
+        m.putAll(m2);
+    }
+
+    /**
      * Map keys
      *
      * @param m

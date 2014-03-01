@@ -416,17 +416,29 @@ public class ASTEvaluator {
                     r = !Objects.isNullOrEmpty(r);
                 getResult = (Boolean)l&&(Boolean)r;
             }else if(operator==Token.LT){
-                if(l instanceof Number && r instanceof Number)
+                if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() < ((Number)r).doubleValue();
+                }else if(l instanceof String && r instanceof String){
+                    getResult = ((String) l).compareTo((String)r)<0;
+                }
             }else if(operator==Token.LE){
-                if(l instanceof Number && r instanceof Number)
+                if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() <= ((Number)r).doubleValue();
+                }else if(l instanceof String && r instanceof String){
+                    getResult = ((String) l).compareTo((String)r)<=0;
+                }
             }else if(operator==Token.GT){
-                if(l instanceof Number && r instanceof Number)
+                if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() > ((Number)r).doubleValue();
+                }else if(l instanceof String && r instanceof String){
+                    getResult = ((String) l).compareTo((String)r)>0;
+                }
             }else if(operator==Token.GE){
-                if(l instanceof Number && r instanceof Number)
+                if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() >= ((Number)r).doubleValue();
+                }else if(l instanceof String && r instanceof String){
+                    getResult = ((String) l).compareTo((String)r)>=0;
+                }
             }else if(operator==Token.ADD){
                 if(l instanceof Number && r instanceof Number)
                     getResult = ((Number)l).doubleValue() + ((Number)r).doubleValue();

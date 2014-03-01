@@ -20,8 +20,6 @@ import java.util.UUID;
  */
 public abstract class TestAppServer implements Runnable{
 
-    public static final Logger LOG = LoggerFactory.getLogger(TestAppServer.class);
-
     public static final String SERVER_HOME = System.getProperty("java.io.tmpdir")+"/s1-test-server";
 
     protected abstract int getPort();
@@ -41,7 +39,7 @@ public abstract class TestAppServer implements Runnable{
         //set options path
         String opt = getOptions();
         System.setProperty("s1."+ OptionsStorage.CONFIG_HOME, opt);
-        LOG.info("s1." + OptionsStorage.CONFIG_HOME + "=" + opt);
+        System.err.println("TestAppServer: s1." + OptionsStorage.CONFIG_HOME + "=" + opt);
 
 
         String host = "localhost";
@@ -67,14 +65,14 @@ public abstract class TestAppServer implements Runnable{
         tomcat.getHost().setDeployOnStartup(true);
 
         Context ctx = tomcat.addWebapp(tomcat.getHost(), contextPath, path);
-        LOG.info("Webapp path: "+path);
-        LOG.info("Context path: "+contextPath);
+        System.err.println("TestAppServer: Webapp path: "+path);
+        System.err.println("TestAppServer: Context path: "+contextPath);
         try {
             tomcat.start();
         } catch (LifecycleException e) {
             throw S1SystemError.wrap(e);
         }
-        LOG.info("Server started: "+host+":"+port);
+        System.err.println("TestAppServer: Server started: "+host+":"+port);
         tomcat.getServer().await();
     }
 

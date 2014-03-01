@@ -306,7 +306,7 @@ class TableDescriptor {
                     try{
                         return scriptEngine.evalInFunction(Boolean.class, accessStr, null);
                     }catch (ScriptException e){
-                        return false;
+                        throw ClosureException.wrap(e);
                     }
                 }
             });
@@ -320,7 +320,7 @@ class TableDescriptor {
                     try {
                         return scriptEngine.evalInFunction(Boolean.class, importAccessStr, null);
                     } catch (ScriptException e) {
-                        return false;
+                        throw ClosureException.wrap(e);
                     }
                 }
             });
@@ -335,7 +335,7 @@ class TableDescriptor {
                         return scriptEngine.evalInFunction(Boolean.class,accessStr, Objects.newHashMap(String.class, Object.class,
                                 "record", input));
                     } catch (ScriptException e) {
-                        return false;
+                        throw ClosureException.wrap(e);
                     }
                 }
             });
@@ -354,7 +354,7 @@ class TableDescriptor {
                                 "state", input.getState(),
                                 "data", input.getData()));
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }
@@ -371,7 +371,7 @@ class TableDescriptor {
                                 "context", input.getContext(),
                                 "record", input.getRecord()));
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }
@@ -389,7 +389,7 @@ class TableDescriptor {
                                 "search", m));
                         input.fromMap(m);
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }
@@ -407,7 +407,7 @@ class TableDescriptor {
                                 "sort", m));
                         input.fromMap(m);
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }

@@ -74,7 +74,7 @@ public class TableTest extends ClusterTest {
     }
 
     public void testUnique() {
-        final int p = 100;
+        final int p = 1000;
         title("Unique, parallel: " + p);
         TablesFactory.getTable("test1");
 

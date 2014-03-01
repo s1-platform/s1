@@ -63,7 +63,7 @@ public class ActionBean {
                         return scriptEngine.evalInFunction(Boolean.class, accessStr, Objects.newHashMap(String.class, Object.class,
                                 "record", input));
                     }catch (ScriptException e){
-                        return false;
+                        throw ClosureException.wrap(e);
                     }
                 }
             });
@@ -80,7 +80,7 @@ public class ActionBean {
                                 "foundation", input.getFoundation(),
                                 "data", input.getData()));
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }
@@ -99,7 +99,7 @@ public class ActionBean {
                                 "foundation", input.getFoundation(),
                                 "data", input.getData()));
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }
@@ -117,7 +117,7 @@ public class ActionBean {
                                 "oldRecord", input.getOldRecord(),
                                 "data", input.getData()));
                     } catch (ScriptException e) {
-                        ClosureException.wrap(e);
+                        throw ClosureException.wrap(e);
                     }
                     return null;
                 }

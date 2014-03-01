@@ -39,6 +39,7 @@ $(document).ready(function(){
     //accounts
     $("#refresh-accounts").click(function(){
         $("#accounts-data").html("");
+        $("#operations-data").html("");
         accounts = [];
         $(".accounts-count").html("?");
         $("#refresh-accounts").attr("disabled",true).find(">i").addClass("fa-spinner");
@@ -48,18 +49,22 @@ $(document).ready(function(){
             contentType:"application/json",
             data:JSON.stringify({list:[
                 {operation:"Table",method:"aggregate",params:{table:"accounts",field:"balance"}},
+                {operation:"Table",method:"aggregate",params:{table:"operations",field:"sum"}},
                 {operation:"Table",method:"list",params:{max:0,skip:0,table:"accounts"}}
             ]}),
             type:"POST",
             success:function(data,status,xhr){
                 $("#refresh-accounts").attr("disabled",false).find(">i").removeClass("fa-spinner");
                 var dt = data;
+                var dt2 = "";
                 if(data.success){
                     dt = data.data.list[0].data;
-                    accounts = data.data.list[1].data.list;
+                    dt2 = data.data.list[1].data;
+                    accounts = data.data.list[2].data.list;
                     $(".accounts-count").html(accounts.length);
                 }
                 $("#accounts-data").html(JSON.stringify(dt,null,"  "));
+                $("#operations-data").html(JSON.stringify(dt2,null,"  "));
             },
             error:function(xhr,status,err){
                 $("#refresh-accounts").attr("disabled",false).find(">i").removeClass("fa-spinner");
@@ -67,6 +72,35 @@ $(document).ready(function(){
                 console.error(err);
             }
         });
+    });
+
+    //clear
+    $("#clear").click(function(){
+        if(nodes.length==0){
+            console.error("Nodes.length == 0");
+            return;
+        }
+        accounts = [];
+        $(".accounts-count").html("?");
+        $("#clear").attr("disabled",true).find(">i").addClass("fa-spinner");
+
+        var res = [];
+        for(var i=0;i<nodes.length;i++){
+            var url = "http://"+nodes[i].address+":"+9000+"/s1/dispatcher/Test.clear";
+            var result = function(dt){
+                res.push(1);
+            };
+
+            $.getJSON(url+"?_callback=?", null, result);
+        }
+        var f = function(){
+            if(res.length==nodes.length){
+                $("#clear").attr("disabled",false).find(">i").removeClass("fa-spinner");
+            }else{
+                window.setTimeout(f,1000);
+            }
+        };
+        window.setTimeout(f,1000);
     });
 
     //request
@@ -111,20 +145,35 @@ $(document).ready(function(){
 
     var callTest = function(res,i,test){
         var t = new Date().getTime();
-        var url = "http://"+getRandomNode().address+":"+9000+"/s1/dispatcher/Table.";
+        var url = "http://"+getRandomNode().address+":"+9000+"/s1/dispatcher/";
         var data = {table:"accounts"};
         if(test=="get"){
-            url+="get";
+            url+="Table.get";
             data.id = getRandomAccount().id;
         }else if(test=="add"){
-            url+="changeState";
+            url+="Table.changeState";
             data.action = "add";
             data.data = {
                 title: "account_"+i,
                 balance: 1000
             };
         }else if(test=="complex"){
-            url+="pay";
+            url+="Test.pay";
+            var src = null;
+            while(!src){
+                src = getRandomAccount();
+                if(src.balance<=0)
+                    src = null;
+            }
+            var dest = null;
+            while(!dest){
+                dest = getRandomAccount();
+                if(dest.id == src.id)
+                    dest = null;
+            }
+            data.sum = 1;
+            data.src = src.id;
+            data.dest = dest.id;
         }
         url+="?_params="+encodeURIComponent(JSON.stringify(data));
 

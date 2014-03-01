@@ -5,6 +5,7 @@ import org.s1.cluster.datasource.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.mongodb.MongoDBDDS;
+import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
 import org.s1.test.ClusterTest;
@@ -30,51 +31,46 @@ public class WriteTest extends ClusterTest {
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
-                MongoDBDDS.add(null,COLL, Objects.newHashMap(String.class,Object.class,
-                            "id",input
-                        ),Objects.newHashMap(String.class,Object.class,
-                            "id",input,"title","test_"+input
+                String id = MongoDBFormat.newId();
+                MongoDBDDS.add(null,COLL, id,Objects.newHashMap(String.class,Object.class,
+                            "title","test_"+input
                         ));
 
                 //
                 Map<String,Object> m = null;
                 try{
-                    m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
-                            "id",input
+                    m = MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                            "id",id
                     ));
                 }catch (Exception e){
                     throw S1SystemError.wrap(e);
                 }
-                assertEquals(input,m.get("id"));
+                assertEquals(id,m.get("id"));
                 assertEquals("test_"+input,m.get("title"));
                 m.put("x","y");
 
                 //set
-                MongoDBDDS.set(null, COLL, Objects.newHashMap(String.class, Object.class,
-                        "id", input
-                ), m);
+                MongoDBDDS.set(null, COLL, id, m);
 
                 try{
-                    m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
-                            "id",input
+                    m = MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                            "id",id
                     ));
                 }catch (Exception e){
                     throw S1SystemError.wrap(e);
                 }
 
-                assertEquals(input,m.get("id"));
+                assertEquals(id,m.get("id"));
                 assertEquals("test_"+input,m.get("title"));
                 assertEquals("y",m.get("x"));
 
                 //remove
-                MongoDBDDS.remove(null, COLL, Objects.newHashMap(String.class, Object.class,
-                        "id", input
-                ));
+                MongoDBDDS.remove(null, COLL, id);
 
                 boolean b = false;
                 try{
-                    MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
-                            "id",input
+                    MongoDBQueryHelper.get(null,COLL,Objects.newHashMap(String.class,Object.class,
+                            "id",id
                     ));
                 }catch (NotFoundException e){
                     b = true;
@@ -92,10 +88,10 @@ public class WriteTest extends ClusterTest {
     public void testFlush(){
         int p=100;
         title("Flush, parallel: "+p);
-        MongoDBDDS.add(null,COLL, Objects.newHashMap(String.class,Object.class,
-                "id","test"
-        ),Objects.newHashMap(String.class,Object.class,
-                "id","test","count",0
+        final String testId = MongoDBFormat.newId();
+        trace(testId);
+        MongoDBDDS.add(null,COLL, testId, Objects.newHashMap(String.class,Object.class,
+                "count",0
         ));
 
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
@@ -106,22 +102,23 @@ public class WriteTest extends ClusterTest {
                         @Override
                         public Object call(String input) throws ClosureException {
                             Map<String,Object> s = Objects.newHashMap(
-                                    "id", "test"
+                                    "id", testId
                             );
-                            MongoDBDDS.waitForRecord(null,COLL,s);
+                            MongoDBDDS.waitForRecord(null,COLL,testId);
 
                             Map<String,Object> m = null;
                             try{
-                                m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(s));
+                                m = MongoDBQueryHelper.get(null,COLL,s);
                             }catch (Exception e){
                                 throw S1SystemError.wrap(e);
                             }
+
                             int c = Objects.get(m,"count");
 
                             m.put("count",c+1);
 
                             //save
-                            MongoDBDDS.set(null,COLL,s,m);
+                            MongoDBDDS.set(null,COLL,testId,m);
 
                             return null;
                         }
@@ -137,7 +134,7 @@ public class WriteTest extends ClusterTest {
         Map<String,Object> m = null;
         try{
             m = MongoDBQueryHelper.get(null,COLL,new BasicDBObject(
-                    "id","test"
+                    "id",testId
             ));
         }catch (Exception e){
             throw S1SystemError.wrap(e);

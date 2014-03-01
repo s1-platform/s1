@@ -27,24 +27,27 @@ public class MongoDBDDS extends DistributedDataSource{
                 .getCollection(cn);
 
         if("add".equals(command) || "set".equals(command)){
-            Map<String,Object> search = Objects.get(params,"search");
+            String id = Objects.get(params,"id");
             Map<String,Object> data = Objects.get(params,"data");
-            if(search == null || data == null){
+            if(id == null || data == null || MongoDBFormat.parseId(id)==null){
                 return;
             }
+            Map<String,Object> search = Objects.newHashMap("id",id);
+            data.put("id",id);
             int n = coll.update(
                     MongoDBFormat.fromMap(search),
                     MongoDBFormat.fromMap(data),command.equals("add"),false,WriteConcern.FSYNC_SAFE).getN();
             if(LOG.isDebugEnabled())
-                LOG.debug("MongoDB records("+n+") "+(command.equals("add")?"added":"updated")+", search:"+search+", data:"+data);
+                LOG.debug("MongoDB records("+n+") "+(command.equals("add")?"added":"updated")+", id:"+id+", data:"+data);
         }else if("remove".equals(command)){
-            Map<String,Object> search = Objects.get(params,"search");
-            if(search == null){
+            String id = Objects.get(params,"id");
+            if(id == null || MongoDBFormat.parseId(id)==null){
                 return;
             }
+            Map<String,Object> search = Objects.newHashMap("id",id);
             int n = coll.remove(MongoDBFormat.fromMap(search),WriteConcern.FSYNC_SAFE).getN();
             if(LOG.isDebugEnabled())
-                LOG.debug("MongoDB records("+n+") removed, search:"+search);
+                LOG.debug("MongoDB records("+n+") removed, id:"+id);
         }
     }
 
@@ -53,17 +56,17 @@ public class MongoDBDDS extends DistributedDataSource{
      *
      * @param instance
      * @param collection
-     * @param search
+     * @param id
      * @param data
      */
-    public static void add(String instance, String collection, Map<String, Object> search, Map<String, Object> data){
+    public static void add(String instance, String collection, String id, Map<String, Object> data){
 
         ClusterNode.call(MongoDBDDS.class, "add", Objects.newHashMap(String.class,Object.class,
                 "instance",instance,
                 "collection",collection,
-                "search",search,
+                "id",id,
                 "data",data
-                ),getGroup(instance,collection,search));
+                ),getGroup(instance,collection,id));
 
     }
 
@@ -72,17 +75,17 @@ public class MongoDBDDS extends DistributedDataSource{
      *
      * @param instance
      * @param collection
-     * @param search
+     * @param id
      * @param data
      */
-    public static void set(String instance, String collection, Map<String, Object> search, Map<String, Object> data){
+    public static void set(String instance, String collection, String id, Map<String, Object> data){
 
         ClusterNode.call(MongoDBDDS.class, "set", Objects.newHashMap(String.class,Object.class,
                 "instance",instance,
                 "collection",collection,
-                "search",search,
+                "id",id,
                 "data",data
-        ),getGroup(instance,collection,search));
+        ),getGroup(instance,collection,id));
 
     }
 
@@ -91,34 +94,35 @@ public class MongoDBDDS extends DistributedDataSource{
      *
      * @param instance
      * @param collection
-     * @param search
+     * @param id
      */
-    public static void remove(String instance, String collection, Map<String, Object> search){
+    public static void remove(String instance, String collection, String id){
         ClusterNode.call(MongoDBDDS.class, "remove", Objects.newHashMap(String.class,Object.class,
                 "instance",instance,
                 "collection",collection,
-                "search",search
-        ),getGroup(instance,collection,search));
-    }
-
-    /**
-     *
-     * @param collection
-     * @param search
-     */
-    public static void waitForRecord(String instance, String collection, Map<String, Object> search){
-        ClusterNode.flush(MongoDBDDS.class,getGroup(instance,collection,search));
+                "id",id
+        ),getGroup(instance,collection,id));
     }
 
     /**
      *
      * @param instance
      * @param collection
-     * @param search
+     * @param id
+     */
+    public static void waitForRecord(String instance, String collection, String id){
+        ClusterNode.flush(MongoDBDDS.class, getGroup(instance, collection, id));
+    }
+
+    /**
+     *
+     * @param instance
+     * @param collection
+     * @param id
      * @return
      */
-    private static String getGroup(String instance, String collection,  Map<String, Object> search){
-        return instance+":"+collection+":"+search;
+    public static String getGroup(String instance, String collection,  String id){
+        return instance+":"+collection+":"+id;
     }
 
 }

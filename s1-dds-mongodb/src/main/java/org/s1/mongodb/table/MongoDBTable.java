@@ -123,6 +123,11 @@ public class MongoDBTable extends Table{
     }
 
     @Override
+    protected String newId() {
+        return MongoDBFormat.newId();
+    }
+
+    @Override
     protected void collectionIndex(String collection, String name, IndexBean ind) {
         DBObject i = new BasicDBObject();
         for(String f:ind.getFields()){
@@ -163,17 +168,17 @@ public class MongoDBTable extends Table{
 
     @Override
     protected void collectionAdd(String collection, Map<String, Object> data) {
-        MongoDBDDS.add(null,collection,Objects.newHashMap(String.class,Object.class,"id",Objects.get(data,"id")),data);
+        MongoDBDDS.add(null, collection, Objects.get(String.class,data,"id"), data);
     }
 
     @Override
     protected void collectionSet(String collection, String id, Map<String, Object> data) {
-        MongoDBDDS.set(null, collection, Objects.newHashMap(String.class, Object.class, "id", id), data);
+        MongoDBDDS.set(null, collection, id, data);
     }
 
     @Override
     protected void collectionRemove(String collection, String id) {
-        MongoDBDDS.remove(null, collection, Objects.newHashMap(String.class, Object.class, "id", id));
+        MongoDBDDS.remove(null, collection, id);
     }
 
 }

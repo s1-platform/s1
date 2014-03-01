@@ -42,17 +42,24 @@
                 <p>
                     Nodes count: <b class="nodes-count">?</b>
                 </p>
+                <p>
+                    <button id="clear" type="button" class="btn btn-danger"><i class="fa fa-times"></i> Clear all tables on all nodes</button>
+                    <small>(Nodes count must be > 0, if not, refresh cluster info on Monitor data)</small>
+                </p>
                 <pre id="monitor-data"></pre>
             </div>
             <div class="tab-pane fade" id="accounts">
                 <h2>Accounts</h2>
                 <p>
-                    <button id="refresh-accounts" type="button" class="btn btn-primary"><i class="fa fa-refresh"></i> Refresh accounts statistic</button>
+                    <button id="refresh-accounts" type="button" class="btn btn-primary"><i class="fa fa-refresh"></i> Refresh accounts statistic from current node</button>
                 </p>
                 <p>
                     Accounts count: <b class="accounts-count">?</b>
                 </p>
+                <h4>Accounts balance:</h4>
                 <pre id="accounts-data"></pre>
+                <h4>Operations sum:</h4>
+                <pre id="operations-data"></pre>
             </div>
             <div class="tab-pane fade" id="request">
                 <h2>Request</h2>
@@ -67,7 +74,7 @@
                     <h4>Data:</h4>
                     <textarea id="request-data" style="max-width:100%;min-height:50px;" class="form-control"></textarea>
                 </p>
-                <button id="request-run" type="button" class="btn btn-primary bt-sm"><i class="fa fa-external-link"></i> Run request</button>
+                <button id="request-run" type="button" class="btn btn-primary bt-sm"><i class="fa fa-external-link"></i> Run request on current node</button>
                 <br><br>
                 <pre id="request-response"></pre>
             </div>
@@ -83,6 +90,7 @@
                 </p>
                 <div class="panel panel-default">
                     <div class="panel-heading">
+                        <p>This test will check <b>write</b> speed (under load) in clustered table</p>
                         <div class="input-group">
                             <span class="input-group-addon">Test add, count: </span>
                             <input id="count-add" class="form-control" placeholder="0" type="number">
@@ -97,6 +105,7 @@
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-heading">
+                        <p>This test will check <b>read</b> speed (under load) from clustered table</p>
                         <div class="input-group">
                             <span class="input-group-addon">Test get, count: </span>
                             <input id="count-get" class="form-control" placeholder="0" type="number">
@@ -111,8 +120,14 @@
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-heading">
+                        <p>This is stress test: there must be already several accounts with total balance > test sum.<br>
+                            Test performs random payment operations with sum==1.<br>
+                            After test finishes you may check that <i>total balance is not changed</i>
+                            and <i>sum of operation sums was increased on test sum value</i>.<br>
+                            You may break nodes during the test to make it more interesting.
+                        </p>
                         <div class="input-group">
-                            <span class="input-group-addon">Complex test, count: </span>
+                            <span class="input-group-addon">Complex test, sum: </span>
                             <input id="count-complex" class="form-control" placeholder="0" type="number">
                             <span class="input-group-btn">
                                 <button id="run-complex" type="button" class="btn btn-primary"><i class="fa fa-cog"></i> Run</button>

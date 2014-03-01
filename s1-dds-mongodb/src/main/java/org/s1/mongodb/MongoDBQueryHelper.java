@@ -32,13 +32,13 @@ public class MongoDBQueryHelper {
      * @throws MoreThanOneFoundException
      * @return
      */
-    public static Map<String, Object> get(String instance, String collection, DBObject search)
+    public static Map<String, Object> get(String instance, String collection, Map<String,Object> search)
     throws NotFoundException, MoreThanOneFoundException {
-        ensureOnlyOne(instance,collection,search);
+        System.out.println("==="+MongoDBFormat.fromMap(search));
+        ensureOnlyOne(instance, collection, search);
 
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
-
-        Map<String,Object> m = MongoDBFormat.toMap(coll.findOne(search));
+        Map<String,Object> m = MongoDBFormat.toMap(coll.findOne(MongoDBFormat.fromMap(search)));
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB get result (collection:"+collection+",search:"+search+"\n\t> "+m);
         return m;
@@ -60,15 +60,15 @@ public class MongoDBQueryHelper {
      */
     public static long fullTextSearch(List<Map<String, Object>> res, String instance, String collection,
                                       String fullTextQuery,
-                                      DBObject search,
-                                      DBObject fields, int skip, int max) {
+                                      Map<String,Object> search,
+                                      Map<String,Object> fields, int skip, int max) {
         DB db = MongoDBConnectionHelper.getConnection(instance);
         BasicDBObject request = new BasicDBObject();
         request.put("text", collection);
         request.put("search", fullTextQuery);
         //comment to get valid count
         //request.put("limit", max + skip);
-        request.put("filter", search);
+        request.put("filter", MongoDBFormat.fromMap(search));
         request.put("project", Objects.newHashMap("_id", 1));
         CommandResult cr = db.command(request);
         List<Map<String,Object>> l = Objects.get(cr,"results",new ArrayList<Map<String, Object>>());
@@ -78,7 +78,7 @@ public class MongoDBQueryHelper {
                 continue;
             Map<String,Object> _m = Objects.newHashMap();
             DBObject o = db.getCollection(collection).findOne(new BasicDBObject("_id",Objects.get(m,"obj._id")),
-                    fields);
+                    MongoDBFormat.fromMap(fields));
             if(o!=null){
                 _m.putAll(MongoDBFormat.toMap(o));
                 res.add(_m);
@@ -111,8 +111,8 @@ public class MongoDBQueryHelper {
      * @return
      */
     public static long list(List<Map<String, Object>> res, String instance, String collection,
-                            DBObject search, DBObject sort,
-                            DBObject fields, int skip, int max) {
+                            Map<String,Object> search, Map<String,Object> sort,
+                            Map<String,Object> fields, int skip, int max) {
         return list(res, instance, collection,search,sort,fields,skip,max,null);
     }
 
@@ -130,21 +130,21 @@ public class MongoDBQueryHelper {
      * @return
      */
     public static long list(List<Map<String, Object>> res, String instance, String collection,
-                                         DBObject search, DBObject sort,
-                                         DBObject fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
+                            Map<String,Object> search, Map<String,Object> sort,
+                            Map<String,Object> fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
 
         if (search == null)
-            search = new BasicDBObject();
+            search = Objects.newHashMap();
 
-        DBCursor cur = coll.find(search, fields);
+        DBCursor cur = coll.find(MongoDBFormat.fromMap(search), MongoDBFormat.fromMap(fields));
         if (max > 0)
             cur.limit(max);
         if (skip >= 0)
             cur.skip(skip);
 
         if (sort != null){
-            cur = cur.sort(sort);
+            cur = cur.sort(MongoDBFormat.fromMap(sort));
         }
 
         if(prepareCursor!=null){
@@ -176,11 +176,11 @@ public class MongoDBQueryHelper {
      * @param search
      * @throws AlreadyExistsException
      */
-    public static void ensureNotExists(String instance, String collection, DBObject search) throws AlreadyExistsException {
+    public static void ensureNotExists(String instance, String collection, Map<String,Object> search) throws AlreadyExistsException {
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
         if(search==null)
-            search = new BasicDBObject();
-        long cnt = coll.count(search);
+            search = Objects.newHashMap();
+        long cnt = coll.count(MongoDBFormat.fromMap(search));
         if(cnt>0){
             if(LOG.isDebugEnabled())
                 LOG.debug("Record already exists: "+collection+", search: "+search);
@@ -196,12 +196,12 @@ public class MongoDBQueryHelper {
      * @throws NotFoundException
      * @throws MoreThanOneFoundException
      */
-    public static void ensureOnlyOne(String instance, String collection, DBObject search)
+    public static void ensureOnlyOne(String instance, String collection, Map<String,Object> search)
             throws NotFoundException, MoreThanOneFoundException{
         DBCollection coll = MongoDBConnectionHelper.getConnection(instance).getCollection(collection);
         if(search==null)
-            search = new BasicDBObject();
-        long cnt = coll.count(search);
+            search = Objects.newHashMap();
+        long cnt = coll.count(MongoDBFormat.fromMap(search));
         if(cnt==0){
             if(LOG.isDebugEnabled())
                 LOG.debug("Record not found instance: "+instance+", collection: "+collection+", search: "+search);

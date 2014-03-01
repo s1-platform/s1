@@ -57,36 +57,25 @@ class TableWriter {
             throws AccessDeniedException, ObjectSchemaValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException {
         table.checkAccess();
         try {
-            return Transactions.run(new Closure<String, Map<String, Object>>() {
-                @Override
-                public Map<String, Object> call(String input) throws ClosureException {
-                    try {
-                        if(Objects.isNullOrEmpty(id)){
-                            //add
+            if(Objects.isNullOrEmpty(id) || Transactions.isInTransaction()){
+                //add
+                return table.changeRecordState(id, action, data, foundation);
+            }else{
+                //lock and set
+                return (Map<String, Object>) Locks.waitAndRun(table.getLockName(id), new Closure<String, Object>() {
+                    @Override
+                    public Object call(String input) throws ClosureException {
+                        try {
                             return table.changeRecordState(id, action, data, foundation);
-                        }else{
-                            //lock and set
-                            return (Map<String, Object>) Locks.waitAndRun(table.getLockName(id), new Closure<String, Object>() {
-                                @Override
-                                public Object call(String input) throws ClosureException {
-                                    try {
-                                        return table.changeRecordState(id, action, data, foundation);
-                                    } catch (Throwable e) {
-                                        throw ClosureException.wrap(e);
-                                    }
-                                }
-                            }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                        } catch (Throwable e) {
+                            throw ClosureException.wrap(e);
                         }
-                    }catch (Throwable e){
-                        if(e instanceof ClosureException)
-                            throw (ClosureException)e;
-                        throw ClosureException.wrap(e);
                     }
-                }
-            });
-        } /*catch (TimeoutException e) {
+                }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            }
+        } catch (TimeoutException e) {
             throw S1SystemError.wrap(e);
-        } */catch (ClosureException e) {
+        } catch (ClosureException e) {
             if (e.getCause() != null) {
                 if (e.getCause() instanceof ObjectSchemaValidationException) {
                     throw (ObjectSchemaValidationException) e.getCause();
@@ -149,13 +138,16 @@ class TableWriter {
                 foundation = a.getFoundationSchema().validate(foundation);
         }
 
+        //brules
+        table.runBefore(a, oldObject, data, foundation);
+
         Map<String, Object> newObject = null;
         if(isTo){
             newObject = Objects.newHashMap("id",id,Table.STATE,state.getName());
             if(isFrom)
                 newObject = Objects.copy(oldObject);
             //merge
-            newObject = merge(a, newObject, data);
+            newObject = table.merge(a, newObject, data);
 
             //validate
             if (state.getSchema() != null)
@@ -166,29 +158,35 @@ class TableWriter {
             newObject.put("id", id);
         }
 
-        //brules
-        runBefore(a, oldObject, data, foundation);
-
         if(isTo){
             final Map<String, Object> _newObject = newObject;
             final String _id = id;
             try {
-                Locks.waitAndRun(table.getLockName(null), new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
-                        try {
-                            table.checkUnique(_newObject, !isFrom);
-                            //save
-                            if(isFrom)
-                                table.collectionSet(table.getCollection(), _id, _newObject);
-                            else
-                                table.collectionAdd(table.getCollection(), _newObject);
-                        } catch (Throwable e) {
-                            throw ClosureException.wrap(e);
+                if(Transactions.isInTransaction()){
+                    table.checkUnique(_newObject, !isFrom);
+                    //save
+                    if(isFrom)
+                        table.collectionSet(table.getCollection(), _id, _newObject);
+                    else
+                        table.collectionAdd(table.getCollection(), _newObject);
+                }else{
+                    Locks.waitAndRun(table.getLockName(null), new Closure<String, Object>() {
+                        @Override
+                        public Object call(String input) throws ClosureException {
+                            try {
+                                table.checkUnique(_newObject, !isFrom);
+                                //save
+                                if(isFrom)
+                                    table.collectionSet(table.getCollection(), _id, _newObject);
+                                else
+                                    table.collectionAdd(table.getCollection(), _newObject);
+                            } catch (Throwable e) {
+                                throw ClosureException.wrap(e);
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                    }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                }
             } catch (TimeoutException e) {
                 throw S1SystemError.wrap(e);
             } catch (ClosureException e) {
@@ -208,7 +206,7 @@ class TableWriter {
         if(a.isLog() && isTo)
             table.log(id, a, oldObject, newObject, data, foundation);
 
-        runAfter(a, oldObject, newObject, data, foundation);
+        table.runAfter(a, oldObject, newObject, data, foundation);
 
         return isTo?newObject:oldObject;
     }

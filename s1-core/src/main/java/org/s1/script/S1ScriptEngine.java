@@ -214,12 +214,22 @@ public class S1ScriptEngine {
             f = executeTask(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
-                    return Session.run(sb.getId(),new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) throws ClosureException {
-                            return new ASTEvaluator().eval(root,ctx);
-                        }
-                    });
+                    try{
+                        return Session.run(sb.getId(),new Closure<String, Object>() {
+                            @Override
+                            public Object call(String input) throws ClosureException {
+                                try {
+                                    return new ASTEvaluator().eval(root,ctx);
+                                } catch (Throwable e) {
+                                    throw ClosureException.wrap(e);
+                                }
+                            }
+                        });
+                    }catch (ClosureException e){
+                        if(e.getCause() !=null)
+                            throw (Exception)e.getCause();
+                        throw e;
+                    }
                 }
             },getTimeLimit());
         }else{
