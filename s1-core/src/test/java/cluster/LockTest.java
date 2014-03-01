@@ -3,7 +3,7 @@ package cluster;
 import org.s1.cluster.Locks;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
-import org.s1.test.ClusterTest;
+import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
  * Date: 17.01.14
  * Time: 15:11
  */
-public class LockTest extends ClusterTest {
+public class LockTest extends BasicTest {
 
     public void testLock(){
         int p = 1000;

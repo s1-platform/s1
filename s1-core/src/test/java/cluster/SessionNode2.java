@@ -23,8 +23,6 @@ public class SessionNode2 {
         }
         System.setProperty("s1."+ OptionsStorage.CONFIG_HOME, home+ "/options1");
 
-        //ClusterNode.start();
-
         Session.run("test1", new Closure<String, Object>() {
             @Override
             public Object call(String input) {

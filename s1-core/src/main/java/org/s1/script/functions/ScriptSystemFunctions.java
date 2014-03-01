@@ -1,14 +1,27 @@
+/*
+ * Copyright 2014 Grigory Pykhov
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.s1.script.functions;
 
 import org.s1.cluster.Session;
-import org.s1.cluster.datasource.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
-import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
-import org.s1.script.Context;
 import org.s1.script.ScriptFunction;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
@@ -376,7 +389,7 @@ public class ScriptSystemFunctions extends ScriptFunctions{
      *
      * @return
      */
-    public Map<String,Object> whoAmI() throws NotFoundException{
+    public Map<String,Object> whoAmI() {
         String id = Session.getSessionBean().getUserId();
         return Users.getUser(id);
     }
@@ -385,7 +398,7 @@ public class ScriptSystemFunctions extends ScriptFunctions{
      *
      * @return
      */
-    public boolean inRole(String role) throws NotFoundException{
+    public boolean inRole(String role) {
         String id = Session.getSessionBean().getUserId();
         UserBean ub = Users.getUser(id);
         return Users.isUserInRole(ub,role);

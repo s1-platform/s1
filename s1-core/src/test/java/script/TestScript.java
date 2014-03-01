@@ -8,7 +8,6 @@ import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
 import org.s1.script.*;
 import org.s1.test.BasicTest;
-import org.s1.test.ClusterTest;
 import org.s1.test.LoadTestUtils;
 
 import java.io.File;
