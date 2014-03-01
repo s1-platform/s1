@@ -1,7 +1,5 @@
 package org.s1.log;
 
-import org.s1.table.format.Query;
-
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +17,7 @@ public class LogStorage {
      * @param max
      * @return
      */
-    public long list(List<Map<String,Object>> list, Query search, int skip, int max){
+    public long list(List<Map<String,Object>> list, Map<String,Object> search, int skip, int max){
         return 0;
     }
 

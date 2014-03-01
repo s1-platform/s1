@@ -1,9 +1,5 @@
 package org.s1.background;
 
-import com.hazelcast.core.Hazelcast;
-import org.s1.S1SystemError;
-import org.s1.cluster.node.ClusterNode;
-import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -26,23 +22,14 @@ public class BackgroundListener implements ServletContextListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundListener.class);
 
-    private Map<String,BackgroundWorker> workers = null;
+    private List<BackgroundWorker> workers = null;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        //start cluster node
-        Init.init();
-        try{
-            ClusterNode.start();
-        }catch (Exception e){
-            LOG.error("Cannot start ClusterNode: "+e.getMessage(),e);
-            throw S1SystemError.wrap(e);
-        }
-
         if (workers == null) {
 
             List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
-            workers = Objects.newHashMap();
+            workers = Objects.newArrayList();
             if(l!=null){
                 int i=0;
                 for(Map<String,Object> m : l){
@@ -58,7 +45,7 @@ public class BackgroundListener implements ServletContextListener {
                         LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
                     }
                     if(w!=null){
-                        workers.put(name,w);
+                        workers.add(w);
                         w.start();
                     }
                 }
@@ -69,16 +56,12 @@ public class BackgroundListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce){
         if(workers!=null){
-            for(String name:workers.keySet()){
-                workers.get(name).doShutdown();
-                workers.get(name).interrupt();
+            for(BackgroundWorker w:workers){
+                w.doShutdown();
+                w.interrupt();
             }
         }
         workers = null;
-
-        //stop
-        ClusterNode.stop();
-        Hazelcast.shutdownAll();
     }
 
 }

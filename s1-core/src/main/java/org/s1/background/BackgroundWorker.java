@@ -1,5 +1,6 @@
 package org.s1.background;
 
+import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,22 @@ public abstract class BackgroundWorker extends Thread {
 
     protected String name = null;
     protected Map<String,Object> config = null;
+
+    /**
+     *
+     * @return
+     */
+    public String getWorkerName() {
+        return name;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<String, Object> getConfig() {
+        return config;
+    }
 
     /**
      * Initializing with name and config
@@ -41,11 +58,13 @@ public abstract class BackgroundWorker extends Thread {
                 if(!run)
                     break;
             }
-            try {
-                MDC.put("id", "");
-                process();
-            } catch (Throwable e) {
-                LOG.warn(""+name+" processing error: "+e.getMessage(),e);
+            if(ClusterLifecycleAction.isStarted()){
+                try {
+                    MDC.put("id", "");
+                    process();
+                } catch (Throwable e) {
+                    LOG.warn(""+name+" processing error: "+e.getMessage(),e);
+                }
             }
 
             try {

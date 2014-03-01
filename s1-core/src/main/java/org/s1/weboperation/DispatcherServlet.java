@@ -1,11 +1,7 @@
 package org.s1.weboperation;
 
-import com.hazelcast.core.Hazelcast;
-import org.s1.S1SystemError;
-import org.s1.cluster.node.ClusterNode;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
-import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -23,8 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Dispatcher servlet. Dispatches requests between web operations. <br>
- * Starts {@link org.s1.cluster.node.ClusterNode} on init, initializes {@link org.s1.misc.protocols.classpath.Handler}<br>
- * Stops Hazelcast and ClusterNode on shutdown.<br>
+ *
  * <pre>
  * &lt;!-- Main dispatcher servlet. Serves business logic of application. -->
  * &lt;servlet>
@@ -42,25 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DispatcherServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(DispatcherServlet.class);
-
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        Init.init();
-        try{
-            ClusterNode.start();
-        }catch (Exception e){
-            LOG.error("Cannot start ClusterNode: "+e.getMessage(),e);
-            throw S1SystemError.wrap(e);
-        }
-    }
-
-    @Override
-    public void destroy() {
-        ClusterNode.stop();
-        Hazelcast.shutdownAll();
-        super.destroy();
-    }
 
     @Override
     protected void doGet(HttpServletRequest request,

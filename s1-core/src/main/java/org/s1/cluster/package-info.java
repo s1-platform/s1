@@ -1,5 +1,4 @@
 /**
- * Distributed Data Sources Framework. Contains classes for implementing durable, horizontal scale data sources.
- * Allows distributed transactions.
+ * Cluster node classes
  */
 package org.s1.cluster;

@@ -5,7 +5,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
+import org.s1.S1SystemError;
 import org.s1.objects.Objects;
+import org.s1.options.Options;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -103,6 +105,24 @@ public class Loggers {
             l.setLevel(Level.WARN);
         else if(level.equalsIgnoreCase("ERROR"))
             l.setLevel(Level.ERROR);
+    }
+
+    private static LogStorage storage;
+
+    /**
+     * Get log storage
+     * @return
+     */
+    public static synchronized LogStorage getLogStorage(){
+        if(storage==null){
+            String cls = Options.getStorage().getSystem("log.storageClass", LogStorage.class.getName());
+            try{
+                storage = (LogStorage)Class.forName(cls).newInstance();
+            }catch (Exception e){
+                throw S1SystemError.wrap(e);
+            }
+        }
+        return storage;
     }
 
 }

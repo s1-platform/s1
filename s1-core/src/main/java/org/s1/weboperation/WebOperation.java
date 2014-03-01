@@ -3,6 +3,10 @@ package org.s1.weboperation;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
+import org.s1.objects.*;
+import org.s1.script.S1ScriptEngine;
+import org.s1.user.AccessDeniedException;
+import org.s1.user.AuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -15,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.Objects;
 
 /**
  * Base class for some web actions
@@ -238,6 +243,9 @@ public abstract class WebOperation<I, O> {
                     I params = parseInput(request);
                     logInParams(params);
 
+                    //check access
+                    checkAccess();
+
                     O out = process(method, params, request, response);
 
                     if (out != null) {
@@ -298,6 +306,28 @@ public abstract class WebOperation<I, O> {
             throwMethodNotFound(method);
         }
         return null;
+    }
+
+    /**
+     *
+     * @throws org.s1.user.AccessDeniedException
+     */
+    protected void checkAccess() throws AccessDeniedException {
+        String userId = Session.getSessionBean().getUserId();
+        boolean ok = false;
+        if(Session.ROOT.equals(userId))
+            ok = true;
+        String s = org.s1.objects.Objects.get(config, "accessScript");
+        if(!org.s1.objects.Objects.isNullOrEmpty(s)){
+            try{
+                ok = new S1ScriptEngine().evalInFunction(Boolean.class,s, org.s1.objects.Objects.newHashMap(String.class, Object.class, "userId", userId));
+            }catch (Throwable e){
+                if(LOG.isDebugEnabled())
+                    LOG.debug("Access script error: "+e.getMessage(),e);
+            }
+        }
+        if(!ok)
+            throw new AccessDeniedException("Access is denied");
     }
 
 }

@@ -18,6 +18,9 @@
     </filter-mapping>
 
     <listener>
+        <listener-class>org.s1.lifecycle.LifecycleListener</listener-class>
+    </listener>
+    <listener>
         <listener-class>org.s1.background.BackgroundListener</listener-class>
     </listener>
 
