@@ -3,6 +3,8 @@ package objects.schema;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.*;
+import org.s1.objects.schema.errors.CustomValidationException;
+import org.s1.objects.schema.errors.ValidationException;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 
@@ -57,7 +59,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -113,7 +115,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -187,7 +189,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -227,7 +229,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -267,7 +269,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -307,7 +309,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -336,7 +338,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -363,7 +365,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -375,7 +377,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -407,7 +409,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
                 assertTrue(Objects.equals(data, data1));
@@ -418,7 +420,7 @@ public class SchemaTest extends BasicTest{
                 data = Objects.newHashMap();
                 try {
                     s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -427,7 +429,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -436,7 +438,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -470,7 +472,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
                 assertTrue(Objects.equals(data, data1));
@@ -490,7 +492,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -519,7 +521,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -532,7 +534,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -541,7 +543,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -560,9 +562,9 @@ public class SchemaTest extends BasicTest{
         }
 
         @Override
-        public Map<String, Object> validate(Map<String, Object> m) throws Exception {
+        public Map<String, Object> validate(Map<String, Object> m) throws ValidationException {
             if(!m.containsKey("x"))
-                throw new Exception("x not found");
+                throw new CustomValidationException("x not found");
             return m;
         }
     }
@@ -588,7 +590,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -599,7 +601,7 @@ public class SchemaTest extends BasicTest{
                 //expand
                 try {
                     data1 = s.validate(data, true, false, null);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -610,7 +612,7 @@ public class SchemaTest extends BasicTest{
                 //expand deep
                 try {
                     data1 = s.validate(data, true, true, null);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -626,7 +628,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data, true, true, null);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
 
                 }
 
@@ -660,7 +662,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -671,7 +673,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -707,7 +709,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -718,7 +720,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -752,7 +754,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -763,7 +765,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -812,7 +814,7 @@ public class SchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -823,7 +825,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -835,7 +837,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -866,7 +868,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                     assertTrue(e.getMessage().contains("str"));
@@ -877,7 +879,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                     assertTrue(e.getMessage().contains("map / str"));
@@ -888,7 +890,7 @@ public class SchemaTest extends BasicTest{
                 try {
                     s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                     assertTrue(e.getMessage().contains("list / 1 / str"));

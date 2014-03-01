@@ -4,12 +4,11 @@ import org.s1.S1SystemError;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.*;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
+import org.s1.objects.schema.errors.ValidationException;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -46,7 +45,7 @@ public class ScriptSchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -57,7 +56,7 @@ public class ScriptSchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                     assertTrue(e.getMessage().contains("err1"));
@@ -96,7 +95,7 @@ public class ScriptSchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -108,7 +107,7 @@ public class ScriptSchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                     b = true;
@@ -147,7 +146,7 @@ public class ScriptSchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -158,7 +157,7 @@ public class ScriptSchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -200,7 +199,7 @@ public class ScriptSchemaTest extends BasicTest{
                 Map<String, Object> data1 = null;
                 try {
                     data1 = s.validate(data);
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -211,7 +210,7 @@ public class ScriptSchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }
@@ -223,7 +222,7 @@ public class ScriptSchemaTest extends BasicTest{
                 try {
                     data1 = s.validate(data);
                     throw new RuntimeException("error");
-                } catch (ObjectSchemaValidationException e) {
+                } catch (ValidationException e) {
                     if (input.equals(0))
                         trace(e.getMessage());
                 }

@@ -17,6 +17,8 @@
 package org.s1.objects.schema;
 
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
+import org.s1.objects.schema.errors.WrongTypeException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -70,7 +72,7 @@ public class MapAttribute extends ObjectSchemaAttribute<Map<String, Object>> {
     @Override
     protected void validateType(boolean expand, boolean deep, Map<String, Object> ctx, boolean quite) throws Exception {
         if (data != null && !(data instanceof Map)) {
-            throw new Exception("Data is not map");
+            throw new WrongTypeException("Map");
         }
         if (data != null) {
             List<ObjectSchemaAttribute> attrs = Objects.newArrayList();

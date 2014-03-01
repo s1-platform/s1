@@ -18,6 +18,8 @@ package org.s1.user;
 
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ComplexType;
+import org.s1.objects.schema.errors.CustomValidationException;
+import org.s1.objects.schema.errors.ValidationException;
 
 import java.util.Map;
 
@@ -34,10 +36,10 @@ public class UserComplexType extends ComplexType{
     }
 
     @Override
-    public Map<String, Object> validate(Map<String, Object> m) throws Exception {
+    public Map<String, Object> validate(Map<String, Object> m) throws ValidationException {
         String id = Objects.get(m,"id");
         if(Objects.isNullOrEmpty(id))
-            throw new Exception("user id is missing");
+            throw new CustomValidationException("User #"+id+" not found");
         return m;
     }
 }

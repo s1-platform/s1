@@ -14,26 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.objects.schema;
+package org.s1.objects.schema.errors;
 
 /**
- * Object schema format exception
+ * Custom validation
  */
-public class ObjectSchemaFormatException extends Exception {
+public class CustomValidationException extends ValidationException {
 
-    public ObjectSchemaFormatException() {
+    public CustomValidationException() {
         super();
     }
 
-    public ObjectSchemaFormatException(String message) {
+    public CustomValidationException(String message) {
         super(message);
     }
 
-    public ObjectSchemaFormatException(String message, Throwable cause) {
+    public CustomValidationException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public ObjectSchemaFormatException(Throwable cause) {
+    public CustomValidationException(Throwable cause) {
         super(cause);
     }
 }

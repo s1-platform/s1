@@ -17,6 +17,10 @@
 package org.s1.objects.schema;
 
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.ListLongerThanException;
+import org.s1.objects.schema.errors.ListShorterThanException;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
+import org.s1.objects.schema.errors.WrongTypeException;
 
 import java.util.List;
 import java.util.Map;
@@ -63,16 +67,16 @@ public class ListAttribute extends ObjectSchemaAttribute<List<Object>> {
     @Override
     protected void validateType(boolean expand, boolean deep, Map<String, Object> ctx, boolean quite) throws Exception {
         if (data != null && !(data instanceof List)) {
-            throw new Exception("Data is not list");
+            throw new WrongTypeException("List");
         }
 
         if (data != null) {
 
             if (min > 0 && data.size() < min) {
-                throw new Exception("Shorter than min");
+                throw new ListShorterThanException(""+min);
             }
             if (max > 0 && data.size() > max) {
-                throw new Exception("Longer than max");
+                throw new ListLongerThanException(""+max);
             }
 
             list = Objects.newArrayList();

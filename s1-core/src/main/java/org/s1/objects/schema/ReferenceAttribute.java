@@ -18,6 +18,7 @@ package org.s1.objects.schema;
 
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class ReferenceAttribute extends ObjectSchemaAttribute<Map<String,Object>
         super(name,label,type);
     }
 
-    void fromMap(Map<String,Object> m) throws ObjectSchemaFormatException{
+    void fromMap(Map<String,Object> m) throws ObjectSchemaFormatException {
         super.fromMap(m);
         if(!this.type.startsWith("#"))
             throw new ObjectSchemaFormatException("Reference type attribute ("+getPath(" / ")+") must starts with #");
@@ -53,7 +54,7 @@ public class ReferenceAttribute extends ObjectSchemaAttribute<Map<String,Object>
         return m;
     }
 
-    MapAttribute resolve() throws Exception{
+    MapAttribute resolve() throws ObjectSchemaFormatException{
         ObjectSchemaType t = Objects.find(schema.getTypes(), new Closure<ObjectSchemaType, Boolean>() {
             @Override
             public Boolean call(ObjectSchemaType input) {
@@ -61,7 +62,7 @@ public class ReferenceAttribute extends ObjectSchemaAttribute<Map<String,Object>
             }
         });
         if(t==null)
-            throw new Exception("reference not found");
+            throw new ObjectSchemaFormatException("reference not found");
 
         List<ObjectSchemaAttribute> list = Objects.newArrayList();
         for(ObjectSchemaAttribute a:t.getAttributes()){

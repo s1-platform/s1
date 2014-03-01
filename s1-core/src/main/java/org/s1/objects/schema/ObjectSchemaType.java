@@ -17,6 +17,7 @@
 package org.s1.objects.schema;
 
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
 
 import java.util.Arrays;
 import java.util.List;

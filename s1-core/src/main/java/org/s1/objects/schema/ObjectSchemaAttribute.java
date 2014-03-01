@@ -19,10 +19,9 @@ package org.s1.objects.schema;
 import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.misc.Closure;
-import org.s1.script.Context;
+import org.s1.objects.schema.errors.*;
 import org.s1.script.S1ScriptEngine;
 import org.s1.script.ScriptException;
-import org.s1.script.ScriptFunction;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +38,7 @@ public abstract class ObjectSchemaAttribute<T> {
      * @param a
      * @return
      */
-    public static ObjectSchemaAttribute createFromMap(Map<String,Object> a) throws ObjectSchemaFormatException{
+    public static ObjectSchemaAttribute createFromMap(Map<String,Object> a) throws ObjectSchemaFormatException {
         ObjectSchemaAttribute attr = null;
         String type = Objects.get(a,"type","Object");
         if("Map".equals(type)){
@@ -415,7 +414,7 @@ public abstract class ObjectSchemaAttribute<T> {
      * @return
      */
     ObjectSchemaAttribute validate(T data, boolean expand, boolean deep,
-                  Map<String,Object> ctx, boolean quite)  throws ObjectSchemaValidationException{
+                  Map<String,Object> ctx, boolean quite)  throws ValidationException {
         ObjectSchemaAttribute attribute = this;
         attribute.error = null;
         attribute.validationCtx = ctx;
@@ -445,10 +444,10 @@ public abstract class ObjectSchemaAttribute<T> {
                 if(!quite){
                     //check required, denied
                     if(attribute.required && (attribute.data==null)){
-                        throw new Exception("Attribute is required");
+                        throw new RequiredAttributeException();
                     }
                     if(attribute.denied && (attribute.data!=null)){
-                        throw new Exception("Attribute is denied");
+                        throw new DeniedAttributeException();
                     }
                     if(attribute.denied){
                         attribute.data = null;
@@ -473,17 +472,17 @@ public abstract class ObjectSchemaAttribute<T> {
                             return Objects.equals(input, Objects.cast(data1, type1));
                         }
                     })==null){
-                        throw new Exception("Value not in available variants");
+                        throw new NotInVariantsException(""+attribute.variants);
                     }
                 }
 
                 if(quite){
                     //check required, denied
                     if(attribute.required && (attribute.data==null)){
-                        throw new Exception("Attribute is required");
+                        throw new RequiredAttributeException();
                     }
                     if(attribute.denied && (attribute.data!=null)){
-                        throw new Exception("Attribute is denied");
+                        throw new DeniedAttributeException();
                     }
                     if(attribute.denied){
                         attribute.data = null;
@@ -495,17 +494,19 @@ public abstract class ObjectSchemaAttribute<T> {
                 if(attribute.validate!=null){
                     String msg = (String)attribute.validate.call(attribute);
                     if(!Objects.isNullOrEmpty(msg))
-                        throw new Exception(msg);
+                        throw new CustomValidationException(msg);
                 }
             }
         }catch (Throwable e){
             if(quite)
                 attribute.error = e.getMessage();
             else{
-                if(e instanceof ObjectSchemaValidationException)
-                    throw new ObjectSchemaValidationException(e.getMessage(),e);
-                else
-                    throw new ObjectSchemaValidationException(getPath(" / ")+": "+e.getMessage(),e);
+                if(e instanceof ValidationException){
+                    if(((ValidationException) e).getPath()==null)
+                        ((ValidationException) e).setPath(getPath(" / "));
+                    throw (ValidationException)e;
+                }
+                throw S1SystemError.wrap(e);
             }
         }
         return attribute;

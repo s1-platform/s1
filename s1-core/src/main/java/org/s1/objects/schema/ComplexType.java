@@ -17,6 +17,7 @@
 package org.s1.objects.schema;
 
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.ValidationException;
 
 import java.util.Map;
 
@@ -59,6 +60,6 @@ public abstract class ComplexType {
      * @return
      * @throws Exception
      */
-    public abstract Map<String, Object> validate(Map<String, Object> m) throws Exception;
+    public abstract Map<String, Object> validate(Map<String, Object> m) throws ValidationException;
 
 }

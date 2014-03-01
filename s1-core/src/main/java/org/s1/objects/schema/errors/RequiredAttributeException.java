@@ -14,29 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.objects.schema;
+package org.s1.objects.schema.errors;
 
 /**
- * s1v2
- * User: GPykhov
- * Date: 14.01.14
- * Time: 18:46
+ * Required attribute missing
  */
-public class ObjectSchemaValidationException extends Exception {
+public class RequiredAttributeException extends ValidationException {
 
-    public ObjectSchemaValidationException() {
+    public RequiredAttributeException() {
         super();
     }
 
-    public ObjectSchemaValidationException(String message) {
+    public RequiredAttributeException(String message) {
         super(message);
     }
 
-    public ObjectSchemaValidationException(String message, Throwable cause) {
+    public RequiredAttributeException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public ObjectSchemaValidationException(Throwable cause) {
+    public RequiredAttributeException(Throwable cause) {
         super(cause);
     }
 }

@@ -18,8 +18,8 @@ package org.s1.objects.schema;
 
 import org.s1.S1SystemError;
 import org.s1.objects.Objects;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.s1.objects.schema.errors.ObjectSchemaFormatException;
+import org.s1.objects.schema.errors.ValidationException;
 
 import java.io.Serializable;
 import java.util.List;
@@ -64,7 +64,7 @@ public class ObjectSchema implements Serializable{
         setAttributesSchema();
     }
 
-    public ObjectSchema fromMap(Map<String,Object> m) throws ObjectSchemaFormatException{
+    public ObjectSchema fromMap(Map<String,Object> m) throws ObjectSchemaFormatException {
         List<Map<String,Object>> attrs = Objects.get(m, "attributes");
         this.attributes = Objects.newArrayList();
         if(!Objects.isNullOrEmpty(attrs)){
@@ -145,28 +145,28 @@ public class ObjectSchema implements Serializable{
     public ValidateResultBean validateQuite(Map<String,Object> data, boolean expand, boolean deep, Map<String,Object> ctx){
         try {
             return validate(data, expand, deep, ctx, true);
-        } catch (ObjectSchemaValidationException e) {
+        } catch (ValidationException e) {
             throw S1SystemError.wrap(e);
         }
     }
 
     public Map<String,Object> validate(Map<String,Object> data)
-            throws ObjectSchemaValidationException{
+            throws ValidationException {
         return validate(data, null);
     }
 
     public Map<String,Object> validate(Map<String,Object> data, Map<String,Object> ctx)
-            throws ObjectSchemaValidationException{
+            throws ValidationException {
         return validate(data, false, false, ctx);
     }
 
     public Map<String,Object> validate(Map<String,Object> data, boolean expand, boolean deep, Map<String,Object> ctx)
-            throws ObjectSchemaValidationException{
+            throws ValidationException {
         return validate(data,expand,deep,ctx,false).getValidatedData();
     }
 
     protected ValidateResultBean validate(Map<String,Object> data, boolean expand, boolean deep, Map<String,Object> ctx, boolean quite)
-            throws ObjectSchemaValidationException{
+            throws ValidationException {
         if(ctx==null)
             ctx = Objects.newHashMap();
         Map<String,Object> validatedData = Objects.copy(data);
