@@ -30,27 +30,9 @@ public class MonitorWebTest extends ServerTest {
             public Object call(Integer input) throws ClosureException {
                 TestHttpClient client = client();
 
-                boolean b = true;
-                try{
-                    client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
-                            String.class,Object.class
-                    ),null);
-                    b = false;
-                }catch (RuntimeException e){
-                    if(input==0)
-                        trace(e.getMessage());
-                }
-                assertTrue(b);
-
-                //authenticate
-                client.postJSON(getContext()+"/dispatcher/Auth.login",Objects.newHashMap(
-                        String.class,Object.class,
-                        "name","root",
-                        "password","root"
-                ),null);
                 Map<String,Object> m =null;
                 //cluster info
-                m = client.postJSON(getContext()+"/dispatcher/Monitor.clusterInfo",Objects.newHashMap(
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.getClusterInfo",Objects.newHashMap(
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);
@@ -58,7 +40,7 @@ public class MonitorWebTest extends ServerTest {
                 assertEquals("node-1", Objects.get(m, "nodes", Objects.newArrayList(Map.class)).get(0).get("nodeId"));
 
                 //node indicators
-                m = client.postJSON(getContext()+"/dispatcher/Monitor.nodeInfo",Objects.newHashMap(
+                m = client.postJSON(getContext()+"/dispatcher/Monitor.getNodeInfo",Objects.newHashMap(
                         String.class,Object.class,
                         "nodeId","node-1"
                 ),null);

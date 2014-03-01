@@ -23,7 +23,6 @@ import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -34,27 +33,27 @@ public class MonitorLifecycleAction extends LifecycleAction{
 
     @Override
     public void start() {
-        NodeMessageExchange.registerOperation("monitor.getClusterInfo", new Closure<Serializable, Serializable>() {
+        NodeMessageExchange.registerOperation("monitor.getClusterInfo", new Closure<Object, Object>() {
             @Override
-            public Serializable call(Serializable input) throws ClosureException {
-                return (Serializable) MonitorOperation.getStatistic(false);
+            public Object call(Object input) throws ClosureException {
+                return MonitorOperation.getStatistic(false);
             }
         });
-        NodeMessageExchange.registerOperation("monitor.getNodeInfo",new Closure<Serializable, Serializable>() {
+        NodeMessageExchange.registerOperation("monitor.getNodeInfo",new Closure<Object, Object>() {
             @Override
-            public Serializable call(Serializable input) throws ClosureException {
-                return (Serializable)MonitorOperation.getStatistic(true);
+            public Object call(Object input) throws ClosureException {
+                return MonitorOperation.getStatistic(true);
             }
         });
-        NodeMessageExchange.registerOperation("monitor.getLoggers",new Closure<Serializable, Serializable>() {
+        NodeMessageExchange.registerOperation("monitor.getLoggers",new Closure<Object, Object>() {
             @Override
-            public Serializable call(Serializable input) throws ClosureException {
-                return (Serializable) Loggers.getLogClasses();
+            public Object call(Object input) throws ClosureException {
+                return Loggers.getLogClasses();
             }
         });
-        NodeMessageExchange.registerOperation("monitor.setLogLevel",new Closure<Serializable, Serializable>() {
+        NodeMessageExchange.registerOperation("monitor.setLogLevel",new Closure<Object, Object>() {
             @Override
-            public Serializable call(Serializable input) throws ClosureException {
+            public Object call(Object input) throws ClosureException {
                 Map<String,Object> m = (Map<String,Object>)input;
                 String cls = Objects.get(m,"name");
                 String level = Objects.get(m,"level");
@@ -62,9 +61,9 @@ public class MonitorLifecycleAction extends LifecycleAction{
                 return true;
             }
         });
-        NodeMessageExchange.registerOperation("monitor.listNodeLogs",new Closure<Serializable, Serializable>() {
+        NodeMessageExchange.registerOperation("monitor.listNodeLogs",new Closure<Object, Object>() {
             @Override
-            public Serializable call(Serializable input) throws ClosureException {
+            public Object call(Object input) throws ClosureException {
                 Map<String,Object> m = (Map<String,Object>)input;
                 int skip = Objects.get(Integer.class,m,"skip",0);
                 int max = Objects.get(Integer.class,m,"max",10);
@@ -73,7 +72,7 @@ public class MonitorLifecycleAction extends LifecycleAction{
                 Map<String,Object> search = Objects.get(m,"search");
                 List<Map<String,Object>> list = Objects.newArrayList();
                 long c = Loggers.getLogStorage().list(list,search,skip,max);
-                return (Serializable)Objects.newHashMap("count",c,"list",list);
+                return Objects.newHashMap("count",c,"list",list);
             }
         });
     }

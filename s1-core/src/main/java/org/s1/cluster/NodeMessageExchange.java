@@ -39,20 +39,28 @@ import java.util.concurrent.TimeoutException;
 public class NodeMessageExchange {
     private static final Logger LOG = LoggerFactory.getLogger(NodeMessageExchange.class);
 
+    static volatile NodeMessageExchange instance = null;
+
+    public static NodeMessageExchange getInstance(){
+        return instance;
+    }
+
     private final String nodeId;
     private final ITopic<NodeMessageBean> topic;
     public static final String TOPIC = "S1NodeExchange";
-    private final Map<String,Serializable> replies = new ConcurrentHashMap<String, Serializable>();
+    private final Map<String,Object> replies = new ConcurrentHashMap<String, Object>();
     public static final int TIMEOUT = 30000;
 
-    private static final Map<String,Closure<Serializable,Serializable>> operations = new ConcurrentHashMap<String, Closure<Serializable, Serializable>>();
+    private static final Object empty = new Object();
+
+    private static final Map<String,Closure<Object,Object>> operations = new ConcurrentHashMap<String, Closure<Object, Object>>();
 
     /**
      *
      * @param name
      * @param op
      */
-    public static void registerOperation(String name, Closure<Serializable,Serializable> op){
+    public static void registerOperation(String name, Closure<Object,Object> op){
         operations.put(name,op);
     }
 
@@ -78,8 +86,8 @@ public class NodeMessageExchange {
                         //reply
                         synchronized (replies){
                             if(replies.containsKey(req.id)){
-                                if(req.operation.equals(NodeMessageBean.ALL)){
-                                    List<Serializable> l = (List<Serializable>)replies.get(req.id);
+                                if(req.from.equals(NodeMessageBean.ALL)){
+                                    List<Object> l = (List<Object>)replies.get(req.id);
                                     l.add(req.data);
                                 }else{
                                     replies.put(req.id, req.data);
@@ -88,8 +96,8 @@ public class NodeMessageExchange {
                         }
                     }else{
                         //request
-                        Serializable reply = process(req.operation, req.data);
-                        topic.publish(new NodeMessageBean(req.id, nodeId, req.from, NodeMessageBean.REPLY, reply));
+                        Object reply = process(req.operation, req.data);
+                        topic.publish(new NodeMessageBean(req.id, req.to, req.from, NodeMessageBean.REPLY, reply));
                         if(LOG.isDebugEnabled())
                             LOG.debug("Received node request => "+req.toString());
                     }
@@ -106,8 +114,8 @@ public class NodeMessageExchange {
      * @param data
      * @return
      */
-    protected Serializable process(String operation, Serializable data){
-        Closure<Serializable,Serializable> cl = operations.get(operation);
+    protected Object process(String operation, Object data){
+        Closure<Object,Object> cl = operations.get(operation);
         if(cl!=null){
             return cl.callQuite(data);
         }
@@ -120,17 +128,17 @@ public class NodeMessageExchange {
      * @param data
      * @return
      */
-    public List<Serializable> multicast(String operation, Serializable data) throws TimeoutException {
+    public List<Object> multicast(String operation, Object data) throws TimeoutException {
         int nodes = HazelcastWrapper.getInstance().getCluster().getMembers().size();
         String id = UUID.randomUUID().toString();
         NodeMessageBean m = new NodeMessageBean(id,nodeId,NodeMessageBean.ALL,operation,data);
         try{
-            replies.put(id, new ArrayList<Serializable>());
+            replies.put(id, new ArrayList<Object>());
             topic.publish(m);
             long t = System.currentTimeMillis();
             while(true){
                 synchronized (replies){
-                    List<Serializable> l = (List<Serializable>)replies.get(id);
+                    List<Object> l = (List<Object>)replies.get(id);
                     if(l.size()==nodes){
                         return l;
                     }
@@ -158,7 +166,7 @@ public class NodeMessageExchange {
      * @param operation
      * @param data
      */
-    public void multicastAndForget(String operation, Serializable data){
+    public void multicastAndForget(String operation, Object data){
         String id = UUID.randomUUID().toString();
         NodeMessageBean m = new NodeMessageBean(id,nodeId,NodeMessageBean.ALL,operation,data);
         topic.publish(m);
@@ -171,16 +179,16 @@ public class NodeMessageExchange {
      * @param data
      * @return
      */
-    public Serializable request(String to, String operation, Serializable data) throws TimeoutException {
+    public Object request(String to, String operation, Object data) throws TimeoutException {
         String id = UUID.randomUUID().toString();
         NodeMessageBean m = new NodeMessageBean(id,nodeId,to,operation,data);
         try{
-            replies.put(id, null);
+            replies.put(id, empty);
             topic.publish(m);
             long t = System.currentTimeMillis();
             while(true){
                 synchronized (replies){
-                    if(replies.get(id)!=null){
+                    if(replies.get(id)!=empty){
                         return replies.get(id);
                     }
                 }
@@ -208,7 +216,7 @@ public class NodeMessageExchange {
      * @param operation
      * @param data
      */
-    public void requestAndForget(String to, String operation, Serializable data){
+    public void requestAndForget(String to, String operation, Object data){
         String id = UUID.randomUUID().toString();
         NodeMessageBean m = new NodeMessageBean(id,nodeId,to,operation,data);
         topic.publish(m);
@@ -219,14 +227,14 @@ public class NodeMessageExchange {
      */
     public static class NodeRequestBean{
         private String operation;
-        private Serializable data;
+        private Object data;
 
         /**
          *
          * @param operation
          * @param data
          */
-        public NodeRequestBean(String operation, Serializable data) {
+        public NodeRequestBean(String operation, Object data) {
             this.operation = operation;
             this.data = data;
         }
@@ -243,7 +251,7 @@ public class NodeMessageExchange {
          *
          * @return
          */
-        public Serializable getData() {
+        public Object getData() {
             return data;
         }
     }
@@ -251,7 +259,7 @@ public class NodeMessageExchange {
     /**
      *
      */
-    private static class NodeMessageBean{
+    private static class NodeMessageBean implements Serializable{
         public static final String REPLY = "$reply";
         public static final String ALL = "$all";
 
@@ -259,7 +267,7 @@ public class NodeMessageExchange {
         private String from;
         private String to;
         private String operation;
-        private Serializable data;
+        private Object data;
 
         /**
          *
@@ -268,7 +276,7 @@ public class NodeMessageExchange {
          * @param operation
          * @param data
          */
-        public NodeMessageBean(String id, String from, String to, String operation, Serializable data) {
+        public NodeMessageBean(String id, String from, String to, String operation, Object data) {
             this.id = id;
             this.from = from;
             this.to = to;

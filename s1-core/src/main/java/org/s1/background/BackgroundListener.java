@@ -38,46 +38,96 @@ public class BackgroundListener implements ServletContextListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundListener.class);
 
-    private List<BackgroundWorker> workers = null;
+    private static List<BackgroundWorker> workers = Objects.newArrayList();
 
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        if (workers == null) {
-
-            List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
-            workers = Objects.newArrayList();
-            if(l!=null){
-                int i=0;
-                for(Map<String,Object> m : l){
-                    String cls = Objects.get(m,"class");
-                    String name = Objects.get(m,"name","Worker#"+i);
-                    Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
-                    i++;
-                    BackgroundWorker w = null;
-                    try{
-                        w = (BackgroundWorker)Class.forName(cls).newInstance();
-                        w.init(name,cfg);
-                    }catch (Throwable e){
-                        LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
-                    }
-                    if(w!=null){
-                        workers.add(w);
-                        w.start();
-                    }
+    /**
+     *
+     * @param cls
+     * @return
+     */
+    public static boolean isStarted(Class<? extends BackgroundWorker> cls){
+        synchronized (workers){
+            boolean b = false;
+            for(BackgroundWorker a:workers){
+                if(a.getClass()==cls){
+                    b = true;
+                    break;
                 }
             }
+            return b;
+        }
+    }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public static boolean isStarted(String name){
+        synchronized (workers){
+            boolean b = false;
+            for(BackgroundWorker a:workers){
+                if(a.getName().equals(name)){
+                    b = true;
+                    break;
+                }
+            }
+            return b;
         }
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sce){
-        if(workers!=null){
-            for(BackgroundWorker w:workers){
-                w.doShutdown();
-                w.interrupt();
+    public void contextInitialized(ServletContextEvent sce) {
+        synchronized (workers){
+            workers.clear();
+        }
+
+        List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
+        List<BackgroundWorker> lst = Objects.newArrayList();
+        if(l!=null){
+            int i=0;
+            for(Map<String,Object> m : l){
+                String cls = Objects.get(m,"class");
+                String name = Objects.get(m,"name","BackgroundWorker#"+i);
+                Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
+                i++;
+                BackgroundWorker w = null;
+                try{
+                    w = (BackgroundWorker)Class.forName(cls).newInstance();
+                    w.init(name,cfg);
+                }catch (Throwable e){
+                    LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
+                }
+                if(w!=null){
+                    lst.add(w);
+                    try{
+                        w.start();
+                    }catch (Throwable e){
+                        LOG.warn("Worker #"+i+" failed to start, "+e.getClass().getName()+": "+e.getMessage(),e);
+                    }
+                }
             }
         }
-        workers = null;
+        synchronized (workers){
+            workers.addAll(lst);
+        }
+        LOG.info("Background started");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce){
+        List<BackgroundWorker> l = Objects.newArrayList();
+        synchronized (workers){
+            l.addAll(workers);
+        }
+        for(BackgroundWorker w:l){
+            w.doShutdown();
+            w.interrupt();
+        }
+        synchronized (workers){
+            workers.clear();
+        }
+        LOG.info("Background stopped");
     }
 
 }

@@ -17,6 +17,7 @@
 package org.s1.background;
 
 import org.s1.cluster.ClusterLifecycleAction;
+import org.s1.lifecycle.LifecycleListener;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ public abstract class BackgroundWorker extends Thread {
                 if(!run)
                     break;
             }
-            if(ClusterLifecycleAction.isStarted()){
+            if(LifecycleListener.isStarted(ClusterLifecycleAction.class)){
                 try {
                     MDC.put("id", "");
                     process();

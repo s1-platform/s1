@@ -19,10 +19,9 @@ package org.s1.weboperation;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
-import org.s1.objects.*;
+import org.s1.objects.Objects;
 import org.s1.script.S1ScriptEngine;
 import org.s1.user.AccessDeniedException;
-import org.s1.user.AuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -34,8 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
-import java.util.Objects;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Base class for some web actions
@@ -260,7 +261,7 @@ public abstract class WebOperation<I, O> {
                     logInParams(params);
 
                     //check access
-                    checkAccess();
+                    checkAccess(method, params, request);
 
                     O out = process(method, params, request, response);
 
@@ -326,22 +327,82 @@ public abstract class WebOperation<I, O> {
 
     /**
      *
-     * @throws org.s1.user.AccessDeniedException
+     * @param request
+     * @return
      */
-    protected void checkAccess() throws AccessDeniedException {
+    public static String getClientIpAddr(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+
+    /**
+     *
+     * @param method
+     * @param params
+     * @param request
+     * @throws AccessDeniedException
+     */
+    protected void checkAccess(String method, I params, HttpServletRequest request) throws AccessDeniedException {
         String userId = Session.getSessionBean().getUserId();
-        boolean ok = false;
-        if(Session.ROOT.equals(userId))
-            ok = true;
-        String s = org.s1.objects.Objects.get(config, "accessScript");
-        if(!org.s1.objects.Objects.isNullOrEmpty(s)){
-            try{
-                ok = new S1ScriptEngine().evalInFunction(Boolean.class,s, org.s1.objects.Objects.newHashMap(String.class, Object.class, "userId", userId));
-            }catch (Throwable e){
-                if(LOG.isDebugEnabled())
-                    LOG.debug("Access script error: "+e.getMessage(),e);
+        boolean ok = true;
+
+        String ip = getClientIpAddr(request);
+        Map<String,String> headers = Objects.newHashMap();
+        Enumeration<String> en = request.getHeaderNames();
+        while(en.hasMoreElements()){
+            String n = en.nextElement();
+            headers.put(n,request.getHeader(n));
+        }
+        //ip white list
+        if(ok){
+            if(Objects.get(config, "ipWhiteList")!=null){
+                List<String> list = Objects.get(config, "ipWhiteList");
+                ok = list.contains(ip);
             }
         }
+
+        //ip black list
+        if(ok){
+            if(Objects.get(config, "ipBlackList")!=null){
+                List<String> list = Objects.get(config, "ipBlackList");
+                ok = !list.contains(ip);
+            }
+        }
+
+        //access script
+        if(ok){
+            String s = Objects.get(config, "access");
+            if(!Objects.isNullOrEmpty(s)){
+                try{
+                    ok = new S1ScriptEngine().evalInFunction(Boolean.class,s,
+                            Objects.newHashMap(String.class, Object.class,
+                                    "userId", userId,
+                                    "ip", ip,
+                                    "headers",headers,
+                                    "method",method,
+                                    "params",params));
+                }catch (Throwable e){
+                    if(LOG.isDebugEnabled())
+                        LOG.debug("Access script error: "+e.getMessage(),e);
+                }
+            }
+        }
+
         if(!ok)
             throw new AccessDeniedException("Access is denied");
     }

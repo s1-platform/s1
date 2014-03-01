@@ -16,17 +16,13 @@
 
 package org.s1.cluster.monitor;
 
-import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.NodeMessageExchange;
-import org.s1.cluster.Session;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.MapAttribute;
 import org.s1.objects.schema.ObjectSchema;
 import org.s1.objects.schema.SimpleTypeAttribute;
 import org.s1.options.Options;
-import org.s1.script.S1ScriptEngine;
-import org.s1.user.AuthException;
 import org.s1.weboperation.MapWebOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +33,28 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Cluster monitoring
  */
 public class MonitorOperation extends MapWebOperation {
+
+    /**
+     *
+     * @return
+     * @throws TimeoutException
+     */
+    public static List<Map<String,Object>> getClusterInfo() throws TimeoutException {
+        List<Map<String,Object>> l = Objects.newArrayList();
+        if(NodeMessageExchange.getInstance()!=null){
+            List<Object> lo = NodeMessageExchange.getInstance().multicast("monitor.getClusterInfo",null);
+            for(Object o:lo){
+                l.add((Map<String,Object>)o);
+            }
+        }
+        return l;
+    }
 
     /**
      *
@@ -83,20 +96,20 @@ public class MonitorOperation extends MapWebOperation {
         Map<String,Object> result = Objects.newHashMap();
 
         if("getClusterInfo".equals(method)){
-            result.put("nodes",ClusterLifecycleAction.getNodeMessageExchange().multicast("monitor.getClusterInfo",null));
+            result.put("nodes",getClusterInfo());
         }else if("getNodeInfo".equals(method)){
             params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true))
                     .validate(params);
             String nodeId = Objects.get(params,"nodeId");
-            result = (Map<String,Object>)ClusterLifecycleAction.getNodeMessageExchange().request(nodeId,"monitor.getNodeInfo",null);
+            result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.getNodeInfo",null);
         }else if("listNodeLogs".equals(method)){
             params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true),
                     new SimpleTypeAttribute("skip","skip",Integer.class).setRequired(true).setDefault(0),
                     new SimpleTypeAttribute("max","max",Integer.class).setRequired(true).setDefault(10),
                     new MapAttribute("search","search")).validate(params);
             String nodeId = Objects.get(params,"nodeId");
-            result = (Map<String,Object>)ClusterLifecycleAction.getNodeMessageExchange().request(nodeId,"monitor.listNodeLogs",
-                    (Serializable)Objects.newHashMap(
+            result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.listNodeLogs",
+                    Objects.newHashMap(
                             "search",Objects.get(params,"search"),
                             "skip",Objects.get(params,"skip"),
                             "max",Objects.get(params,"max")));
@@ -106,15 +119,15 @@ public class MonitorOperation extends MapWebOperation {
                     new SimpleTypeAttribute("level","level",String.class).setRequired(true)
             ).validate(params);
             String nodeId = Objects.get(params,"nodeId");
-            result = (Map<String,Object>)ClusterLifecycleAction.getNodeMessageExchange().request(nodeId,"monitor.setLogLevel",
-                    (Serializable)Objects.newHashMap(
+            NodeMessageExchange.getInstance().request(nodeId,"monitor.setLogLevel",
+                    Objects.newHashMap(
                             "name",Objects.get(params,"name"),
                             "level",Objects.get(params,"level")));
         }else if("getLoggers".equals(method)){
             params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true)
             ).validate(params);
             String nodeId = Objects.get(params,"nodeId");
-            result = (Map<String,Object>)ClusterLifecycleAction.getNodeMessageExchange().request(nodeId,"monitor.getLoggers",null);
+            result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.getLoggers",null);
         }else{
             throwMethodNotFound(method);
         }
