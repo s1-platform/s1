@@ -65,12 +65,8 @@
 
     <modules>
         <module>s1-core</module>
-        <module>s1-dds-mongodb</module>
-        <module>s1-dds-lucene</module>
         <module>s1-xsd-utils</module>
         <module>s1-testing</module>
-        <module>s1-distributed-test-client</module>
-        <module>s1-distributed-test-node</module>
     </modules>
 
     <build>
