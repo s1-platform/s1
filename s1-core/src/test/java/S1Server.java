@@ -15,7 +15,7 @@ public class S1Server extends TestAppServer {
 
     @Override
     protected String getAppPath() {
-        return getClassesHome()+ "webapp";
+        return getClassesHome()+ "../../src/test/resources/webapp";
     }
 
     @Override
@@ -25,7 +25,7 @@ public class S1Server extends TestAppServer {
 
     @Override
     protected String getOptions() {
-        return getClassesHome()+"options";
+        return getClassesHome()+"options_standalone";
     }
 
     public static void main(String[] args) {
