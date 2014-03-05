@@ -17,7 +17,7 @@ to endorse or promote products derived from this software without
 prior written permission. For written permission, please contact
 s.one.platform@gmail.com
 
-Copyright (c) 20013-2014 Grigory Pykhov.  All rights reserved.
+Copyright (c) 2013-2014 Grigory Pykhov.  All rights reserved.
 
 *******************************************************************************
 
