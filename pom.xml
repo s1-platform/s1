@@ -21,7 +21,7 @@
     <artifactId>s1</artifactId>
     <packaging>pom</packaging>
     <version>2.2.1-SNAPSHOT</version>
-    <description>Java platform for application development from data structure to ui</description>
+    <description>S1-Platform - the web application development Java framework</description>
     <url>http://s1-platform.org</url>
 
     <developers>
