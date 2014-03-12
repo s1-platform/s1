@@ -67,6 +67,7 @@
         <module>s1-core</module>
         <module>s1-xsd-utils</module>
         <module>s1-testing</module>
+        <module>s1-mongodb-logging</module>
     </modules>
 
     <build>
