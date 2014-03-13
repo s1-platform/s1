@@ -2,7 +2,7 @@ S1-Platform
 ===========
 
 S1-Platform - the web application development Java framework.
-For more info look here[http://s1-platform.org](http://s1-platform.org).
+For more info look here [http://s1-platform.org](http://s1-platform.org).
 
 Platform is being under active development, so we're very interested in bug reports,
 contributions and the like.
