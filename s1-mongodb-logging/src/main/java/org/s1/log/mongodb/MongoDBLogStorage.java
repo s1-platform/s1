@@ -34,10 +34,6 @@ import java.util.Map;
  */
 public class MongoDBLogStorage extends LogStorage{
 
-    public MongoDBLogStorage() {
-        DBCollection coll = MongoDBLogConnectionHelper.getCollection();
-    }
-
     @Override
     public long list(List<Map<String, Object>> list, Map<String, Object> search, int skip, int max) {
         //return super.list(list, search, skip, max);
