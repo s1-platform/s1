@@ -1,5 +1,4 @@
-S1-Platform
-===========
+# S1-Platform [![Build Status](https://travis-ci.org/s1-platform/s1.png?branch=master)](https://travis-ci.org/s1-platform/s1)
 
 S1-Platform - the web application development Java framework.
 For more info look here [http://s1-platform.org](http://s1-platform.org).
