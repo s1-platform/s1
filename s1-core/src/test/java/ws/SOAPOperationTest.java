@@ -22,7 +22,7 @@ import java.io.IOException;
 public class SOAPOperationTest extends ServerTest {
 
     public void testResources(){
-        int p = 100;
+        int p = 10;
         title("WS1 resources, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -50,7 +50,7 @@ public class SOAPOperationTest extends ServerTest {
     }
 
     public void testFile(){
-        int p = 100;
+        int p = 10;
         title("WS1, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -99,7 +99,7 @@ public class SOAPOperationTest extends ServerTest {
     }
 
     public void testFault(){
-        int p = 100;
+        int p = 10;
         title("Fault, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

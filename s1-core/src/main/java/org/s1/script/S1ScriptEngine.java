@@ -259,12 +259,14 @@ public class S1ScriptEngine {
         }
 
         try {
-            T result = (T)f.get();
+            T result = (T)f.get(getTimeLimit(), TimeUnit.MILLISECONDS);
             if(LOG.isDebugEnabled()){
                 LOG.debug("Script result ("+(System.currentTimeMillis()-t)+"ms.): "+result);
             }
             return result;
-        } catch (CancellationException e){
+        } /*catch (CancellationException e){
+            throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
+        } */catch (TimeoutException e){
             throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
         } catch (InterruptedException e){
             throw S1SystemError.wrap(e);
@@ -288,15 +290,17 @@ public class S1ScriptEngine {
      */
     private <T> Future<T> executeTask(Callable<T> c, long timeoutMS){
         ExecutorService service = Executors.newFixedThreadPool(1);
-        ScheduledExecutorService canceller = Executors.newSingleThreadScheduledExecutor();
+        //ScheduledExecutorService canceller = Executors.newSingleThreadScheduledExecutor();
 
         final Future<T> future = service.submit(c);
-        canceller.schedule(new Callable<Void>(){
+        /*canceller.schedule(new Callable<Void>(){
             public Void call(){
                 future.cancel(true);
                 return null;
             }
-        }, timeoutMS, TimeUnit.MILLISECONDS);
+        }, timeoutMS, TimeUnit.MILLISECONDS);*/
+        service.shutdown();
+        //canceller.shutdown();
         return future;
     }
 

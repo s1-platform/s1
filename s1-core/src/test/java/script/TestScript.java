@@ -210,6 +210,7 @@ public class TestScript extends BasicTest{
     }
 
     public void testMemoryLimit(){
+        int t = Thread.activeCount();
         int p=10;
         title("Memory limit test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
@@ -253,6 +254,8 @@ public class TestScript extends BasicTest{
                 return null;
             }
         }));
+        trace(Thread.activeCount());
+        assertEquals(t,Thread.activeCount());
     }
 
     public void testSyntaxError(){

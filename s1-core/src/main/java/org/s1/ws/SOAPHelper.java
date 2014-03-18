@@ -145,9 +145,10 @@ public class SOAPHelper {
      * @return
      */
     public static SOAPMessage send(String endpoint, SOAPMessage data) throws SOAPException{
+        SOAPConnection soapConnection = null;
         try{
             SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
-            SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+            soapConnection = soapConnectionFactory.createConnection();
 
             SOAPMessage soapResponse = soapConnection.call(data, endpoint);
 
@@ -172,6 +173,11 @@ public class SOAPHelper {
                         "                        Endpoint: ${endpoint}",e);
             }
             throw e;
+        } finally {
+            try{
+                if(soapConnection!=null)
+                    soapConnection.close();
+            }catch (Throwable e){}
         }
     }
 
