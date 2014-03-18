@@ -18,7 +18,7 @@ import java.util.Map;
 public class ObjectSchemaWebTest extends ServerTest {
 
     public void testValidate(){
-        int p = 100;
+        int p = 10;
         title("Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
@@ -55,7 +55,7 @@ public class ObjectSchemaWebTest extends ServerTest {
     }
 
     public void testScriptValidate(){
-        int p = 100;
+        int p = 10;
         title("Script Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override

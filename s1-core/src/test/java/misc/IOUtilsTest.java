@@ -17,7 +17,7 @@ import java.nio.charset.Charset;
 public class IOUtilsTest extends BasicTest {
 
     public void testToString(){
-        int p = 1000;
+        int p = 10;
         title("IOUtils.toString, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -33,7 +33,7 @@ public class IOUtilsTest extends BasicTest {
     }
 
     public void testCopy(){
-        int p = 1000;
+        int p = 10;
         title("IOUtils.copy, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -56,7 +56,7 @@ public class IOUtilsTest extends BasicTest {
     }
 
     public void testCopySkip(){
-        int p = 1000;
+        int p = 10;
         title("IOUtils.copy, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

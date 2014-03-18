@@ -18,7 +18,7 @@ import java.util.Map;
 public class CommandTest extends ServerTest {
 
     public void testUploadDownload(){
-        int p = 100;
+        int p = 10;
         title("Command, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override

@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 public class LockTest extends BasicTest {
 
     public void testLock(){
-        int p = 1000;
+        int p = 10;
         title("Lock, parallel "+p);
         final StringBuffer buf = new StringBuffer();
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
@@ -45,7 +45,7 @@ public class LockTest extends BasicTest {
     }
 
     public void testHasLock(){
-        int p = 1000;
+        int p = 10;
         title("Has lock, parallel "+p);
         final StringBuffer buf = new StringBuffer();
         final StringBuffer buf2 = new StringBuffer();
@@ -68,7 +68,7 @@ public class LockTest extends BasicTest {
         }));
         trace("were able to run: "+buf2.length());
         assertEquals(1, buf.length());
-        assertTrue(buf2.length()>1);
+        assertTrue(buf2.length()>=1);
         assertTrue(buf2.length()<p);
     }
 

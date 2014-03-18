@@ -16,7 +16,7 @@ import org.s1.test.LoadTestUtils;
 public class SessionTest extends BasicTest {
 
     public void testSession(){
-        int p = 1000;
+        int p = 10;
         title("Session, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

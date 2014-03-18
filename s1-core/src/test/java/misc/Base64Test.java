@@ -16,7 +16,7 @@ import org.s1.test.LoadTestUtils;
 public class Base64Test extends BasicTest {
 
     public void test1(){
-        int p = 1000;
+        int p = 10;
         title("Base64 encode/decode, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

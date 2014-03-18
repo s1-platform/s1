@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CacheTest extends BasicTest {
 
     public void testGet(){
-        int p = 1000;
+        int p = 10;
         int size = 100;
         final Cache c = new Cache(size);
         final AtomicInteger i = new AtomicInteger(0);

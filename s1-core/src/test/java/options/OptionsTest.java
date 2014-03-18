@@ -20,7 +20,7 @@ import java.util.Map;
 public class OptionsTest extends BasicTest {
 
     public void testGetParameter(){
-        int p = 1000;
+        int p = 10;
         title("Get parameter, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -43,7 +43,7 @@ public class OptionsTest extends BasicTest {
     }
 
     public void testGetMap(){
-        int p = 1000;
+        int p = 10;
         title("Get map, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -67,7 +67,7 @@ public class OptionsTest extends BasicTest {
     }
 
     public void testFormat(){
-        int p = 1000;
+        int p = 10;
         title("Format, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -92,7 +92,7 @@ public class OptionsTest extends BasicTest {
     }
 
     public void testParse(){
-        int p = 1000;
+        int p = 10;
         title("Get parameter, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -171,7 +171,7 @@ public class OptionsTest extends BasicTest {
     }
 
     public void testReadConfig(){
-        int p = 1000;
+        int p = 10;
         title("Read config, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

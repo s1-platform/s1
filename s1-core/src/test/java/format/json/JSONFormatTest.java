@@ -19,7 +19,7 @@ import java.util.Map;
 public class JSONFormatTest extends BasicTest {
 
     public void testEvalJSON() {
-        int p = 1000;
+        int p = 10;
         title("Eval JSON, parallel " + p);
         assertEquals(p, LoadTestUtils.run("parsing", p, p, new Closure<Integer, Object>() {
             @Override
@@ -51,7 +51,7 @@ public class JSONFormatTest extends BasicTest {
     }
 
     public void testEvalJSONFromFile() {
-        int p = 1000;
+        int p = 10;
         title("Eval JSON from file, parallel " + p);
         assertEquals(p, LoadTestUtils.run("parsing", p, p, new Closure<Integer, Object>() {
             @Override
@@ -73,7 +73,7 @@ public class JSONFormatTest extends BasicTest {
     }
 
     public void testToJSON() {
-        int p = 1000;
+        int p = 10;
         title("To JSON, parallel " + p);
         final String json1 = "{\"a1\":1.0,\"a2\":1.2,\"b1\":true,\"s\":\"ccc\",\"b\":{\"c\":[1,2,3]}}";
         final Map<String, Object> m;

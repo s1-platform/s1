@@ -29,7 +29,7 @@ import java.nio.charset.Charset;
 public class SOAPHelperTest extends ServerTest {
 
     public void testString(){
-        int p = 100;
+        int p = 10;
         title("Auth root, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -66,7 +66,7 @@ public class SOAPHelperTest extends ServerTest {
     }
 
     public void testFile(){
-        int p = 100;
+        int p = 10;
         title("Auth root, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -175,7 +175,7 @@ public class SOAPHelperTest extends ServerTest {
     }
 
     public void testSend(){
-        int p = 100;
+        int p = 10;
         title("Send, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -207,7 +207,7 @@ public class SOAPHelperTest extends ServerTest {
     }
 
     public void testChange(){
-        int p = 100;
+        int p = 10;
         title("Send, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -253,7 +253,7 @@ public class SOAPHelperTest extends ServerTest {
     }
 
     public void testSendSoapAction(){
-        int p = 100;
+        int p = 10;
         title("Send with action, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

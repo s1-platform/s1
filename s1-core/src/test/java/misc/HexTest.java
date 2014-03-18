@@ -14,7 +14,7 @@ import org.s1.test.LoadTestUtils;
 public class HexTest extends BasicTest {
 
     public void test1(){
-        int p = 1000;
+        int p = 10;
         title("Hex encode/decode, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

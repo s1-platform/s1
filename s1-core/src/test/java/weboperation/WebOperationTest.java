@@ -17,7 +17,7 @@ import java.util.Map;
 public class WebOperationTest extends ServerTest {
 
     public void testGetEcho(){
-        int p = 100;
+        int p = 10;
         title("Echo test, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
@@ -39,7 +39,7 @@ public class WebOperationTest extends ServerTest {
     }
 
     public void testPostEcho(){
-        int p = 100;
+        int p = 10;
         title("Echo test post, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override

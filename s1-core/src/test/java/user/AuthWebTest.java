@@ -16,7 +16,7 @@ import org.s1.test.TestHttpClient;
 public class AuthWebTest extends ServerTest {
 
     public void testRoot(){
-        int p = 100;
+        int p = 10;
         title("Auth root, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override

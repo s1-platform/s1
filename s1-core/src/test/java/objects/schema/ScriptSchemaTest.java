@@ -21,7 +21,7 @@ public class ScriptSchemaTest extends BasicTest{
 
     public void testValidate(){
         title("custom validate");
-        int p=100;
+        int p=10;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -69,7 +69,7 @@ public class ScriptSchemaTest extends BasicTest{
 
     public void testDynamic1(){
         title("dynamic form field");
-        int p=100;
+        int p=10;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -121,7 +121,7 @@ public class ScriptSchemaTest extends BasicTest{
 
     public void testDynamic2(){
         title("change entire attribute");
-        int p=100;
+        int p=10;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
@@ -169,7 +169,7 @@ public class ScriptSchemaTest extends BasicTest{
 
     public void testDynamic3(){
         title("dynamic list");
-        int p=100;
+        int p=10;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {

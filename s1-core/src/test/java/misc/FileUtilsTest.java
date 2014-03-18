@@ -18,7 +18,7 @@ import java.io.IOException;
 public class FileUtilsTest extends BasicTest {
 
     public void testString(){
-        int p = 1000;
+        int p = 10;
         title("FileUtils string file, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override

@@ -22,7 +22,7 @@ import java.util.Map;
 public class XMLFormatTest extends BasicTest {
 
     public void testString() {
-        int p = 1000;
+        int p = 10;
         title("String, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -147,7 +147,7 @@ public class XMLFormatTest extends BasicTest {
     }
 
     public void testToJSON() {
-        int p = 1000;
+        int p = 10;
         title("To JSON, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
@@ -187,7 +187,7 @@ public class XMLFormatTest extends BasicTest {
     }
 
     public void testToJSONWithLists() {
-        int p = 1000;
+        int p = 10;
         title("XML to JSON with Lists, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
