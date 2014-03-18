@@ -62,6 +62,10 @@
         <system>GitHub Issue Management</system>
         <url>https://github.com/s1-platform/s1/issues</url>
     </issueManagement>
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.org/s1-platform/s1/</url>
+    </ciManagement>
 
     <modules>
         <module>s1-core</module>
