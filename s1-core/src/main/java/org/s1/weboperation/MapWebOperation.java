@@ -61,7 +61,9 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
             for(String it:arr){
                 String nv [] = it.split("=");
                 String n = nv[0];
-                String v = nv[1];
+                String v = null;
+                if(nv.length>1)
+                    v = nv[1];
                 try {
                     v = URLDecoder.decode(v, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
