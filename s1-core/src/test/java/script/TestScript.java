@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * s1v2
@@ -146,12 +147,21 @@ public class TestScript extends BasicTest{
         title("Time limit test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setTimeLimit(2000);
+        final AtomicLong al = new AtomicLong();
         final Map<String,Object> data = Objects.newHashMap(
                 "sleep",
                 new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"time")) {
                     @Override
                     public Object call() throws ScriptException {
                         sleep(getContext().get(Long.class, "time"));
+                        return null;
+                    }
+                },
+                "tick",
+                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class)) {
+                    @Override
+                    public Object call() throws ScriptException {
+                        al.incrementAndGet();
                         return null;
                     }
                 }
@@ -174,11 +184,16 @@ public class TestScript extends BasicTest{
                 //timeout 2
                 b = false;
                 try {
-                    scriptEngine.eval("while(true){}", data);
+                    scriptEngine.eval("while(true){tick();sleep(100);}", data);
                 } catch (ScriptLimitException e){
+                    if(input==0)
+                        trace(e.getType()+":"+e.getMessage());
                     b = e.getType()== ScriptLimitException.Limits.TIME;
                 }
                 assertTrue(b);
+                long l = al.get();
+                sleep(1000);
+                assertEquals(l,al.get());
                 return null;
             }
         }));
