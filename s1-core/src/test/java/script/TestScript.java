@@ -6,6 +6,7 @@ import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
+import org.s1.options.Options;
 import org.s1.script.*;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
@@ -269,8 +270,10 @@ public class TestScript extends BasicTest{
                 return null;
             }
         }));
+        int tc = Options.getStorage().getSystem(Integer.class,S1ScriptEngine.OPTIONS_KEY+".threadCount",500);
+        //4*p threads are requested
         trace(Thread.activeCount());
-        assertEquals(t,Thread.activeCount());
+        assertTrue(t<=Thread.activeCount()+tc);
     }
 
     public void testSyntaxError(){

@@ -47,6 +47,14 @@ public class S1ScriptEngine {
 
     private static final Logger LOG = LoggerFactory.getLogger(S1ScriptEngine.class);
 
+    public static final String OPTIONS_KEY = "scriptEngine";
+    private static final ExecutorService service;
+
+    static{
+        int ps = Options.getStorage().getSystem(Integer.class,OPTIONS_KEY+".threadCount",500);
+        service = Executors.newFixedThreadPool(ps);
+    }
+
     private List<Map<String,Object>> functions = Objects.newArrayList();
     private long timeLimit = 0;
     private long sizeLimit = 0;
@@ -56,7 +64,7 @@ public class S1ScriptEngine {
      * Create with path='scriptEngine'
      */
     public S1ScriptEngine(){
-        this("scriptEngine");
+        this(OPTIONS_KEY);
     }
 
     /**
@@ -227,7 +235,7 @@ public class S1ScriptEngine {
         Future<Object> f = null;
         if(sb!=null){
             //run script
-            f = executeTask(new Callable<Object>() {
+            f = service.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
                     try{
@@ -247,28 +255,37 @@ public class S1ScriptEngine {
                         throw e;
                     }
                 }
-            },getTimeLimit());
+            });
         }else{
             //run script
-            f = executeTask(new Callable<Object>() {
+            f = service.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
                     return new ASTEvaluator().eval(root,ctx);
                 }
-            },getTimeLimit());
+            });
         }
 
         try {
-            T result = (T)f.get(getTimeLimit(), TimeUnit.MILLISECONDS);
+            long l = System.currentTimeMillis();
+            while(true){
+                if(System.currentTimeMillis()-l>getTimeLimit()){
+                    f.cancel(true);
+                    throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
+                    //break;
+                }
+                if(f.isDone()){
+                    break;
+                }
+            }
+            T result = (T)f.get();
             if(LOG.isDebugEnabled()){
                 LOG.debug("Script result ("+(System.currentTimeMillis()-t)+"ms.): "+result);
             }
             return result;
         } /*catch (CancellationException e){
             throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
-        } */catch (TimeoutException e){
-            throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
-        } catch (InterruptedException e){
+        }*/ catch (InterruptedException e){
             throw S1SystemError.wrap(e);
         } catch (ExecutionException e){
             if(e.getCause()!=null){
@@ -279,29 +296,6 @@ public class S1ScriptEngine {
             }
             throw S1SystemError.wrap(e);
         }
-    }
-
-    /**
-     *
-     * @param c
-     * @param timeoutMS
-     * @param <T>
-     * @return
-     */
-    private <T> Future<T> executeTask(Callable<T> c, long timeoutMS){
-        ExecutorService service = Executors.newFixedThreadPool(1);
-        //ScheduledExecutorService canceller = Executors.newSingleThreadScheduledExecutor();
-
-        final Future<T> future = service.submit(c);
-        /*canceller.schedule(new Callable<Void>(){
-            public Void call(){
-                future.cancel(true);
-                return null;
-            }
-        }, timeoutMS, TimeUnit.MILLISECONDS);*/
-        service.shutdown();
-        //canceller.shutdown();
-        return future;
     }
 
     /**
