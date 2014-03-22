@@ -14,26 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.table;
+package org.s1.table.errors;
 
 /**
- * More than one object found
+ *
  */
-public class MoreThanOneFoundException extends Exception {
+public class CustomActionException extends Exception {
 
-    public MoreThanOneFoundException() {
+    public CustomActionException() {
         super();
     }
 
-    public MoreThanOneFoundException(String message) {
+    public CustomActionException(String message) {
         super(message);
     }
 
-    public MoreThanOneFoundException(String message, Throwable cause) {
+    public CustomActionException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public MoreThanOneFoundException(Throwable cause) {
+    public CustomActionException(Throwable cause) {
         super(cause);
     }
 }

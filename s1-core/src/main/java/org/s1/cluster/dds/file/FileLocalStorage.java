@@ -17,7 +17,7 @@
 package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
-import org.s1.table.NotFoundException;
+import org.s1.table.errors.NotFoundException;
 import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.Closure;
@@ -48,7 +48,7 @@ public class FileLocalStorage {
      * @param cl
      * @param <T>
      * @return
-     * @throws org.s1.table.NotFoundException
+     * @throws org.s1.table.errors.NotFoundException
      * @throws org.s1.misc.ClosureException
      */
     public <T> T read(String group, String id, Closure<FileStorage.FileReadBean,T> cl) throws NotFoundException, ClosureException {

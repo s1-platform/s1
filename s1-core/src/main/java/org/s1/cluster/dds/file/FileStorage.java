@@ -18,7 +18,7 @@ package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
 import org.s1.cluster.dds.*;
-import org.s1.table.NotFoundException;
+import org.s1.table.errors.NotFoundException;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
@@ -108,7 +108,7 @@ public class FileStorage extends DistributedDataSource {
      * @param cl
      * @param <T>
      * @return
-     * @throws org.s1.table.NotFoundException
+     * @throws org.s1.table.errors.NotFoundException
      * @throws org.s1.misc.ClosureException
      */
     public static <T> T read(Class<T> cls, String group, String id, Closure<FileReadBean,T> cl) throws NotFoundException, ClosureException{

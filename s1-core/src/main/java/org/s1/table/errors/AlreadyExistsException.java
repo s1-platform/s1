@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.s1.table;
+package org.s1.table.errors;
 
 /**
  * Object already exists exception

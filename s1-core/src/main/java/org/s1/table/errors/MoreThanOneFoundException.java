@@ -14,26 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.table;
+package org.s1.table.errors;
 
 /**
- * Object not found
+ * More than one object found
  */
-public class NotFoundException extends Exception {
+public class MoreThanOneFoundException extends Exception {
 
-    public NotFoundException() {
+    public MoreThanOneFoundException() {
         super();
     }
 
-    public NotFoundException(String message) {
+    public MoreThanOneFoundException(String message) {
         super(message);
     }
 
-    public NotFoundException(String message, Throwable cause) {
+    public MoreThanOneFoundException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public NotFoundException(Throwable cause) {
+    public MoreThanOneFoundException(Throwable cause) {
         super(cause);
     }
 }
