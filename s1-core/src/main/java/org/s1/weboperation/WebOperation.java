@@ -305,12 +305,17 @@ public abstract class WebOperation<I, O> {
      */
     public static <I,O> O processClassMethods(WebOperation<I,O> T, String method, I params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         Method mt = null;
-        for(Method m:T.getClass().getDeclaredMethods()){
-            if(m.getName().equals(method) && m.getAnnotation(WebOperationMethod.class)!=null){
-                mt = m;
-                break;
+        for (Class<?> c = T.getClass(); c != null; c = c.getSuperclass()){
+            for(Method m:c.getDeclaredMethods()){
+                if(m.getName().equals(method) && m.getAnnotation(WebOperationMethod.class)!=null){
+                    mt = m;
+                    break;
+                }
             }
+            if(mt!=null)
+                break;
         }
+
         if(mt!=null){
             try{
                 return (O)mt.invoke(T,params,request,response);

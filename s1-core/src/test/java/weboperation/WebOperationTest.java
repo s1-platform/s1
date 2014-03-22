@@ -60,4 +60,28 @@ public class WebOperationTest extends ServerTest {
         }));
     }
 
+    public void testProcessClassMethods(){
+        int p = 10;
+        title("Process class methods, parallel: "+p);
+        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) throws ClosureException {
+                Map<String,Object> r = client().getJSON(getContext() + "/dispatcher/Operation2.method1",
+                        null, null);
+                assertEquals("1",Objects.get(r,"a"));
+
+                r = client().getJSON(getContext() + "/dispatcher/Operation2.method2",
+                        null, null);
+                assertEquals("2",Objects.get(r,"a"));
+
+                r = client().getJSON(getContext() + "/dispatcher/Operation2.method3",
+                        null, null);
+                assertEquals("3",Objects.get(r,"a"));
+
+
+                return null;
+            }
+        }));
+    }
+
 }
