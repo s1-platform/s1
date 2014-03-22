@@ -7,6 +7,8 @@ import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
 import org.s1.test.TestHttpClient;
 
+import java.util.Map;
+
 /**
  * s1v2
  * User: GPykhov
@@ -15,17 +17,25 @@ import org.s1.test.TestHttpClient;
  */
 public class AuthWebTest extends ServerTest {
 
-    public void testRoot(){
+    public void testLoginLogout(){
         int p = 10;
-        title("Auth root, parallel: "+p);
+        title("Root login, logout, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {
 
                 TestHttpClient client = client();
+                Map<String,Object> m = null;
+
+                m = client.getJSON(getContext() + "/dispatcher/User.whoAmI", null, null);
+                assertEquals("anonymous",Objects.get(m,"id"));
+
+                m = client.getJSON(getContext() + "/dispatcher/User.getUser?id=root", null, null);
+                assertEquals("root",Objects.get(m,"id"));
+
                 boolean b=true;
                 try{
-                    client.postJSON(getContext() + "/dispatcher/Auth.login", Objects.newHashMap(
+                    client.postJSON(getContext() + "/dispatcher/User.login", Objects.newHashMap(
                             String.class, Object.class,
                             "name", "root",
                             "password", "wrong"
@@ -39,11 +49,19 @@ public class AuthWebTest extends ServerTest {
                 assertTrue(b);
 
                 //authenticate
-                client.postJSON(getContext() + "/dispatcher/Auth.login", Objects.newHashMap(
+                client.postJSON(getContext() + "/dispatcher/User.login", Objects.newHashMap(
                         String.class, Object.class,
                         "name", "root",
                         "password", "root"
                 ), null);
+
+                m = client.getJSON(getContext() + "/dispatcher/User.whoAmI", null, null);
+                assertEquals("root",Objects.get(m,"id"));
+
+                m = client.getJSON(getContext() + "/dispatcher/User.logout", null, null);
+
+                m = client.getJSON(getContext() + "/dispatcher/User.whoAmI", null, null);
+                assertEquals("anonymous",Objects.get(m,"id"));
 
                 return null;
             }
