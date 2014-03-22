@@ -14,31 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.cluster;
-
-import com.hazelcast.core.Hazelcast;
-import org.s1.cluster.dds.DDSCluster;
-import org.s1.lifecycle.LifecycleAction;
-import org.s1.misc.protocols.Init;
+package org.s1.table;
 
 /**
- * S1 system action
+ * More than one object found
  */
-public class ClusterLifecycleAction extends LifecycleAction {
+public class MoreThanOneFoundException extends Exception {
 
-    @Override
-    public void start() {
-        Init.init();
-        HazelcastWrapper.getInstance();
-        NodeMessageExchange.instance = new NodeMessageExchange();
-        DDSCluster.start();
+    public MoreThanOneFoundException() {
+        super();
     }
 
-    @Override
-    public void stop() {
-        DDSCluster.stop();
-        Hazelcast.shutdownAll();
-        NodeMessageExchange.instance = null;
+    public MoreThanOneFoundException(String message) {
+        super(message);
     }
 
+    public MoreThanOneFoundException(String message, Throwable cause) {
+        super(message,cause);
+    }
+
+    public MoreThanOneFoundException(Throwable cause) {
+        super(cause);
+    }
 }

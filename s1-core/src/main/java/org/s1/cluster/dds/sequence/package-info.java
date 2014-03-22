@@ -14,31 +14,7 @@
  *    limitations under the License.
  */
 
-package org.s1.cluster;
-
-import com.hazelcast.core.Hazelcast;
-import org.s1.cluster.dds.DDSCluster;
-import org.s1.lifecycle.LifecycleAction;
-import org.s1.misc.protocols.Init;
-
 /**
- * S1 system action
+ * Sequence DDS
  */
-public class ClusterLifecycleAction extends LifecycleAction {
-
-    @Override
-    public void start() {
-        Init.init();
-        HazelcastWrapper.getInstance();
-        NodeMessageExchange.instance = new NodeMessageExchange();
-        DDSCluster.start();
-    }
-
-    @Override
-    public void stop() {
-        DDSCluster.stop();
-        Hazelcast.shutdownAll();
-        NodeMessageExchange.instance = null;
-    }
-
-}
+package org.s1.cluster.dds.sequence;

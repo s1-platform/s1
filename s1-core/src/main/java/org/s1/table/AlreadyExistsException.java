@@ -14,31 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.cluster;
-
-import com.hazelcast.core.Hazelcast;
-import org.s1.cluster.dds.DDSCluster;
-import org.s1.lifecycle.LifecycleAction;
-import org.s1.misc.protocols.Init;
+package org.s1.table;
 
 /**
- * S1 system action
+ * Object already exists exception
  */
-public class ClusterLifecycleAction extends LifecycleAction {
+public class AlreadyExistsException extends Exception {
 
-    @Override
-    public void start() {
-        Init.init();
-        HazelcastWrapper.getInstance();
-        NodeMessageExchange.instance = new NodeMessageExchange();
-        DDSCluster.start();
+    public AlreadyExistsException() {
+        super();
     }
 
-    @Override
-    public void stop() {
-        DDSCluster.stop();
-        Hazelcast.shutdownAll();
-        NodeMessageExchange.instance = null;
+    public AlreadyExistsException(String message) {
+        super(message);
     }
 
+    public AlreadyExistsException(String message, Throwable cause) {
+        super(message,cause);
+    }
+
+    public AlreadyExistsException(Throwable cause) {
+        super(cause);
+    }
 }

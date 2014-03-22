@@ -14,31 +14,15 @@
  *    limitations under the License.
  */
 
-package org.s1.cluster;
+package org.s1.cluster.dds;
 
-import com.hazelcast.core.Hazelcast;
-import org.s1.cluster.dds.DDSCluster;
-import org.s1.lifecycle.LifecycleAction;
-import org.s1.misc.protocols.Init;
+import java.util.Map;
 
 /**
- * S1 system action
+ * Base class for distributed data sources
  */
-public class ClusterLifecycleAction extends LifecycleAction {
+public abstract class DistributedDataSource {
 
-    @Override
-    public void start() {
-        Init.init();
-        HazelcastWrapper.getInstance();
-        NodeMessageExchange.instance = new NodeMessageExchange();
-        DDSCluster.start();
-    }
-
-    @Override
-    public void stop() {
-        DDSCluster.stop();
-        Hazelcast.shutdownAll();
-        NodeMessageExchange.instance = null;
-    }
+    public abstract void runWriteCommand(CommandBean cmd);
 
 }
