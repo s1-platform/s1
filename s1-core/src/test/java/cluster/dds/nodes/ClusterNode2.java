@@ -16,16 +16,22 @@
 
 package cluster.dds.nodes;
 
+import org.s1.S1SystemError;
 import org.s1.cluster.ClusterLifecycleAction;
+import org.s1.cluster.dds.DDSCluster;
+import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.Closure;
+import org.s1.misc.ClosureException;
 import org.s1.options.OptionsStorage;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * s1v2
@@ -63,7 +69,32 @@ public class ClusterNode2 {
                 return true;
             }
         }, new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+        System.out.println("file a2 writed");
 
+        while(true){
+            DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class, null, null, "transact"), new Closure<String, Object>() {
+                @Override
+                public Object call(String input) throws ClosureException {
+                    Transactions.run(new Closure<String, Object>() {
+                        @Override
+                        public Object call(String input) throws ClosureException {
+                            long l = NumberSequence.next("transact");
+                            System.out.println(">>>>>>>>>>>>>" + l+","+(l+1));
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                throw S1SystemError.wrap(e);
+                            }
+                            NumberSequence.set("transact",l+1);
+                            return null;
+                        }
+                    });
+
+                    return null;
+                }
+            }, 10, TimeUnit.SECONDS);
+            Thread.sleep(2000);
+        }
     }
 
 }

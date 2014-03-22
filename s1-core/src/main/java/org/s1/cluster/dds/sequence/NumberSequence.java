@@ -63,6 +63,26 @@ public class NumberSequence extends DistributedDataSource {
         }
     }
 
+    /**
+     *
+     * @param name
+     * @param value
+     */
+    public static void set(final String name, final long value){
+        try{
+            DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class,null,null,name),new Closure<String, Object>() {
+                @Override
+                public Object call(String input) throws ClosureException {
+                    DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
+                            Objects.newHashMap(String.class, Object.class, "value", value)));
+                    return null;
+                }
+            }, 10, TimeUnit.SECONDS);
+        }catch (Exception e){
+            throw S1SystemError.wrap(e);
+        }
+    }
+
     @Override
     public void runWriteCommand(CommandBean cmd) {
         if("set".equals(cmd.getCommand())){

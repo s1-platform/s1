@@ -59,7 +59,7 @@ public class ClusterNode3 {
                 return true;
             }
         }, new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
-
+        System.out.println("file a3 writed");
 
     }
 

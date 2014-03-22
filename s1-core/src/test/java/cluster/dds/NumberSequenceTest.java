@@ -17,6 +17,9 @@
 package cluster.dds;
 
 import org.s1.cluster.HazelcastWrapper;
+import org.s1.cluster.dds.DDSCluster;
+import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.misc.Closure;
 import org.s1.misc.ClosureException;
@@ -25,6 +28,8 @@ import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * s1v2
@@ -62,6 +67,38 @@ public class NumberSequenceTest extends ServerTest {
                 return null;
             }
         }));
+    }
+
+    public void testTransactionSequence(){
+        int p = 10;
+        title("Number sequence in transaction, parallel "+p);
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer index) throws ClosureException {
+                try{
+                    DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class,null,null,"transact"),new Closure<String, Object>() {
+                        @Override
+                        public Object call(String input) throws ClosureException {
+                            Transactions.run(new Closure<String, Object>() {
+                                @Override
+                                public Object call(String input) throws ClosureException {
+                                    NumberSequence.next("transact");
+                                    NumberSequence.next("transact");
+                                    return null;
+                                }
+                            });
+
+                            return null;
+                        }
+                    },10, TimeUnit.SECONDS);
+                }catch (TimeoutException e){
+                    throw ClosureException.wrap(e);
+                }
+                return null;
+            }
+        }));
+
+        assertEquals(p*2+1,NumberSequence.next("transact"));
     }
 
 }
