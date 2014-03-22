@@ -82,8 +82,9 @@ public class NumberSequenceTest extends ServerTest {
                             Transactions.run(new Closure<String, Object>() {
                                 @Override
                                 public Object call(String input) throws ClosureException {
-                                    NumberSequence.next("transact");
-                                    NumberSequence.next("transact");
+                                    long l = NumberSequence.next("transact");
+                                    System.out.println(l+","+(l+1));
+                                    NumberSequence.set("transact",l+1);
                                     return null;
                                 }
                             });
@@ -98,7 +99,7 @@ public class NumberSequenceTest extends ServerTest {
             }
         }));
 
-        assertEquals(p*2+1,NumberSequence.next("transact"));
+        assertEquals(p*2,NumberSequence.next("transact"));
     }
 
 }

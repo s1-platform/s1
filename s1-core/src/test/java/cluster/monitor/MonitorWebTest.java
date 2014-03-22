@@ -24,7 +24,7 @@ public class MonitorWebTest extends ServerTest {
 
     public void testMonitor(){
         int p = 10;
-        title("Log, parallel: "+p);
+        title("Monitor, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) throws ClosureException {

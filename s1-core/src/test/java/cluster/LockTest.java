@@ -49,6 +49,54 @@ public class LockTest extends BasicTest {
         assertEquals(1, buf.length());
     }
 
+    public void testNestedLock(){
+        int p = 10;
+        title("Nested Lock, parallel "+p);
+        final Map<String,Integer> m = Objects.newHashMap("a",0);
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer index) throws ClosureException {
+
+                try {
+                    Locks.waitAndRun("test", new Closure<String, Object>() {
+                        @Override
+                        public Object call(String input) throws ClosureException{
+                            try{
+
+                                Locks.waitAndRun("test", new Closure<String, Object>() {
+                                    @Override
+                                    public Object call(String input) {
+                                        int i = m.get("a");
+                                        m.put("a",i+1);
+                                        return null;
+                                    }
+                                }, 30, TimeUnit.SECONDS);
+
+                                Locks.waitAndRun("test", new Closure<String, Object>() {
+                                    @Override
+                                    public Object call(String input) {
+                                        int i = m.get("a");
+                                        m.put("a",i+1);
+                                        return null;
+                                    }
+                                }, 30, TimeUnit.SECONDS);
+
+                                }catch (Exception e){
+                                    throw ClosureException.wrap(e);
+                                }
+                            return null;
+                        }
+                    }, 30, TimeUnit.SECONDS);
+                } catch (TimeoutException e) {
+                    throw new RuntimeException(e);
+                }
+
+                return null;
+            }
+        }));
+        assertEquals(p*2, m.get("a").intValue());
+    }
+
     public void testMultiLock(){
         HazelcastWrapper.getInstance();
         int p = 100;

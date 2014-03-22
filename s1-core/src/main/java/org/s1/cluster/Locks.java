@@ -66,6 +66,8 @@ public class Locks {
         if(localLocks.get() == null)
             localLocks.set(Objects.newArrayList(String.class));
 
+        List<String> nonLocalIds = Objects.newArrayList();
+
         long t = System.currentTimeMillis();
         Object ret = null;
         while(true){
@@ -93,8 +95,13 @@ public class Locks {
                     if(!b){
                         //set locks
                         for(String new_lock:lockIds){
-                            locks.put(new_lock,System.currentTimeMillis());
-                            localLocks.get().add(new_lock);
+                            if(locks.containsKey(new_lock)){
+
+                            }else{
+                                locks.put(new_lock,System.currentTimeMillis());
+                                localLocks.get().add(new_lock);
+                                nonLocalIds.add(new_lock);
+                            }
                         }
                     }
                 } catch (InterruptedException e){
@@ -115,7 +122,7 @@ public class Locks {
             }finally {
                 //remove locks
                 if(!b){
-                    for(String new_lock:lockIds){
+                    for(String new_lock:nonLocalIds){
                         locks.remove(new_lock);
                         localLocks.get().remove(new_lock);
                     }

@@ -65,15 +65,17 @@ public class ObjectWire {
             public Object call(ObjectIterator.IterateBean i) {
                 if (i.getValue() instanceof String) {
                     String s = (String) i.getValue();
-                    if (s.startsWith("/") && s.endsWith("/")) {
-                        s = s.substring(1, s.length() - 1);
-                        String type = s.substring(0, s.indexOf("("));
-                        String value = s.substring(s.indexOf("(") + 1,
-                                s.lastIndexOf(")"));
-                        if ("Date".equalsIgnoreCase(type)) {
-                            return ObjectType.cast(value, Date.class);
+                    try{
+                        if (s.startsWith("/") && s.endsWith("/")) {
+                            s = s.substring(1, s.length() - 1);
+                            String type = s.substring(0, s.indexOf("("));
+                            String value = s.substring(s.indexOf("(") + 1,
+                                    s.lastIndexOf(")"));
+                            if ("Date".equalsIgnoreCase(type)) {
+                                return ObjectType.cast(value, Date.class);
+                            }
                         }
-                    }
+                    }catch (Throwable e){}
                 }
                 return i.getValue();
             }
