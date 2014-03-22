@@ -73,7 +73,11 @@ public class MonitorOperation extends MapWebOperation {
         m.put("address", HazelcastWrapper.getInstance().getCluster().getLocalMember().getInetSocketAddress().getHostName());
 
         if(full){
-            m.put("env",System.getenv());
+            Map<String,String> env = Objects.newHashMap();
+            for(Map.Entry<String,String> e:System.getenv().entrySet()){
+                env.put(""+e.getKey(),""+e.getValue());
+            }
+            m.put("env",env);
             m.put("properties",System.getProperties());
             List<Map> roots = Objects.newArrayList();
             for(File f:File.listRoots()){
