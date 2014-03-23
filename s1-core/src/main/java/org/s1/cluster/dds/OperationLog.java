@@ -54,7 +54,7 @@ public class OperationLog {
     public synchronized void listFrom(long id, Closure<MessageBean,Object> cl){
         for(MessageBean m:map.values()){
             if(m.getId()>id){
-                cl.callQuite(m);
+                cl.call(m);
             }
         }
     }
@@ -66,7 +66,7 @@ public class OperationLog {
     public synchronized void listUndone(Closure<MessageBean,Object> cl){
         for(MessageBean m:map.values()){
             if(!doneMap.get(m.getId())){
-                cl.callQuite(m);
+                cl.call(m);
             }
         }
     }

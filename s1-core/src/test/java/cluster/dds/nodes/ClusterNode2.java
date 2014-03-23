@@ -18,18 +18,16 @@ package cluster.dds.nodes;
 
 import org.s1.S1SystemError;
 import org.s1.cluster.ClusterLifecycleAction;
-import org.s1.cluster.dds.DDSCluster;
+import org.s1.cluster.Locks;
 import org.s1.cluster.dds.EntityIdBean;
 import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.cluster.dds.file.FileStorage;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.options.OptionsStorage;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
@@ -58,41 +56,46 @@ public class ClusterNode2 {
 
         FileStorage.remove("test", "a2");
 
-        FileStorage.write("test", "a2", new Closure<OutputStream, Boolean>() {
-            @Override
-            public Boolean call(OutputStream input) {
-                try {
-                    input.write("qwer".getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                return true;
+        FileStorage.FileWriteBean fb = null;
+        try{
+            fb = FileStorage.createFileWriteBean("test", "a2", new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            try {
+                fb.getOutputStream().write("qwer".getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }, new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            FileStorage.save(fb);
+        }finally {
+            FileStorage.closeAfterWrite(fb);
+        }
+
         System.out.println("file a2 writed");
 
-        while(true){
-            DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class, null, null, "transact"), new Closure<String, Object>() {
-                @Override
-                public Object call(String input) throws ClosureException {
-                    Transactions.run(new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) throws ClosureException {
-                            long l = NumberSequence.next("transact");
-                            System.out.println(">>>>>>>>>>>>>" + l+","+(l+1));
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                throw S1SystemError.wrap(e);
-                            }
-                            NumberSequence.set("transact",l+1);
-                            return null;
-                        }
-                    });
 
-                    return null;
+
+        while(true){
+            String lockId = null;
+            String id = null;
+            try{
+                lockId = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, "transact"), 30, TimeUnit.SECONDS);
+                id = Transactions.begin();
+
+                long l = NumberSequence.next("transact");
+                System.out.println(">>>>>>>>>>>>>" + l);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw S1SystemError.wrap(e);
                 }
-            }, 10, TimeUnit.SECONDS);
+                NumberSequence.set("transact",l+1);
+
+                Transactions.commit(id);
+            }catch (Throwable e){
+                Transactions.rollbackOnError(id, e);
+                throw new RuntimeException(e.getMessage(),e);
+            }finally {
+                Locks.releaseLock(lockId);
+            }
             Thread.sleep(2000);
         }
     }

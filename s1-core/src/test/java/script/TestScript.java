@@ -3,7 +3,7 @@ package script;
 import org.s1.S1SystemError;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -61,32 +61,31 @@ public class TestScript extends BasicTest{
         title("Cases test, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
-                Session.run("script_"+input,new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
-                        File[] fs = dir.listFiles(new FileFilter() {
-                            @Override
-                            public boolean accept(File f) {
-                                return !f.isDirectory() && f.getName().endsWith(".js");
-                            }
-                        });
-                        for(File f:fs){
-                            String script = null;
-                            try {
-                                script = FileUtils.readFileToString(f,"UTF-8");
-                            } catch (IOException e) {
-                                throw S1SystemError.wrap(e);
-                            }
-                            try{
-                                scriptEngine.eval(script,data);
-                            }catch (RuntimeException e){
-                                throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
-                            }
+            public Object call(Integer input)  {
+                try{
+                    Session.start("script_"+input);
+                    File[] fs = dir.listFiles(new FileFilter() {
+                        @Override
+                        public boolean accept(File f) {
+                            return !f.isDirectory() && f.getName().endsWith(".js");
                         }
-                        return null;
+                    });
+                    for(File f:fs){
+                        String script = null;
+                        try {
+                            script = FileUtils.readFileToString(f,"UTF-8");
+                        } catch (IOException e) {
+                            throw S1SystemError.wrap(e);
+                        }
+                        try{
+                            scriptEngine.eval(script,data);
+                        }catch (RuntimeException e){
+                            throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
+                        }
                     }
-                });
+                }finally {
+                    Session.end("script_"+input);
+                }
                 return null;
             }
         }));
@@ -99,7 +98,7 @@ public class TestScript extends BasicTest{
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 File[] fs = dir.listFiles(new FileFilter() {
                     @Override
                     public boolean accept(File f) {
@@ -134,7 +133,7 @@ public class TestScript extends BasicTest{
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 assertEquals(10,scriptEngine.evalInFunction(Integer.class,"return 10;",null).intValue());
                 assertTrue(scriptEngine.evalInFunction(Boolean.class,"return true;",null));
                 assertFalse(scriptEngine.evalInFunction(Boolean.class,"return false;",null));
@@ -169,7 +168,7 @@ public class TestScript extends BasicTest{
         );
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String t = scriptEngine.eval("'test'+'1';", data);
                 assertEquals("test1", t);
 
@@ -208,7 +207,7 @@ public class TestScript extends BasicTest{
 
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String t = scriptEngine.eval("'012345'", null);
                 assertEquals("012345", t);
 
@@ -234,7 +233,7 @@ public class TestScript extends BasicTest{
 
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String t = scriptEngine.eval("'012345'", null);
                 assertEquals("012345", t);
 

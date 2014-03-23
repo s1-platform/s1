@@ -18,7 +18,7 @@ package weboperation;
 
 import org.s1.S1SystemError;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
@@ -42,7 +42,7 @@ public class UploadTest extends ServerTest {
         title("Upload download, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String s = "qwerasdf"+input;
                 String name = "name_"+input;
                 String ct = "text/plain";

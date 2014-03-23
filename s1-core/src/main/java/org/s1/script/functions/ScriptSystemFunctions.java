@@ -18,7 +18,6 @@ package org.s1.script.functions;
 
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
@@ -202,7 +201,7 @@ public class ScriptSystemFunctions extends ScriptFunctions{
     public Map<String,Object> iterate(Map<String,Object> o, final ScriptFunction f){
         return Objects.iterate(o,new Closure<ObjectIterator.IterateBean, Object>() {
             @Override
-            public Object call(ObjectIterator.IterateBean input) throws ClosureException {
+            public Object call(ObjectIterator.IterateBean input) {
                 return f.call(Objects.newHashMap(String.class,Object.class,
                         "path",input.getPath(),
                         "value",input.getValue(),

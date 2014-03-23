@@ -16,8 +16,6 @@
 
 package org.s1.cluster.dds;
 
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,29 +52,17 @@ public class Transactions {
     }
 
     /**
-     * All operation calls will be combined in one atomic transaction
      *
-     * @param closure
      * @return
      */
-    public static <T> T run(Closure<String,T> closure) throws ClosureException{
+    public static String begin() {
         if(local.get()!=null){
-            return closure.call(local.get());
+            return null;
         }else{
             String id = UUID.randomUUID().toString();
-            beginTransaction(id);
+            transactionLog.put(id, new LogBean());
             local.set(id);
-            try{
-                T o = closure.call(id);
-                local.remove();
-                commit(id);
-                return o;
-            } catch (Throwable t){
-                local.remove();
-                rollback(id);
-                throw ClosureException.wrap(ClosureException.getCause(t));
-            } finally {
-            }
+            return id;
         }
     }
 
@@ -84,29 +70,30 @@ public class Transactions {
      *
      * @param id
      */
-    private static void beginTransaction(String id){
-        transactionLog.put(id, new LogBean());
-    }
-
-    /**
-     *
-     * @param id
-     */
-    private static void commit(String id){
+    public static void commit(String id){
+        if(Objects.isNullOrEmpty(id))
+            return;
         List<CommandBean> l = Objects.newArrayList();
         for(CommandBean c:transactionLog.get(id).getList()){
             l.add(c);
         }
+
+        local.remove();
+        transactionLog.remove(id);
+
         DDSCluster.call(new MessageBean(null,null,null,null,null,
                 Objects.newHashMap(String.class, Object.class, "list", l)));
-        transactionLog.remove(id);
     }
 
     /**
      *
      * @param id
      */
-    private static void rollback(String id){
+    public static void rollbackOnError(String id, Throwable e){
+        if(Objects.isNullOrEmpty(id)) {
+            throw new RollbackException(e.getMessage(),e);
+        }
+        local.remove();
         transactionLog.remove(id);
     }
 

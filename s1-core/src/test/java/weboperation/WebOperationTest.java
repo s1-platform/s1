@@ -1,7 +1,7 @@
 package weboperation;
 
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -21,7 +21,7 @@ public class WebOperationTest extends ServerTest {
         title("Echo test, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 Map<String,Object> r = client().getJSON(getContext() + "/dispatcher/Echo",
                         Objects.newHashMap(String.class, Object.class, "aa", "qwer"), null);
                 assertEquals("qwer",Objects.get(r,"aa"));
@@ -43,7 +43,7 @@ public class WebOperationTest extends ServerTest {
         title("Echo test post, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 Map<String,Object> r = client().postJSON(getContext() + "/dispatcher/Echo",
                         Objects.newHashMap(String.class, Object.class, "aa", "qwer"), null);
                 assertEquals("qwer",Objects.get(r,"aa"));
@@ -65,7 +65,7 @@ public class WebOperationTest extends ServerTest {
         title("Process class methods, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 Map<String,Object> r = client().getJSON(getContext() + "/dispatcher/Operation2.method1",
                         null, null);
                 assertEquals("1",Objects.get(r,"a"));

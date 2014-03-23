@@ -17,7 +17,6 @@
 package org.s1.format.xml;
 
 import org.s1.S1SystemError;
-import org.s1.misc.Closure;
 import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.w3c.dom.*;

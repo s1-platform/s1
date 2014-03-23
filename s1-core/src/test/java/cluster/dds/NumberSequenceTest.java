@@ -17,12 +17,12 @@
 package cluster.dds;
 
 import org.s1.cluster.HazelcastWrapper;
+import org.s1.cluster.Locks;
 import org.s1.cluster.dds.DDSCluster;
 import org.s1.cluster.dds.EntityIdBean;
 import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.options.Options;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -58,7 +58,7 @@ public class NumberSequenceTest extends ServerTest {
         title("Number sequence, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
                 for (long i = 0; i < 10L; i++) {
                     assertEquals(i, NumberSequence.next("qwe" + index));
@@ -74,26 +74,22 @@ public class NumberSequenceTest extends ServerTest {
         title("Number sequence in transaction, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
+                String lockId = null;
+                String id = null;
                 try{
-                    DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class,null,null,"transact"),new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) throws ClosureException {
-                            Transactions.run(new Closure<String, Object>() {
-                                @Override
-                                public Object call(String input) throws ClosureException {
-                                    long l = NumberSequence.next("transact");
-                                    System.out.println(l+","+(l+1));
-                                    NumberSequence.set("transact",l+1);
-                                    return null;
-                                }
-                            });
+                    lockId = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class,null,null,"transact"),30,TimeUnit.SECONDS);
+                    id = Transactions.begin();
+                    long l = NumberSequence.next("transact");
+                    trace(l + "," + (l + 1));
+                    NumberSequence.set("transact",l+1);
 
-                            return null;
-                        }
-                    },10, TimeUnit.SECONDS);
-                }catch (TimeoutException e){
-                    throw ClosureException.wrap(e);
+                    Transactions.commit(id);
+                }catch (Throwable e){
+                    Transactions.rollbackOnError(id, e);
+                    throw new RuntimeException(e.getMessage(),e);
+                }finally {
+                    Locks.releaseLock(lockId);
                 }
                 return null;
             }

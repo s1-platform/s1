@@ -21,7 +21,6 @@ import org.s1.S1SystemError;
 import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.Locks;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -203,36 +202,6 @@ public class DDSCluster {
      */
     public static void flush(EntityIdBean e){
         queueWorker.flush(e);
-    }
-
-    /**
-     *
-     * @param e
-     * @param closure
-     * @param timeout
-     * @param tu
-     * @return
-     * @throws TimeoutException
-     * @throws ClosureException
-     */
-    public static Object lockEntity(EntityIdBean e, Closure<String,Object> closure, long timeout, TimeUnit tu) throws TimeoutException, ClosureException {
-        return lockEntities(Objects.newArrayList(e), closure, timeout, tu);
-    }
-
-    public static Object lockEntities(final List<EntityIdBean> e, final Closure<String,Object> closure, long timeout, TimeUnit tu) throws TimeoutException, ClosureException {
-        List<String> l = Objects.newArrayList();
-        for(EntityIdBean _e:e){
-            l.add(_e.getLockName());
-        }
-        return Locks.waitAndRun(l,new Closure<String, Object>() {
-            @Override
-            public Object call(String input) throws ClosureException {
-                for(EntityIdBean _e:e){
-                    flush(_e);
-                }
-                return closure.call(input);
-            }
-        },timeout,tu);
     }
 
 }

@@ -87,8 +87,8 @@ public class ObjectDiff {
                 return null;
             }
         };
-        itr.callQuite(new TwoMapDiffBean(oldObject, newObject, true));
-        itr.callQuite(new TwoMapDiffBean(newObject, oldObject, false));
+        itr.call(new TwoMapDiffBean(oldObject, newObject, true));
+        itr.call(new TwoMapDiffBean(newObject, oldObject, false));
 
         return diff;
     }

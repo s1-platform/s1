@@ -18,7 +18,6 @@ package org.s1.cluster.dds;
 
 import org.s1.cluster.NodeMessageExchange;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +51,7 @@ class MessageListener {
 
         NodeMessageExchange.registerOperation("dds.run", new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 MessageBean e = (MessageBean)input;
                 if(!nodeId.equals(e.getNodeId())){
                     queueWorker.add(e);

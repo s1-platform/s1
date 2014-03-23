@@ -2,7 +2,7 @@ package cluster;
 
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.options.Options;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
@@ -20,28 +20,26 @@ public class SessionTest extends BasicTest {
         title("Session, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
-                Session.run("test" + index, new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
+                try {
+                    Session.start("test" + index);
 
-                        Session.getSessionBean().set("a", null);
-                        Session.getSessionBean().setUserId(Session.ANONYMOUS);
+                    Session.getSessionBean().set("a", null);
+                    Session.getSessionBean().setUserId(Session.ANONYMOUS);
 
-                        assertNull(Session.getSessionBean().get("a"));
-                        assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
+                    assertNull(Session.getSessionBean().get("a"));
+                    assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
 
-                        Session.getSessionBean().set("a", "test_" + input);
-                        Session.getSessionBean().setUserId("user_" + input);
+                    Session.getSessionBean().set("a", "test_" + index);
+                    Session.getSessionBean().setUserId("user_" + index);
 
-                        assertEquals("test_" + input, Session.getSessionBean().get("a"));
-                        assertEquals("user_" + input, Session.getSessionBean().getUserId());
+                    assertEquals("test_" + index, Session.getSessionBean().get("a"));
+                    assertEquals("user_" + index, Session.getSessionBean().getUserId());
 
-                        return null;
-                    }
-                });
-                //String p = Options.getStorage().getParameter("config");
+                }finally {
+                    Session.end("test" + index);
+                }
 
                 return null;
             }
@@ -53,27 +51,26 @@ public class SessionTest extends BasicTest {
         title("Clear, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
-                Session.run("test" + index, new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
+                try {
+                    Session.start("test" + index);
 
-                        Session.getSessionBean().set("a", null);
-                        Session.getSessionBean().setUserId(Session.ANONYMOUS);
+                    Session.getSessionBean().set("a", null);
+                    Session.getSessionBean().setUserId(Session.ANONYMOUS);
 
-                        assertNull(Session.getSessionBean().get("a"));
-                        assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
+                    assertNull(Session.getSessionBean().get("a"));
+                    assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
 
-                        Session.getSessionBean().set("a", "test_" + input);
-                        Session.getSessionBean().setUserId("user_" + input);
+                    Session.getSessionBean().set("a", "test_" + index);
+                    Session.getSessionBean().setUserId("user_" + index);
 
-                        assertEquals("test_" + input, Session.getSessionBean().get("a"));
-                        assertEquals("user_" + input, Session.getSessionBean().getUserId());
-                        return null;
-                    }
-                });
-                //String p = Options.getStorage().getParameter("config");
+                    assertEquals("test_" + index, Session.getSessionBean().get("a"));
+                    assertEquals("user_" + index, Session.getSessionBean().getUserId());
+
+                }finally {
+                    Session.end("test" + index);
+                }
 
                 return null;
             }
@@ -82,19 +79,17 @@ public class SessionTest extends BasicTest {
         //read second time ok
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
-                Session.run("test" + index, new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
+                try {
+                    Session.start("test" + index);
 
-                        assertEquals("test_" + input, Session.getSessionBean().get("a"));
-                        assertEquals("user_" + input, Session.getSessionBean().getUserId());
-                        return null;
-                    }
-                });
-                //String p = Options.getStorage().getParameter("config");
+                    assertEquals("test_" + index, Session.getSessionBean().get("a"));
+                    assertEquals("user_" + index, Session.getSessionBean().getUserId());
 
+                }finally {
+                    Session.end("test" + index);
+                }
                 return null;
             }
         }));
@@ -107,19 +102,17 @@ public class SessionTest extends BasicTest {
 
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
-                Session.run("test" + index, new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) {
+                try {
+                    Session.start("test" + index);
 
-                        assertNull(Session.getSessionBean().get("a"));
-                        assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
+                    assertNull(Session.getSessionBean().get("a"));
+                    assertEquals(Session.ANONYMOUS, Session.getSessionBean().getUserId());
 
-                        return null;
-                    }
-                });
-                //String p = Options.getStorage().getParameter("config");
+                }finally {
+                    Session.end("test" + index);
+                }
 
                 return null;
             }

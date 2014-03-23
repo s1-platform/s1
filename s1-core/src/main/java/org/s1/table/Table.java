@@ -17,13 +17,11 @@
 package org.s1.table;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.Locks;
 import org.s1.cluster.Session;
 import org.s1.cluster.dds.DDSCluster;
 import org.s1.cluster.dds.DistributedDataSource;
 import org.s1.cluster.dds.EntityIdBean;
-import org.s1.cluster.dds.Transactions;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ListAttribute;
@@ -289,40 +287,13 @@ public abstract class Table {
                                            final Map<String, Object> data, final Map<String, Object> foundation)
             throws AccessDeniedException, ValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException, CustomActionException {
         checkAccess();
+        String lockId = null;
         try {
-            if (Objects.isNullOrEmpty(id) || Transactions.isInTransaction()) {
-                //add
-                return changeRecordState(id, action, data, foundation);
-            } else {
-                //lock and set
-                return (Map<String, Object>) DDSCluster.lockEntity(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id), new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
-                        try {
-                            return changeRecordState(id, action, data, foundation);
-                        } catch (Throwable e) {
-                            throw ClosureException.wrap(e);
-                        }
-                    }
-                }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
-            }
-        } catch (TimeoutException e) {
-            throw S1SystemError.wrap(e);
-        } catch (ClosureException e) {
-            if (e.getCause() != null) {
-                if (e.getCause() instanceof ValidationException) {
-                    throw (ValidationException) e.getCause();
-                } else if (e.getCause() instanceof ActionNotAvailableException) {
-                    throw (ActionNotAvailableException) e.getCause();
-                } else if (e.getCause() instanceof AlreadyExistsException) {
-                    throw (AlreadyExistsException) e.getCause();
-                } else if (e.getCause() instanceof NotFoundException) {
-                    throw (NotFoundException) e.getCause();
-                } else if (e.getCause() instanceof CustomActionException) {
-                    throw (CustomActionException) e.getCause();
-                }
-            }
-            throw e.toSystemError();
+            //lock and set
+            lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            return changeRecordState(id, action, data, foundation);
+        } finally {
+            Locks.releaseLock(lockId);
         }
     }
 
@@ -363,45 +334,21 @@ public abstract class Table {
 
             newObject.put("id", id);
 
-            final Map<String, Object> _newObject = newObject;
-            final String _id = id;
+            //lock table to check unique
+            String lockId = null;
             try {
-                if (Transactions.isInTransaction()) {
-                    checkUnique(_newObject, type == ActionBean.Types.ADD);
-                    //save
-                    if (type == ActionBean.Types.SET)
-                        collectionSet(_id, _newObject);
-                    else
-                        collectionAdd(_id, _newObject);
-                } else {
-                    DDSCluster.lockEntity(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""), new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) throws ClosureException {
-                            try {
-                                checkUnique(_newObject, type == ActionBean.Types.ADD);
-                                //save
-                                if (type == ActionBean.Types.SET)
-                                    collectionSet(_id, _newObject);
-                                else
-                                    collectionAdd(_id, _newObject);
-                            } catch (Throwable e) {
-                                throw ClosureException.wrap(e);
-                            }
-
-                            return null;
-                        }
-                    }, LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
-                }
-            } catch (TimeoutException e) {
-                throw S1SystemError.wrap(e);
-            } catch (ClosureException e) {
-                if (e.getCause() != null) {
-                    if (e.getCause() instanceof AlreadyExistsException) {
-                        throw (AlreadyExistsException) e.getCause();
-                    }
-                }
-                throw e.toSystemError();
+                //lock and set
+                lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                checkUnique(newObject, type == ActionBean.Types.ADD);
+                //save
+                if (type == ActionBean.Types.SET)
+                    collectionSet(id, newObject);
+                else
+                    collectionAdd(id, newObject);
+            } finally {
+                Locks.releaseLock(lockId);
             }
+
         } else {
             collectionRemove(id);
         }
@@ -450,24 +397,17 @@ public abstract class Table {
                 if (getImportSchema() != null)
                     element = getImportSchema().validate(element, Objects.newHashMap(String.class, Object.class, "record", oldObject));
 
-                final Map<String, Object> _element = element;
-                final String _id = id;
-                final Map<String, Object> _oldObject = oldObject;
-                DDSCluster.lockEntity(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id), new Closure<String, Object>() {
-                    @Override
-                    public Object call(String input) throws ClosureException {
-                        try {
-                            importRecord(_id, _oldObject, _element);
-                        } catch (Throwable e) {
-                            throw ClosureException.wrap(e);
-                        }
-                        return null;
-                    }
-                }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                String lockId = null;
+                try {
+                    //lock and set
+                    lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                    importRecord(id, oldObject, element);
+                } finally {
+                    Locks.releaseLock(lockId);
+                }
+
                 res.add(Objects.newHashMap(String.class, Object.class, "success", true, "id", id));
             } catch (Throwable e) {
-                if (e instanceof ClosureException && e.getCause() != null)
-                    e = e.getCause();
                 LOG.info("Import error: " + e.getMessage());
                 LOG.debug("Import error", e);
                 res.add(Objects.newHashMap(String.class, Object.class, "success", false, "message", e.getMessage(), "class", e.getClass().getName()));
@@ -485,38 +425,19 @@ public abstract class Table {
         if (getSchema() != null)
             newObject = getSchema().validate(newObject);
 
-        final Map<String, Object> _newObject = newObject;
+        //lock table to check unique
+        String lockId = null;
         try {
-            DDSCluster.lockEntity(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""), new Closure<String, Object>() {
-                @Override
-                public Object call(String input) throws ClosureException {
-                    try {
-                        //unique
-                        checkUnique(_newObject, oldObject == null);
-
-                        //save
-                        if (oldObject != null) {
-                            //set
-                            collectionSet(id, _newObject);
-                        } else {
-                            //add
-                            collectionAdd(id, _newObject);
-                        }
-                    } catch (Throwable e) {
-                        throw ClosureException.wrap(e);
-                    }
-                    return null;
-                }
-            }, Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            throw S1SystemError.wrap(e);
-        } catch (ClosureException e) {
-            if (e.getCause() != null) {
-                if (e.getCause() instanceof AlreadyExistsException) {
-                    throw (AlreadyExistsException) e.getCause();
-                }
-            }
-            throw e.toSystemError();
+            //lock and set
+            lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            checkUnique(newObject, oldObject==null);
+            //save
+            if (oldObject!=null)
+                collectionSet(id, newObject);
+            else
+                collectionAdd(id, newObject);
+        } finally {
+            Locks.releaseLock(lockId);
         }
     }
 

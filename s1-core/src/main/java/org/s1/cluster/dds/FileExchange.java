@@ -20,8 +20,6 @@ import com.hazelcast.core.Member;
 import org.s1.S1SystemError;
 import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.dds.file.FileStorage;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -201,41 +199,33 @@ public class FileExchange {
         }
         @Override
         public void run() {
-            FileRequestBean req = null;
+            FileRequestBean request = null;
             try{
 
-                req = (FileRequestBean)new ObjectInputStream(socket.getInputStream()).readObject();
-                if(req!=null){
-                    final FileRequestBean request = req;
-                    if(req.getNodeId().equals(nodeId))
+                request = (FileRequestBean)new ObjectInputStream(socket.getInputStream()).readObject();
+                if(request!=null){
+                    if(request.getNodeId().equals(nodeId))
                         throw new Exception("same node request");
                     if(LOG.isDebugEnabled())
-                        LOG.debug("Node "+nodeId+" recieved new file request: "+req.toString());
-                    FileStorage.read(req.getGroup(), req.getId(), new Closure<FileStorage.FileReadBean, Object>() {
-                        @Override
-                        public Object call(FileStorage.FileReadBean input) throws ClosureException {
-                            try {
-                                FileResponseBean resp = new FileResponseBean(nodeId, request.getId(), request.getGroup(), true, null, input.getMeta().getSize());
-                                new ObjectOutputStream(socket.getOutputStream()).writeObject(resp);
-                                IOUtils.copy(input.getInputStream(), socket.getOutputStream());
-                                //sendMessage([success:true,group:req.group,id:req.id,nodeId:nodeId],meta.size,os);
-                                //IOUtils.copy(fis, os);
-                                if (LOG.isDebugEnabled())
-                                    LOG.debug("File (group: " + request.getGroup() + ", id: " + request.getId() + ", size: " + input.getMeta().getSize() + ") sended to " + request.getNodeId() + " successfully");
+                        LOG.debug("Node "+nodeId+" recieved new file request: "+request.toString());
+                    FileStorage.FileReadBean b = null;
+                    try{
+                        b = FileStorage.read(request.getGroup(), request.getId());
+                        FileResponseBean resp = new FileResponseBean(nodeId, request.getId(), request.getGroup(), true, null, b.getMeta().getSize());
+                        new ObjectOutputStream(socket.getOutputStream()).writeObject(resp);
+                        IOUtils.copy(b.getInputStream(), socket.getOutputStream());
+                        if (LOG.isDebugEnabled())
+                            LOG.debug("File (group: " + request.getGroup() + ", id: " + request.getId() + ", size: " + b.getMeta().getSize() + ") sended to " + request.getNodeId() + " successfully");
 
-                            } catch (Exception e) {
-                                LOG.warn("Error in FileServerWorker thread: " + e.getMessage(), e);
-                                throw S1SystemError.wrap(e);
-                            }
-                            return null;
-                        }
-                    });
+                    }finally {
+                        FileStorage.closeAfterRead(b);
+                    }
                 }
             } catch (Throwable e){
                 if(LOG.isDebugEnabled())
-                    LOG.debug("Error getting file for request: "+req+" - "+e.getClass().getName()+": "+e.getMessage());
+                    LOG.debug("Error getting file for request: "+request+" - "+e.getClass().getName()+": "+e.getMessage());
                 try{
-                    FileResponseBean resp = new FileResponseBean(nodeId,req.getId(),req.getGroup(),false,e.getMessage(),0);
+                    FileResponseBean resp = new FileResponseBean(nodeId,request.getId(),request.getGroup(),false,e.getMessage(),0);
                     new ObjectOutputStream(socket.getOutputStream()).writeObject(resp);
                 }catch (Throwable e1){
                 }
@@ -244,14 +234,26 @@ public class FileExchange {
     }
 
     /**
-     * Request for file from cluster
+     *
+     * @param b
+     */
+    public static void closeAfterRead(GetFileBean b){
+        try{
+            b.socket.close();
+        }catch (Throwable e){
+
+        }
+    }
+
+    /**
      *
      * @param group
      * @param id
-     * @param cl
+     * @return
      */
-    public static void getFile(String group, String id, Closure<GetFileBean,Object> cl) throws ClosureException {
+    public static GetFileBean getFile(String group, String id){
         FileRequestBean request = new FileRequestBean(DDSCluster.getCurrentNodeId(),id,group);
+        GetFileBean result = null;
 
         //download from fileserver
         List<String> ip_addresses = Objects.newArrayList();
@@ -265,8 +267,6 @@ public class FileExchange {
 
         int portMax = getPortMax();
         int portMin = getPortMin(portMax);
-
-        boolean done = false;
 
         while(true){
             for(String ip:ip_addresses){
@@ -286,10 +286,9 @@ public class FileExchange {
                             if(LOG.isDebugEnabled())
                                 LOG.debug("File (group: "+resp.getGroup()+", id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", begin copying...");
                             long t = System.currentTimeMillis();
-                            cl.call(new GetFileBean(is,resp.getSize()));
+                            result = new GetFileBean(is,resp.getSize(),socket);
                             if(LOG.isDebugEnabled())
                                 LOG.debug("File (group: "+resp.getGroup()+", id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", copied successfully ("+(System.currentTimeMillis()-t)+" ms.)");
-                            done = true;
                         }else{
                             if(LOG.isDebugEnabled())
                                 LOG.debug("File not avaliable on node "+resp.getNodeId()+": "+resp.getErrorMessage());
@@ -298,24 +297,28 @@ public class FileExchange {
                         if(LOG.isDebugEnabled())
                             LOG.debug("Exception requesting file "+t.getClass().getName()+": "+t.getMessage());
                     } finally {
-                        try{
-                            socket.close();
-                        }catch (Exception ex){}
+                        if(result==null) {
+                            try {
+                                socket.close();
+                            } catch (Exception ex) {
+                            }
+                        }
                     }
-                    if(done)
+                    if(result!=null)
                         break;
                 }
-                if(done)
+                if(result!=null)
                     break;
             }
-            if(done)
+            if(result!=null)
                 break;
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    throw S1SystemError.wrap(e);
-                }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                throw S1SystemError.wrap(e);
             }
+        }
+        return result;
     }
 
     /**
@@ -355,10 +358,12 @@ public class FileExchange {
     public static class GetFileBean implements Serializable{
         private InputStream inputStream;
         private long size;
+        private Socket socket;
 
-        private GetFileBean(InputStream inputStream, long size) {
+        private GetFileBean(InputStream inputStream, long size, Socket socket) {
             this.inputStream = inputStream;
             this.size = size;
+            this.socket = socket;
         }
 
         public InputStream getInputStream() {

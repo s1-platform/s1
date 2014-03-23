@@ -24,10 +24,12 @@ import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.options.OptionsStorage;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 /**

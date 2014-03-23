@@ -22,7 +22,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -138,7 +137,7 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
             if(before!=null)
-                before.callQuite(get);
+                before.call(get);
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,get,context);
@@ -190,7 +189,7 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
             if(before!=null)
-                before.callQuite(post);
+                before.call(post);
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,post,context);
@@ -235,7 +234,7 @@ public class TestHttpClient {
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
 
             if(before!=null)
-                before.callQuite(post);
+                before.call(post);
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,post,context);
@@ -282,7 +281,7 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
             if(before!=null)
-                before.callQuite(post);
+                before.call(post);
 
             HttpResponse resp = null;
             try {

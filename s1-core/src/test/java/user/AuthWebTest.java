@@ -1,7 +1,7 @@
 package user;
 
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -22,7 +22,7 @@ public class AuthWebTest extends ServerTest {
         title("Root login, logout, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
 
                 TestHttpClient client = client();
                 Map<String,Object> m = null;

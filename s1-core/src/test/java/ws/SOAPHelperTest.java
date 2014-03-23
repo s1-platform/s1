@@ -6,7 +6,7 @@ import org.s1.format.xml.XMLFormatException;
 import org.s1.format.xml.XSDFormatException;
 import org.s1.format.xml.XSDValidationException;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -33,7 +33,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Auth root, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
 
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
@@ -70,7 +70,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Auth root, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +
@@ -115,7 +115,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +
@@ -179,7 +179,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Send, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +
@@ -211,7 +211,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Send, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 SOAPMessage msg = SOAPHelper.createSoapFromString("<?xml version='1.0' encoding='UTF-8'?>\n" +
                         "                <SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
                         "                xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\n" +
@@ -257,7 +257,7 @@ public class SOAPHelperTest extends ServerTest {
         title("Send with action, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +

@@ -16,8 +16,6 @@
 
 package org.s1.cluster.dds;
 
-import java.util.Map;
-
 /**
  * Base class for distributed data sources
  */

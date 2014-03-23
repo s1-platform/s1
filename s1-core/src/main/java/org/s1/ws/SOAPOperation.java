@@ -22,8 +22,6 @@ import org.s1.format.xml.XMLFormatException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.weboperation.WebOperation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

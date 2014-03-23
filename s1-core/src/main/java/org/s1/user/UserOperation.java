@@ -16,11 +16,8 @@
 
 package org.s1.user;
 
-import org.s1.S1SystemError;
 import org.s1.cluster.Session;
-import org.s1.log.LogStorage;
 import org.s1.objects.Objects;
-import org.s1.options.Options;
 import org.s1.weboperation.MapWebOperation;
 import org.s1.weboperation.WebOperationMethod;
 
@@ -42,13 +39,13 @@ public class UserOperation extends MapWebOperation {
 
     @WebOperationMethod
     public Map<String, Object> whoAmI(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return new UserFactory().getUser(Session.getSessionBean().getUserId());
+        return Users.getUser(Session.getSessionBean().getUserId());
     }
 
     @WebOperationMethod
     public Map<String, Object> getUser(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String id = Objects.get(params,"id");
-        return new UserFactory().getUser(id);
+        return Users.getUser(id);
     }
 
     @Override

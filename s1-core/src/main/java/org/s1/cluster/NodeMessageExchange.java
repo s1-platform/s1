@@ -117,7 +117,7 @@ public class NodeMessageExchange {
     protected Object process(String operation, Object data){
         Closure<Object,Object> cl = operations.get(operation);
         if(cl!=null){
-            return cl.callQuite(data);
+            return cl.call(data);
         }
         return true;
     }

@@ -17,8 +17,6 @@
 package org.s1.cluster;
 
 import com.hazelcast.core.IMap;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -68,23 +66,28 @@ public class Session {
      * Run some code in session
      *
      * @param id session id
-     * @param closure code
      * @return
      */
-    public static Object run(String id, Closure<String,Object> closure) throws ClosureException{
+    public static String start(String id) {
         if(idLocal.get()!=null){
-            return closure.call(idLocal.get());
+            return null;
         }else{
             MDC.put("sessionId", id);
             if(LOG.isDebugEnabled())
                 LOG.debug("Initialize session id = "+id);
             idLocal.set(id);
-            try{
-                return closure.call(id);
-            }finally {
-                MDC.remove("sessionId");
-                idLocal.remove();
-            }
+            return id;
+        }
+    }
+
+    /**
+     *
+     * @param id
+     */
+    public static void end(String id) {
+        if(!Objects.isNullOrEmpty(id)){
+            MDC.remove("sessionId");
+            idLocal.remove();
         }
     }
 

@@ -21,7 +21,6 @@ import org.s1.cluster.Session;
 import org.s1.log.LogStorage;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
-import org.s1.weboperation.MapWebOperation;
 import org.s1.weboperation.WebOperationMethod;
 
 import javax.servlet.http.HttpServletRequest;

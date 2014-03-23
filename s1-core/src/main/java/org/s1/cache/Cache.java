@@ -20,12 +20,11 @@ import org.s1.S1SystemError;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Cache
@@ -245,7 +244,7 @@ public class Cache {
         }
 
         //add obj
-        obj = closure.callQuite(name);
+        obj = closure.call(name);
 
         lock(name);
         try {

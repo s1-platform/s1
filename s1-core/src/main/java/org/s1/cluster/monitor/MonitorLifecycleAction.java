@@ -20,7 +20,6 @@ import org.s1.cluster.NodeMessageExchange;
 import org.s1.lifecycle.LifecycleAction;
 import org.s1.log.Loggers;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 
 import java.util.List;
@@ -35,25 +34,25 @@ public class MonitorLifecycleAction extends LifecycleAction{
     public void start() {
         NodeMessageExchange.registerOperation("monitor.getClusterInfo", new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 return MonitorOperation.getStatistic(false);
             }
         });
         NodeMessageExchange.registerOperation("monitor.getNodeInfo",new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 return MonitorOperation.getStatistic(true);
             }
         });
         NodeMessageExchange.registerOperation("monitor.getLoggers",new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 return Loggers.getLogClasses();
             }
         });
         NodeMessageExchange.registerOperation("monitor.setLogLevel",new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 Map<String,Object> m = (Map<String,Object>)input;
                 String cls = Objects.get(m,"name");
                 String level = Objects.get(m,"level");
@@ -63,7 +62,7 @@ public class MonitorLifecycleAction extends LifecycleAction{
         });
         NodeMessageExchange.registerOperation("monitor.listNodeLogs",new Closure<Object, Object>() {
             @Override
-            public Object call(Object input) throws ClosureException {
+            public Object call(Object input) {
                 Map<String,Object> m = (Map<String,Object>)input;
                 int skip = Objects.get(Integer.class,m,"skip",0);
                 int max = Objects.get(Integer.class,m,"max",10);

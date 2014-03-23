@@ -4,7 +4,7 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.cookie.Cookie;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -27,7 +27,7 @@ public class MonitorWebTest extends ServerTest {
         title("Monitor, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 TestHttpClient client = client();
 
                 Map<String,Object> m =null;

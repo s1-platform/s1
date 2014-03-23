@@ -22,7 +22,6 @@ import org.mozilla.javascript.ast.AstRoot;
 import org.s1.S1SystemError;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.options.OptionsStorage;
@@ -238,21 +237,12 @@ public class S1ScriptEngine {
             f = service.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
+                    String id = null;
                     try{
-                        return Session.run(sb.getId(),new Closure<String, Object>() {
-                            @Override
-                            public Object call(String input) throws ClosureException {
-                                try {
-                                    return new ASTEvaluator().eval(root,ctx);
-                                } catch (Throwable e) {
-                                    throw ClosureException.wrap(e);
-                                }
-                            }
-                        });
-                    }catch (ClosureException e){
-                        if(e.getCause() !=null)
-                            throw (Exception)e.getCause();
-                        throw e;
+                        id = Session.start(sb.getId());
+                        return new ASTEvaluator().eval(root,ctx);
+                    }finally {
+                        Session.end(id);
                     }
                 }
             });

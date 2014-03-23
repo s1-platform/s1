@@ -1,7 +1,7 @@
 package weboperation;
 
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -22,7 +22,7 @@ public class CommandTest extends ServerTest {
         title("Command, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 List<Map<String,Object>> l = (List<Map<String,Object>>)client().postJSON(getContext()+"/dispatcher/Command",Objects.newHashMap(
                         String.class,Object.class,
                         "list",Objects.newArrayList(

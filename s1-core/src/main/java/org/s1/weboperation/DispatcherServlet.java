@@ -17,7 +17,6 @@
 package org.s1.weboperation;
 
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -102,7 +101,7 @@ public class DispatcherServlet extends HttpServlet {
 
             Map<String,Object> cls = Objects.find((List<Map<String,Object>>)Options.getStorage().getSystem(List.class,"webOperations"),new Closure<Map<String, Object>, Boolean>() {
                 @Override
-                public Boolean call(Map<String, Object> input) throws ClosureException {
+                public Boolean call(Map<String, Object> input) {
                     return name.equals(Objects.get(input, "name"));
                 }
             });

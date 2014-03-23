@@ -16,8 +16,6 @@
 
 package org.s1.script;
 
-import org.s1.objects.Objects;
-
 /**
  * Script syntax exception.
  * Will be thrown if building ast goes wrong

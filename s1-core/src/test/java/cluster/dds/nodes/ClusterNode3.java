@@ -18,12 +18,10 @@ package cluster.dds.nodes;
 
 import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.cluster.dds.file.FileStorage;
-import org.s1.misc.Closure;
 import org.s1.options.OptionsStorage;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 
 /**
@@ -48,17 +46,18 @@ public class ClusterNode3 {
 
         FileStorage.remove("test", "a3");
 
-        FileStorage.write("test", "a3", new Closure<OutputStream, Boolean>() {
-            @Override
-            public Boolean call(OutputStream input) {
-                try {
-                    input.write("qwer12".getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                return true;
+        FileStorage.FileWriteBean fb = null;
+        try{
+            fb = FileStorage.createFileWriteBean("test", "a3", new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            try {
+                fb.getOutputStream().write("qwer".getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }, new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            FileStorage.save(fb);
+        }finally {
+            FileStorage.closeAfterWrite(fb);
+        }
         System.out.println("file a3 writed");
 
     }

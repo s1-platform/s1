@@ -14,18 +14,27 @@
  *    limitations under the License.
  */
 
-package org.s1.misc;
+package org.s1.cluster.dds;
+
+import org.s1.objects.Objects;
 
 /**
- * Abstract function class
+ * Rollback error
  */
-public interface Closure<I,O> {
+public class RollbackException extends RuntimeException {
 
-    /**
-     *
-     * @param input
-     * @return
-     */
-    public O call(I input);
+    public RollbackException() {
+    }
 
+    public RollbackException(String message) {
+        super(message);
+    }
+
+    public RollbackException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public RollbackException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -122,7 +122,7 @@ public class Objects {
      */
     public static <T> T find(Collection<T> c, Closure<T, Boolean> cl) {
         for (T el : c) {
-            if (cl.callQuite(el)) {
+            if (cl.call(el)) {
                 return el;
             }
         }
@@ -138,7 +138,7 @@ public class Objects {
     public static <T> List<T> findAll(Collection<T> c, Closure<T, Boolean> cl) {
         List<T> l = new ArrayList<T>();
         for (T el : c) {
-            if (cl.callQuite(el)) {
+            if (cl.call(el)) {
                 l.add(el);
             }
         }

@@ -16,20 +16,14 @@
 
 package org.s1.cluster.dds.sequence;
 
-import com.hazelcast.core.IAtomicLong;
 import org.s1.S1SystemError;
-import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.Locks;
 import org.s1.cluster.dds.*;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,20 +40,16 @@ public class NumberSequence extends DistributedDataSource {
      * @return
      */
     public static long next(final String name){
+        String id = null;
         try{
-            long r = (Long)DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class,null,null,name),new Closure<String, Object>() {
-                @Override
-                public Object call(String input) throws ClosureException {
-                    long l = getLocalStorage().read(name);
-                    l++;
-                    DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
-                            Objects.newHashMap(String.class, Object.class, "value", l)));
-                    return l;
-                }
-            }, 10, TimeUnit.SECONDS);
-            return r;
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
+            id = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
+            long l = getLocalStorage().read(name);
+            l++;
+            DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
+                    Objects.newHashMap(String.class, Object.class, "value", l)));
+            return l;
+        }finally {
+            Locks.releaseLock(id);
         }
     }
 
@@ -68,18 +58,14 @@ public class NumberSequence extends DistributedDataSource {
      * @param name
      * @param value
      */
-    public static void set(final String name, final long value){
+    public static void set(String name, long value){
+        String id = null;
         try{
-            DDSCluster.lockEntity(new EntityIdBean(NumberSequence.class,null,null,name),new Closure<String, Object>() {
-                @Override
-                public Object call(String input) throws ClosureException {
-                    DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
-                            Objects.newHashMap(String.class, Object.class, "value", value)));
-                    return null;
-                }
-            }, 10, TimeUnit.SECONDS);
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
+            id = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
+            DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
+                    Objects.newHashMap(String.class, Object.class, "value", value)));
+        }finally {
+            Locks.releaseLock(id);
         }
     }
 

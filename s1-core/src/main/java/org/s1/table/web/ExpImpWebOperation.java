@@ -18,12 +18,9 @@ package org.s1.table.web;
 
 import org.s1.S1SystemError;
 import org.s1.cluster.dds.file.FileStorage;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.table.Table;
 import org.s1.table.format.Query;
-import org.s1.user.AccessDeniedException;
 import org.s1.weboperation.MapWebOperation;
 import org.s1.weboperation.UploadWebOperation;
 import org.s1.weboperation.WebOperationMethod;
@@ -32,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -90,13 +86,17 @@ public class ExpImpWebOperation extends MapWebOperation{
         String id = Objects.get(params,"id");
         final String type = Objects.get(params,"type");
         String group = Objects.get(params,"group", UploadWebOperation.GROUP);
-        ExpImpFormat.PreviewBean pb = FileStorage.read(group,id,new Closure<FileStorage.FileReadBean, ExpImpFormat.PreviewBean>() {
-            @Override
-            public ExpImpFormat.PreviewBean call(FileStorage.FileReadBean input) throws ClosureException {
-                ExpImpFormat f = getFormat(type);
-                return f.preview(input);
-            }
-        });
+
+        ExpImpFormat.PreviewBean pb = null;
+        FileStorage.FileReadBean b = null;
+        try{
+            b = FileStorage.read(group,id);
+            ExpImpFormat f = getFormat(type);
+            pb = f.preview(b);
+        }finally {
+            FileStorage.closeAfterRead(b);
+        }
+
         return Objects.newHashMap("schema",pb.getSchema().toMap(),"list",pb.getList(),"count",pb.getCount());
     }
 
@@ -107,23 +107,13 @@ public class ExpImpWebOperation extends MapWebOperation{
         String group = Objects.get(params,"group", UploadWebOperation.GROUP);
         final List<Map<String,Object>> list = Objects.newArrayList();
 
-        try {
-            FileStorage.read(group,id,new Closure<FileStorage.FileReadBean, Object>() {
-                @Override
-                public Object call(FileStorage.FileReadBean input) throws ClosureException {
-                    ExpImpFormat f = getFormat(type);
-                    try {
-                        f.doImport(list, input, getTable(params));
-                    } catch (AccessDeniedException e) {
-                        throw ClosureException.wrap(e);
-                    }
-                    return null;
-                }
-            });
-        } catch (ClosureException e) {
-            if(e.getCause()!=null)
-                throw (Exception)e.getCause();
-            throw e;
+        FileStorage.FileReadBean b = null;
+        try{
+            b = FileStorage.read(group,id);
+            ExpImpFormat f = getFormat(type);
+            f.doImport(list, b, getTable(params));
+        }finally {
+            FileStorage.closeAfterRead(b);
         }
 
         return Objects.newHashMap("list",list);
@@ -157,13 +147,15 @@ public class ExpImpWebOperation extends MapWebOperation{
 
         FileStorage.FileMetaBean meta = new FileStorage.FileMetaBean("export",null,null,null);
         format.setFileMeta(meta);
-        FileStorage.write(group,id,new Closure<OutputStream, Boolean>() {
-            @Override
-            public Boolean call(OutputStream input) throws ClosureException {
-                format.writeExport(input);
-                return null;
-            }
-        },meta);
+
+        FileStorage.FileWriteBean b = null;
+        try{
+            b = FileStorage.createFileWriteBean(group, id, meta);
+            format.writeExport(b.getOutputStream());
+            FileStorage.save(b);
+        }finally {
+            FileStorage.closeAfterWrite(b);
+        }
 
         return Objects.newHashMap("id",id,"group",group);
     }

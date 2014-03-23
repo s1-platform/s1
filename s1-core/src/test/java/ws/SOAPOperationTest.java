@@ -3,7 +3,7 @@ package ws;
 import org.s1.S1SystemError;
 import org.s1.format.xml.XMLFormat;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.misc.IOUtils;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -26,7 +26,7 @@ public class SOAPOperationTest extends ServerTest {
         title("WS1 resources, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
 
                 String s = null;
                 s = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?wsdl", null, null, null).getData(),"UTF-8");
@@ -54,7 +54,7 @@ public class SOAPOperationTest extends ServerTest {
         title("WS1, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +
@@ -103,7 +103,7 @@ public class SOAPOperationTest extends ServerTest {
         title("Fault, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                         "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
                         "                <SOAP-ENV:Body>\n" +

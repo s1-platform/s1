@@ -16,11 +16,7 @@
 
 package org.s1.cluster.dds;
 
-import org.s1.objects.Objects;
-
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Command bean

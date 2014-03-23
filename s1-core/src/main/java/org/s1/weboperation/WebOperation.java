@@ -18,8 +18,8 @@ package org.s1.weboperation;
 
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
+import org.s1.script.ASTEvaluator;
 import org.s1.script.S1ScriptEngine;
 import org.s1.user.AccessDeniedException;
 import org.slf4j.Logger;
@@ -208,13 +208,12 @@ public abstract class WebOperation<I, O> {
     public static final String COOKIE = "S1_ID";
 
     /**
-     * Run closure within session
      *
      * @param req
      * @param resp
-     * @param cl
+     * @return
      */
-    public static void runWithinSession(HttpServletRequest req, HttpServletResponse resp, Closure<String, Object> cl) {
+    public static String getSessionId(HttpServletRequest req, HttpServletResponse resp){
         String id = null;
         if (req.getCookies() != null) {
             for (Cookie it : req.getCookies()) {
@@ -226,11 +225,7 @@ public abstract class WebOperation<I, O> {
             id = UUID.randomUUID().toString();
             resp.addCookie(new Cookie(COOKIE, id));
         }
-        try {
-            Session.run(id, cl);
-        } catch (ClosureException e) {
-            throw e.toSystemError();
-        }
+        return id;
     }
 
     /**
@@ -244,44 +239,45 @@ public abstract class WebOperation<I, O> {
      */
     public void request(final String method, final HttpServletRequest request,
                         final HttpServletResponse response) throws ServletException, IOException {
-        runWithinSession(request, response, new Closure<String, Object>() {
-            @Override
-            public Object call(String input) throws ClosureException {
 
-                long t = System.currentTimeMillis();
-                try {
-                    String requestId = UUID.randomUUID().toString();
+        String id = null;
+        try{
+            id = Session.start(getSessionId(request,response));
 
-                    // set MDC
-                    MDC.put("requestId", requestId);
+            long t = System.currentTimeMillis();
+            try {
+                String requestId = UUID.randomUUID().toString();
 
-                    logRequest(method, request);
+                // set MDC
+                MDC.put("requestId", requestId);
 
-                    I params = parseInput(request);
-                    logInParams(params);
+                logRequest(method, request);
 
-                    //check access
-                    checkAccess(method, params, request);
+                I params = parseInput(request);
+                logInParams(params);
 
-                    O out = process(method, params, request, response);
+                //check access
+                checkAccess(method, params, request);
 
-                    if (out != null) {
-                        logOut(out);
-                        formatOutput(out, false, request, response);
-                    }
-                } catch (Throwable e) {
-                    logError(e);
-                    try {
-                        O out = transformError(e, request, response);
-                        formatOutput(out, true, request, response);
-                    } catch (Exception ex) {
-                        LOG.error("Error preparing exception output", ex);
-                    }
+                O out = process(method, params, request, response);
+
+                if (out != null) {
+                    logOut(out);
+                    formatOutput(out, false, request, response);
                 }
-                logResult(System.currentTimeMillis() - t);
-                return null;
+            } catch (Throwable e) {
+                logError(e);
+                try {
+                    O out = transformError(e, request, response);
+                    formatOutput(out, true, request, response);
+                } catch (Exception ex) {
+                    LOG.error("Error preparing exception output", ex);
+                }
             }
-        });
+            logResult(System.currentTimeMillis() - t);
+        }finally {
+            Session.end(id);
+        }
     }
 
     /**

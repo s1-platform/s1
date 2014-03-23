@@ -18,7 +18,7 @@ package cluster.dds;
 
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.misc.FileUtils;
 import org.s1.misc.IOUtils;
 import org.s1.options.Options;
@@ -46,35 +46,38 @@ public class FileStorageTest extends ServerTest {
         title("File storage write-read-remove, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
 
-                FileStorage.write("test", "aa" + input, new Closure<OutputStream, Boolean>() {
-                    @Override
-                    public Boolean call(OutputStream input) {
-                        try {
-                            input.write("qwer".getBytes());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                        return null;
+                FileStorage.FileWriteBean fw = null;
+                try{
+                    fw = FileStorage.createFileWriteBean("test","aa"+input,new FileStorage.FileMetaBean("test", "txt", "text/plain", 4, null));
+                    try {
+                        fw.getOutputStream().write("qwer".getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                }, new FileStorage.FileMetaBean("test", "txt", "text/plain", 4, null));
+                    FileStorage.save(fw);
+                }finally {
+                    FileStorage.closeAfterWrite(fw);
+                }
 
                 try {
-                    FileStorage.read("test", "aa" + input, new Closure<FileStorage.FileReadBean, Object>() {
-                        @Override
-                        public Object call(FileStorage.FileReadBean input) {
-                            assertEquals("qwer", IOUtils.toString(input.getInputStream(), "UTF-8"));
-                            assertEquals(4L, input.getMeta().getSize());
-                            assertEquals("text/plain", input.getMeta().getContentType());
-                            assertEquals("txt", input.getMeta().getExt());
-                            assertEquals("test", input.getMeta().getName());
-                            assertTrue(input.getMeta().getInfo().isEmpty());
-                            assertNotNull(input.getMeta().getCreated());
-                            assertNotNull(input.getMeta().getLastModified());
-                            return null;
-                        }
-                    });
+                    FileStorage.FileReadBean fr = null;
+                    try{
+                        fr = FileStorage.read("test","aa"+input);
+                        assertEquals("qwer", IOUtils.toString(fr.getInputStream(), "UTF-8"));
+                        assertEquals(4L, fr.getMeta().getSize());
+                        assertEquals("text/plain", fr.getMeta().getContentType());
+                        assertEquals("txt", fr.getMeta().getExt());
+                        assertEquals("test", fr.getMeta().getName());
+                        assertTrue(fr.getMeta().getInfo().isEmpty());
+                        assertNotNull(fr.getMeta().getCreated());
+                        assertNotNull(fr.getMeta().getLastModified());
+
+                    }finally {
+                        FileStorage.closeAfterRead(fr);
+                    }
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

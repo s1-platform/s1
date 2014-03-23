@@ -4,7 +4,7 @@ import com.hazelcast.core.Hazelcast;
 import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.Locks;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
@@ -28,19 +28,14 @@ public class LockTest extends BasicTest {
         final StringBuffer buf = new StringBuffer();
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
-
+            public Object call(Integer index)  {
+                String id = null;
                 try {
-                    Locks.waitAndRun("test", new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) {
-                            if (buf.length() == 0)
-                                buf.append(".");
-                            return null;
-                        }
-                    }, 30, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
-                    throw new RuntimeException(e);
+                    id = Locks.lockQuite("test",30, TimeUnit.SECONDS);
+                    if (buf.length() == 0)
+                        buf.append(".");
+                }finally {
+                    Locks.releaseLock(id);
                 }
 
                 return null;
@@ -55,41 +50,34 @@ public class LockTest extends BasicTest {
         final Map<String,Integer> m = Objects.newHashMap("a",0);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer index) throws ClosureException {
+            public Object call(Integer index)  {
 
+                String id = null;
                 try {
-                    Locks.waitAndRun("test", new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) throws ClosureException{
-                            try{
+                    id = Locks.lockQuite("test",30, TimeUnit.SECONDS);
 
-                                Locks.waitAndRun("test", new Closure<String, Object>() {
-                                    @Override
-                                    public Object call(String input) {
-                                        int i = m.get("a");
-                                        m.put("a",i+1);
-                                        return null;
-                                    }
-                                }, 30, TimeUnit.SECONDS);
+                    String id2 = null;
+                    try {
+                        id2 = Locks.lockQuite("test",30, TimeUnit.SECONDS);
+                        int i = m.get("a");
+                        m.put("a",i+1);
+                    }finally {
+                        Locks.releaseLock(id2);
+                    }
 
-                                Locks.waitAndRun("test", new Closure<String, Object>() {
-                                    @Override
-                                    public Object call(String input) {
-                                        int i = m.get("a");
-                                        m.put("a",i+1);
-                                        return null;
-                                    }
-                                }, 30, TimeUnit.SECONDS);
+                    String id3 = null;
+                    try {
+                        id3 = Locks.lockQuite("test",30, TimeUnit.SECONDS);
+                        int i = m.get("a");
+                        m.put("a",i+1);
+                    }finally {
+                        Locks.releaseLock(id2);
+                    }
 
-                                }catch (Exception e){
-                                    throw ClosureException.wrap(e);
-                                }
-                            return null;
-                        }
-                    }, 30, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
-                    throw new RuntimeException(e);
+                }finally {
+                    Locks.releaseLock(id);
                 }
+
 
                 return null;
             }
@@ -104,34 +92,34 @@ public class LockTest extends BasicTest {
         final ConcurrentHashMap<String,Object> cm = new ConcurrentHashMap<String, Object>();
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(final Integer index) throws ClosureException {
+            public Object call(final Integer index)  {
+
+                String lockId = "db/coll";
+                if(index%2==0)
+                    lockId = "db/coll/id"+index;
+                final String lid = lockId;
+
+                String id = null;
                 try {
-                    String lockId = "db/coll";
-                    if(index%2==0)
-                        lockId = "db/coll/id"+index;
-                    final String lid = lockId;
-                    Locks.waitAndRun(lockId, new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) {
-                            //no lock with same name
-                            assertFalse(cm.containsValue(lid));
-                            sleep(10);
-                            //put self
-                            cm.put("" + index, lid);
-                            sleep(10);
-                            if(index%2==0){
-                                assertTrue(cm.size() >= 1);
-                            }else{
-                                assertEquals(1,cm.size());
-                            }
-                            sleep(10);
-                            cm.remove(""+index);
-                            return null;
-                        }
-                    }, 30, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
-                    throw new RuntimeException(e);
+                    id = Locks.lockQuite(lockId,30, TimeUnit.SECONDS);
+
+                    //no lock with same name
+                    assertFalse(cm.containsValue(lid));
+                    sleep(10);
+                    //put self
+                    cm.put("" + index, lid);
+                    sleep(10);
+                    if(index%2==0){
+                        assertTrue(cm.size() >= 1);
+                    }else{
+                        assertEquals(1,cm.size());
+                    }
+                    sleep(10);
+                    cm.remove(""+index);
+                }finally {
+                    Locks.releaseLock(id);
                 }
+
 
                 return null;
             }
@@ -152,36 +140,33 @@ public class LockTest extends BasicTest {
         }
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(final Integer index) throws ClosureException {
-                try {
-                    final int acc1 = (int)Math.floor(Math.random()*10000000%c);
-                    final int acc2 = (int)Math.floor(Math.random() * 10000000 % c);
-                    if(acc1==acc2)
-                        return null;
+            public Object call(final Integer index)  {
 
-                    Locks.waitAndRun(Objects.newArrayList(
+                final int acc1 = (int)Math.floor(Math.random()*10000000%c);
+                final int acc2 = (int)Math.floor(Math.random() * 10000000 % c);
+                if(acc1==acc2)
+                    return null;
+
+                String id = null;
+                try {
+                    id = Locks.lockQuite(Objects.newArrayList(
                             //"db/coll"
                             "db/coll/acc_"+acc1,
                             "db/coll/acc_"+acc2
-                    ), new Closure<String, Object>() {
-                        @Override
-                        public Object call(String input) {
-                            //no lock with same name
-                            int bal1 = cm.get("acc_"+acc1);
-                            int bal2 = cm.get("acc_"+acc2);
-                            if(bal1-pay>=0){
-                                bal1-=pay;
-                                bal2+=pay;
-                            }
-                            sleep(10);
-                            cm.put("acc_"+acc1,bal1);
-                            cm.put("acc_"+acc2,bal2);
+                    ),30, TimeUnit.SECONDS);
 
-                            return null;
-                        }
-                    }, 30, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
-                    throw new RuntimeException(e);
+                    int bal1 = cm.get("acc_"+acc1);
+                    int bal2 = cm.get("acc_"+acc2);
+                    if(bal1-pay>=0){
+                        bal1-=pay;
+                        bal2+=pay;
+                    }
+                    sleep(10);
+                    cm.put("acc_"+acc1,bal1);
+                    cm.put("acc_"+acc2,bal2);
+
+                }finally {
+                    Locks.releaseLock(id);
                 }
 
                 return null;

@@ -21,7 +21,7 @@ import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -73,18 +73,12 @@ public class HazelcastWrapper {
             }
             if(cfg==null){
                 //try config/hazelcast
+                InputStream is = null;
                 try{
-                    cfg = (Config)Options.getStorage().readConfig(DEFAULT_FILENAME,new Closure<InputStream, Object>() {
-                        @Override
-                        public Object call(InputStream input) {
-                            if(input!=null){
-                                return new XmlConfigBuilder(input).build();
-                            }
-                            return null;
-                        }
-                    });
-                }catch (ClosureException e){
-                    throw e.toSystemError();
+                    is = Options.getStorage().openConfig(DEFAULT_FILENAME);
+                    cfg = new XmlConfigBuilder(is).build();
+                }finally {
+                    IOUtils.closeQuietly(is);
                 }
             }
             if(cfg==null){

@@ -17,8 +17,8 @@
 package org.s1.format.json;
 
 import org.s1.format.json.org_json_simple.JSONObject;
-import org.s1.format.json.org_json_simple.parser.ParseException;
 import org.s1.format.json.org_json_simple.parser.JSONParser;
+import org.s1.format.json.org_json_simple.parser.ParseException;
 
 import java.util.Map;
 

@@ -16,10 +16,7 @@
 
 package org.s1.table;
 
-import org.s1.misc.Closure;
 import org.s1.objects.schema.ObjectSchema;
-
-import java.util.Map;
 
 /**
  * Table action

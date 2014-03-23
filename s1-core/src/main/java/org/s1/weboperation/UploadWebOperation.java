@@ -16,19 +16,15 @@
 
 package org.s1.weboperation;
 
+import org.s1.S1SystemError;
 import org.s1.cluster.dds.file.FileStorage;
-import org.s1.table.errors.NotFoundException;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ObjectSchema;
-import org.s1.objects.schema.SimpleTypeAttribute;
+import org.s1.table.errors.NotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -78,17 +74,18 @@ public class UploadWebOperation extends MapWebOperation {
 
             final FileParameter fp = (FileParameter) params.get("file");
 
-            FileStorage.write(group, id, new Closure<OutputStream, Boolean>() {
-                @Override
-                public Boolean call(OutputStream os) throws ClosureException {
-                    try {
-                        IOUtils.copy(fp.getInputStream(), os);
-                    } catch (IOException e) {
-                        throw ClosureException.wrap(e);
-                    }
-                    return null;
+            FileStorage.FileWriteBean b = null;
+            try{
+                b = FileStorage.createFileWriteBean(group, id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                try {
+                    IOUtils.copy(fp.getInputStream(), b.getOutputStream());
+                } catch (IOException e) {
+                    throw S1SystemError.wrap(e);
                 }
-            }, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                FileStorage.save(b);
+            }finally {
+                FileStorage.closeAfterWrite(b);
+            }
             result.put("id", id);
         } else {
             List<String> ids = new ArrayList<String>();
@@ -98,17 +95,19 @@ public class UploadWebOperation extends MapWebOperation {
 
                 final FileParameter fp = (FileParameter) params.get("file" + i);
 
-                FileStorage.write(group, id, new Closure<OutputStream, Boolean>() {
-                    @Override
-                    public Boolean call(OutputStream os) throws ClosureException {
-                        try {
-                            IOUtils.copy(fp.getInputStream(), os);
-                        } catch (IOException e) {
-                            throw ClosureException.wrap(e);
-                        }
-                        return null;
+                FileStorage.FileWriteBean b = null;
+                try{
+                    b = FileStorage.createFileWriteBean(group, id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                    try {
+                        IOUtils.copy(fp.getInputStream(), b.getOutputStream());
+                    } catch (IOException e) {
+                        throw S1SystemError.wrap(e);
                     }
-                }, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                    FileStorage.save(b);
+                }finally {
+                    FileStorage.closeAfterWrite(b);
+                }
+
                 ids.add(id);
             }
             result.put("ids", ids);
@@ -124,26 +123,22 @@ public class UploadWebOperation extends MapWebOperation {
     public static void download(Map<String, Object> params,
                                 final HttpServletResponse response) throws Exception {
 
-        params = new ObjectSchema(
-                new SimpleTypeAttribute("id", "id", String.class).setRequired(true),
-                new SimpleTypeAttribute("group", "group", String.class).setRequired(true).setDefault(GROUP)
-        ).validate(params);
+        String group = Objects.get(params, "group", GROUP);
+        String id = Objects.get(params, "id");
 
-        try {
-            FileStorage.read(Objects.get(String.class, params, "group"), Objects.get(String.class, params, "id"), new Closure<FileStorage.FileReadBean, Object>() {
-                @Override
-                public Object call(FileStorage.FileReadBean fb) throws ClosureException {
-                    response.setContentType(fb.getMeta().getContentType());
-                    try {
-                        IOUtils.copy(fb.getInputStream(), response.getOutputStream());
-                    } catch (IOException e) {
-                        throw ClosureException.wrap(e);
-                    }
-                    return null;
-                }
-            });
-        } catch (NotFoundException e) {
+        FileStorage.FileReadBean b = null;
+        try{
+            b = FileStorage.read(group, id);
+            response.setContentType(b.getMeta().getContentType());
+            try {
+                IOUtils.copy(b.getInputStream(), response.getOutputStream());
+            } catch (IOException e) {
+                throw S1SystemError.wrap(e);
+            }
+        }catch (NotFoundException e) {
             response.setStatus(404);
+        }finally {
+            FileStorage.closeAfterRead(b);
         }
     }
 
@@ -155,36 +150,31 @@ public class UploadWebOperation extends MapWebOperation {
      */
     public static void downloadAsFile(Map<String, Object> params,
                                       final HttpServletResponse response) throws Exception {
-        final Map<String, Object> p = new ObjectSchema(
-                new SimpleTypeAttribute("id", "id", String.class).setRequired(true),
-                new SimpleTypeAttribute("group", "group", String.class).setRequired(true).setDefault(GROUP),
-                new SimpleTypeAttribute("name", "name", String.class)
-        ).validate(params);
+        String group = Objects.get(params, "group", GROUP);
+        String id = Objects.get(params, "id");
+        String name = Objects.get(params, "name");
 
-        try {
-            FileStorage.read(Objects.get(String.class, p, "group"), Objects.get(String.class, p, "id"), new Closure<FileStorage.FileReadBean, Object>() {
-                @Override
-                public Object call(FileStorage.FileReadBean fb) throws ClosureException {
-                    String name = Objects.get(p, "name");
-                    if (Objects.isNullOrEmpty(name)) {
-                        name = fb.getMeta().getName();
-                        if (name.length() > 100)
-                            name = name.substring(0, 100);
-                        if (!Objects.isNullOrEmpty(fb.getMeta().getExt()))
-                            name += "." + fb.getMeta().getExt();
-                    }
-                    response.setContentType(fb.getMeta().getContentType());
-                    try {
-                        response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(name, "UTF-8"));
-                        IOUtils.copy(fb.getInputStream(), response.getOutputStream());
-                    } catch (IOException e) {
-                        throw ClosureException.wrap(e);
-                    }
-                    return null;
-                }
-            });
-        } catch (NotFoundException e) {
+        FileStorage.FileReadBean b = null;
+        try{
+            b = FileStorage.read(group,id);
+            response.setContentType(b.getMeta().getContentType());
+            if (Objects.isNullOrEmpty(name)) {
+                name = b.getMeta().getName();
+                if (name.length() > 100)
+                    name = name.substring(0, 100);
+                if (!Objects.isNullOrEmpty(b.getMeta().getExt()))
+                    name += "." + b.getMeta().getExt();
+            }
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(name, "UTF-8"));
+            try {
+                IOUtils.copy(b.getInputStream(), response.getOutputStream());
+            } catch (IOException e) {
+                throw S1SystemError.wrap(e);
+            }
+        }catch (NotFoundException e) {
             response.setStatus(404);
+        }finally {
+            FileStorage.closeAfterRead(b);
         }
     }
 

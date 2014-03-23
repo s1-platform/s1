@@ -18,7 +18,6 @@ package org.s1.user;
 
 import org.s1.objects.Objects;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

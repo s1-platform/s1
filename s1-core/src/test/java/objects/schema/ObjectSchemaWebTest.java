@@ -1,7 +1,7 @@
 package objects.schema;
 
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
+
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -22,7 +22,7 @@ public class ObjectSchemaWebTest extends ServerTest {
         title("Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 Map<String,Object> m = client().postJSON(getContext() + "/dispatcher/Schema.validate", Objects.newHashMap(
                         String.class, Object.class,
                         "schema", Objects.newHashMap("attributes",Objects.newArrayList(
@@ -59,7 +59,7 @@ public class ObjectSchemaWebTest extends ServerTest {
         title("Script Validate, parallel: "+p);
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input)  {
                 Map<String,Object> m = client().postJSON(getContext() + "/dispatcher/Schema.validate", Objects.newHashMap(
                         String.class, Object.class,
                         "schema", Objects.newHashMap("attributes",Objects.newArrayList(

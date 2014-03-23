@@ -20,15 +20,15 @@
  */
 package org.s1.format.json.org_json_simple.parser;
 
+import org.s1.format.json.org_json_simple.JSONArray;
+import org.s1.format.json.org_json_simple.JSONObject;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.s1.format.json.org_json_simple.JSONArray;
-import org.s1.format.json.org_json_simple.JSONObject;
 
 
 /**

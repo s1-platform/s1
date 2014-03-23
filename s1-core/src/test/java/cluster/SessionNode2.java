@@ -23,17 +23,17 @@ public class SessionNode2 {
         }
         System.setProperty("s1."+ OptionsStorage.CONFIG_HOME, home+ "/options1");
 
-        Session.run("test1", new Closure<String, Object>() {
-            @Override
-            public Object call(String input) {
-                System.out.println(Session.getSessionBean().getUserId());
-                if (!Session.getSessionBean().getUserId().equals("user1"))
-                    throw new RuntimeException("error");
-                if (!Session.getSessionBean().get("a").equals("aaa"))
-                    throw new RuntimeException("error");
-                return null;
-            }
-        });
+        try{
+            Session.start("test1");
+            System.out.println(Session.getSessionBean().getUserId());
+            if (!Session.getSessionBean().getUserId().equals("user1"))
+                throw new RuntimeException("error");
+            if (!Session.getSessionBean().get("a").equals("aaa"))
+                throw new RuntimeException("error");
+        }finally {
+            Session.end("test1");
+        }
+
     }
 
 }

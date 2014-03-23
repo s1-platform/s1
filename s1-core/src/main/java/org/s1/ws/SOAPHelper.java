@@ -18,7 +18,6 @@ package org.s1.ws;
 
 import org.s1.S1SystemError;
 import org.s1.format.xml.XMLFormat;
-import org.s1.format.xml.XMLFormatException;
 import org.s1.format.xml.XSDFormatException;
 import org.s1.format.xml.XSDValidationException;
 import org.s1.misc.Base64;
@@ -34,7 +33,6 @@ import org.w3c.dom.NodeList;
 import javax.xml.soap.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map;

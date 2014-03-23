@@ -20,16 +20,11 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 import org.s1.S1SystemError;
-import org.s1.misc.Closure;
 import org.s1.misc.FileUtils;
 import org.s1.options.OptionsStorage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
 import java.net.URISyntaxException;
-import java.util.Properties;
-import java.util.UUID;
 
 /**
  * Test app server

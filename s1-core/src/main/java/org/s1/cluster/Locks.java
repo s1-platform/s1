@@ -16,19 +16,21 @@
 
 package org.s1.cluster;
 
-import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IMap;
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.DDSCluster;
+import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.Transactions;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Distributed lock helper
@@ -38,95 +40,108 @@ public class Locks {
     private static IMap<String,Long> locks = HazelcastWrapper.getInstance().getMap("s1.locks");
     private static ILock lock = HazelcastWrapper.getInstance().getLock("s1.locks");
     private static ThreadLocal<List<String>> localLocks = new ThreadLocal<List<String>>();
+    private static Map<String,List<String>> runningLocks = new ConcurrentHashMap<String, List<String>>();
 
     /**
      *
      * @param lockId
-     * @param closure
      * @param timeout
      * @param tu
      * @return
      * @throws TimeoutException
      */
-    public static Object waitAndRun(String lockId, Closure<String, Object> closure, long timeout, TimeUnit tu) throws TimeoutException, ClosureException {
-        return waitAndRun(Objects.newArrayList(lockId),closure,timeout,tu);
+    public static String lock(String lockId, long timeout, TimeUnit tu) throws TimeoutException {
+        return lock(Objects.newArrayList(lockId),timeout,tu);
+    }
+
+    /**
+     *
+     * @param lockId
+     * @param timeout
+     * @param tu
+     * @return
+     */
+    public static String lockQuite(String lockId, long timeout, TimeUnit tu) {
+        return lockQuite(Objects.newArrayList(lockId), timeout, tu);
     }
 
     /**
      *
      * @param lockIds
-     * @param closure
+     * @param timeout
+     * @param tu
+     * @return
+     */
+    public static String lockQuite(List<String> lockIds, long timeout, TimeUnit tu) {
+        try{
+            return lock(lockIds,timeout,tu);
+        }catch (TimeoutException e){
+            throw S1SystemError.wrap(e);
+        }
+    }
+
+    /**
+     *
+     * @param lockIds
      * @param timeout
      * @param tu
      * @return
      * @throws TimeoutException
-     * @throws ClosureException
      */
-    public static Object waitAndRun(List<String> lockIds, Closure<String, Object> closure, long timeout, TimeUnit tu) throws TimeoutException, ClosureException {
+    public static String lock(List<String> lockIds, long timeout, TimeUnit tu) throws TimeoutException {
+        String id = UUID.randomUUID().toString();
+
         if(localLocks.get() == null)
             localLocks.set(Objects.newArrayList(String.class));
-
-        List<String> nonLocalIds = Objects.newArrayList();
 
         long t = System.currentTimeMillis();
         Object ret = null;
         while(true){
             boolean b = false;
+            /* BEGIN: lock to check */
             try{
-                /* BEGIN: lock to check */
-                try{
-                    boolean lb = lock.tryLock(timeout,tu);
-                    if(!lb)
-                        throw new TimeoutException("Timeout waiting lock");
+                boolean lb = lock.tryLock(timeout,tu);
+                if(!lb)
+                    throw new TimeoutException("Timeout waiting lock");
 
+                for(String new_lock:lockIds){
+                    for(String existing_lock:locks.keySet()){
+                        if(new_lock.startsWith(existing_lock) ||
+                                existing_lock.startsWith(new_lock)){
+                            if(!localLocks.get().contains(existing_lock)){
+                                b = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(b)
+                        break;
+                }
+                if(!b){
+                    //set locks
+                    runningLocks.put(id,Objects.newArrayList(String.class));
                     for(String new_lock:lockIds){
-                        for(String existing_lock:locks.keySet()){
-                            if(new_lock.startsWith(existing_lock) ||
-                                    existing_lock.startsWith(new_lock)){
-                                if(!localLocks.get().contains(existing_lock)){
-                                    b = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if(b)
-                            break;
-                    }
-                    if(!b){
-                        //set locks
-                        for(String new_lock:lockIds){
-                            if(locks.containsKey(new_lock)){
+                        if(locks.containsKey(new_lock)){
 
-                            }else{
-                                locks.put(new_lock,System.currentTimeMillis());
-                                localLocks.get().add(new_lock);
-                                nonLocalIds.add(new_lock);
-                            }
+                        }else{
+                            locks.put(new_lock,System.currentTimeMillis());
+                            localLocks.get().add(new_lock);
+                            runningLocks.get(id).add(new_lock);
                         }
                     }
-                } catch (InterruptedException e){
-                    throw S1SystemError.wrap(e);
-                } finally {
-                    try{
-                        lock.unlock();
-                    }catch (Throwable e){}
                 }
-                /* END: lock to check */
+            } catch (InterruptedException e){
+                throw S1SystemError.wrap(e);
+            } finally {
+                try{
+                    lock.unlock();
+                }catch (Throwable e){}
+            }
+            /* END: lock to check */
 
-                //run code
-                if(!b){
-                    ret = closure.call(null);
-                    break;
-                }
-
-            }finally {
-                //remove locks
-                if(!b){
-                    for(String new_lock:nonLocalIds){
-                        locks.remove(new_lock);
-                        localLocks.get().remove(new_lock);
-                    }
-                }
+            //run code
+            if(!b){
+                break;
             }
 
             if(System.currentTimeMillis()-t>tu.toMillis(timeout)){
@@ -138,23 +153,84 @@ public class Locks {
                 throw S1SystemError.wrap(e);
             }
         }
-        return ret;
-        /*ILock lock = HazelcastWrapper.getInstance().getLock("s1.locks");
-        boolean b = false;
-        try {
-            b = lock.tryLock(timeout, tu);
-        } catch (Exception e) {
-            throw S1SystemError.wrap(e);
-        }
-        if (b) {
-            try {
-                return closure.call(lockId);
-            } finally {
-                lock.unlock();
+        return id;
+    }
+
+    /**
+     *
+     * @param id
+     */
+    public static void releaseLock(String id){
+        if(Objects.isNullOrEmpty(id))
+            return;
+        if(runningLocks.containsKey(id)) {
+            for (String new_lock : runningLocks.get(id)) {
+                locks.remove(new_lock);
+                localLocks.get().remove(new_lock);
             }
-        } else {
-            throw new TimeoutException("Lock timeout occurs: " + lockId);
-        }*/
+        }
+    }
+
+    /**
+     *
+     * @param e
+     * @param timeout
+     * @param tu
+     * @return
+     */
+    public static String lockEntityQuite(EntityIdBean e, long timeout, TimeUnit tu) {
+        return lockEntitiesQuite(Objects.newArrayList(e), timeout, tu);
+    }
+
+    /**
+     *
+     * @param e
+     * @param timeout
+     * @param tu
+     * @return
+     * @throws TimeoutException
+     */
+    public static String lockEntity(EntityIdBean e, long timeout, TimeUnit tu) throws TimeoutException {
+        return lockEntities(Objects.newArrayList(e), timeout, tu);
+    }
+
+    /**
+     *
+     * @param e
+     * @param timeout
+     * @param tu
+     * @return
+     */
+    public static String lockEntitiesQuite(final List<EntityIdBean> e, long timeout, TimeUnit tu) {
+        try{
+            return lockEntities(e,timeout,tu);
+        }catch (TimeoutException ex){
+            throw S1SystemError.wrap(ex);
+        }
+    }
+
+    /**
+     *
+     * @param e
+     * @param timeout
+     * @param tu
+     * @return
+     * @throws TimeoutException
+     */
+    public static String lockEntities(final List<EntityIdBean> e, long timeout, TimeUnit tu) throws TimeoutException {
+        if(Transactions.isInTransaction()){
+            return null;
+        }else{
+            List<String> l = Objects.newArrayList();
+            for(EntityIdBean _e:e){
+                l.add(_e.getLockName());
+            }
+            String id = Locks.lock(l,timeout,tu);
+            for(EntityIdBean _e:e){
+                DDSCluster.flush(_e);
+            }
+            return id;
+        }
     }
 
 }

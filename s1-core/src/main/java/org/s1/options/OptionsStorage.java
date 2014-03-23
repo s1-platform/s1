@@ -20,8 +20,6 @@ import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
@@ -31,8 +29,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -227,30 +223,23 @@ public class OptionsStorage {
     }
 
     /**
+     * Do not forget to close InputStream
      *
      * @param name
-     * @param closure
      * @return
      */
-    public Object readConfig(String name, Closure<InputStream, Object> closure) throws ClosureException {
+    public InputStream openConfig(String name) {
         String configPath = configHome + File.separator + name;
         File file = new File(configPath);
-        if(closure!=null){
-            InputStream is = null;
-            try{
-                if(file.exists() && file.isFile()){
-                    try {
-                        is = new FileInputStream(file);
-                    } catch (FileNotFoundException e) {
-                        LOG.debug("Config "+name+" not found");
-                    }
-                }
-                return closure.call(is);
-            } finally {
-                IOUtils.closeQuietly(is);
+        InputStream is = null;
+        if (file.exists() && file.isFile()) {
+            try {
+                is = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                LOG.debug("Config " + name + " not found");
             }
         }
-        return null;
+        return is;
     }
 
     /**
@@ -259,17 +248,12 @@ public class OptionsStorage {
      * @return
      */
     public String readConfigToString(String name){
+        InputStream is = null;
         try{
-            return (String) readConfig(name, new Closure<InputStream, Object>() {
-                @Override
-                public Object call(InputStream input) {
-                    if(input==null)
-                        return null;
-                    return IOUtils.toString(input, "UTF-8");
-                }
-            });
-        }catch (ClosureException e){
-            throw e.toSystemError();
+            is = openConfig(name);
+            return IOUtils.toString(is, "UTF-8");
+        }finally {
+            IOUtils.closeQuietly(is);
         }
     }
 

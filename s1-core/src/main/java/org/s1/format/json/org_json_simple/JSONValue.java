@@ -20,17 +20,14 @@
  */
 package org.s1.format.json.org_json_simple;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
+import org.s1.format.json.org_json_simple.parser.JSONParser;
+import org.s1.format.json.org_json_simple.parser.ParseException;
+
+import java.io.*;
 import java.util.Collection;
-// import java.util.List;
 import java.util.Map;
 
-import org.s1.format.json.org_json_simple.parser.ParseException;
-import org.s1.format.json.org_json_simple.parser.JSONParser;
+// import java.util.List;
 
 
 /**

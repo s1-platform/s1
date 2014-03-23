@@ -55,15 +55,15 @@ public class ObjectIterator {
                 m1.put(e.getKey(),
                         iterateNamedObjectFromLeaf(e.getKey(), (!Objects.isNullOrEmpty(path) ? path + "." + e.getKey() : e.getKey()), e.getValue(), closure));
             }
-            return closure.callQuite(new IterateBean(name, m1, path));
+            return closure.call(new IterateBean(name, m1, path));
         } else if (o instanceof List) {
             List l = new ArrayList();
             for (int i = 0; i < ((List) o).size(); i++) {
                 l.add(iterateNamedObjectFromLeaf(null, path + "[" + i + "]", ((List) o).get(i), closure));
             }
-            return closure.callQuite(new IterateBean(name, l, path));
+            return closure.call(new IterateBean(name, l, path));
         } else {
-            return closure.callQuite(new IterateBean(name, o, path));
+            return closure.call(new IterateBean(name, o, path));
         }
     }
 

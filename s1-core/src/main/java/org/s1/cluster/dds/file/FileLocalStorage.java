@@ -17,15 +17,13 @@
 package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
-import org.s1.table.errors.NotFoundException;
 import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.misc.FileUtils;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.errors.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,17 +39,13 @@ public class FileLocalStorage {
     private static final Logger LOG = LoggerFactory.getLogger(FileLocalStorage.class);
 
     /**
-     * Read file
      *
      * @param group
      * @param id
-     * @param cl
-     * @param <T>
      * @return
-     * @throws org.s1.table.errors.NotFoundException
-     * @throws org.s1.misc.ClosureException
+     * @throws NotFoundException
      */
-    public <T> T read(String group, String id, Closure<FileStorage.FileReadBean,T> cl) throws NotFoundException, ClosureException {
+    public FileStorage.FileReadBean read(String group, String id) throws NotFoundException {
         String dir = getBaseDirectory(group);
 
         FileStorage.FileMetaBean meta = new FileStorage.FileMetaBean();
@@ -81,25 +75,30 @@ public class FileLocalStorage {
             fis = new FileInputStream(f);
             if(LOG.isDebugEnabled())
                 LOG.debug("File read successfully (group: "+group+", id: "+id+"): "+meta.toMap());
-            return cl.call(new FileStorage.FileReadBean(fis, meta));
+            return new FileStorage.FileReadBean(fis, meta);
         }catch (IOException e){
             LOG.warn("File read error (group: "+group+", id: "+id+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
-        }finally{
-            IOUtils.closeQuietly(fis);
         }
     }
 
     /**
-     * Write file
+     *
+     * @param b
+     */
+    public void closeAfterRead(FileStorage.FileReadBean b){
+        if(b!=null)
+            IOUtils.closeQuietly(b.getInputStream());
+    }
+
+    /**
      *
      * @param group
      * @param id
-     * @param closure
      * @param meta
-     * @throws org.s1.misc.ClosureException
+     * @return
      */
-    public void write(String group, String id, Closure<OutputStream,Boolean> closure, FileStorage.FileMetaBean meta) throws ClosureException {
+    public FileStorage.FileWriteBean createFileWriteBean(String group, String id, FileStorage.FileMetaBean meta) {
         String dir = getBaseDirectory(group);
         if(!new File(dir+File.separator+id).exists())
             meta.setCreated(new Date());
@@ -109,18 +108,38 @@ public class FileLocalStorage {
         try{
             fos = new FileOutputStream(dir+File.separator+id);
 
-            if(new Boolean(false).equals(closure.call(fos)))
-                return;
+            return new FileStorage.FileWriteBean(group,id,fos,meta);
 
-            FileUtils.writeStringToFile(new File(dir+File.separator+id+".json"),JSONFormat.toJSON(Objects.toWire(m)),"UTF-8");
         }catch (IOException e){
             LOG.warn("File write error (group: "+group+", id: "+id+", meta: "+m+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
-        }finally{
-            IOUtils.closeQuietly(fos);
+        }
+    }
+
+    /**
+     *
+     * @param b
+     */
+    public void save(FileStorage.FileWriteBean b){
+        try {
+            String dir = getBaseDirectory(b.getGroup());
+            FileUtils.writeStringToFile(new File(dir + File.separator + b.getId() + ".json"), JSONFormat.toJSON(Objects.toWire(b.getMeta().toMap())), "UTF-8");
+
+        }catch (IOException e){
+            LOG.warn("File write error (group: "+b.getGroup()+", id: "+b.getId()+", meta: "+b.getMeta()+"): "+e.getMessage(),e);
+            throw S1SystemError.wrap(e);
         }
         if(LOG.isDebugEnabled())
-            LOG.debug("File write successfully (group: "+group+", id: "+id+", meta: "+m+")");
+            LOG.debug("File write successfully (group: "+b.getGroup()+", id: "+b.getId()+", meta: "+b.getMeta()+")");
+    }
+
+    /**
+     *
+     * @param b
+     */
+    public void closeAfterWrite(FileStorage.FileWriteBean b){
+        if(b!=null)
+            IOUtils.closeQuietly(b.getOutputStream());
     }
 
     /**

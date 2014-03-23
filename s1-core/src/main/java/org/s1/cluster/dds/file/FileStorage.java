@@ -18,12 +18,10 @@ package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
 import org.s1.cluster.dds.*;
-import org.s1.table.errors.NotFoundException;
-import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.table.errors.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,35 +45,24 @@ public class FileStorage extends DistributedDataSource {
             String nodeId = Objects.get(String.class,cmd.getParams(),"nodeId");
             if(!nodeId.equals(DDSCluster.getCurrentNodeId())){
 
+
+                FileExchange.GetFileBean gf = null;
+                FileWriteBean b = null;
                 try{
-                    FileExchange.getFile(
+                    gf = FileExchange.getFile(cmd.getCollection(),cmd.getEntity());
+                    b = getLocalStorage().createFileWriteBean(
                             cmd.getCollection(),
                             cmd.getEntity(),
-                            new Closure<FileExchange.GetFileBean, Object>() {
-                                @Override
-                                public Object call(final FileExchange.GetFileBean resp) throws ClosureException {
-                                    getLocalStorage().write(
-                                            cmd.getCollection(),
-                                            cmd.getEntity(),
-                                            new Closure<OutputStream, Boolean>() {
-                                                @Override
-                                                public Boolean call(OutputStream os) throws ClosureException {
-                                                    try {
-                                                        IOUtils.copy(resp.getInputStream(), os, 0, resp.getSize());
-                                                    } catch (IOException e) {
-                                                        throw S1SystemError.wrap(e);
-                                                    }
-                                                    return true;
-                                                }
-                                            },
-                                            Objects.get(FileMetaBean.class, cmd.getParams(), "meta")
-                                    );
-                                    return null;
-                                }
-                            }
-                    );
-                }catch (ClosureException e){
-                    throw e.toSystemError();
+                            Objects.get(FileMetaBean.class, cmd.getParams(), "meta"));
+                    try {
+                        IOUtils.copy(gf.getInputStream(), b.getOutputStream(), 0, gf.getSize());
+                    } catch (IOException e) {
+                        throw S1SystemError.wrap(e);
+                    }
+                    getLocalStorage().save(b);
+                }finally {
+                    getLocalStorage().closeAfterWrite(b);
+                    FileExchange.closeAfterRead(gf);
                 }
             }
         }else if("remove".equals(cmd.getCommand())){
@@ -102,46 +89,60 @@ public class FileStorage extends DistributedDataSource {
 
     /**
      *
-     * @param cls
      * @param group
      * @param id
-     * @param cl
-     * @param <T>
-     * @return
-     * @throws org.s1.table.errors.NotFoundException
-     * @throws org.s1.misc.ClosureException
-     */
-    public static <T> T read(Class<T> cls, String group, String id, Closure<FileReadBean,T> cl) throws NotFoundException, ClosureException{
-        return Objects.cast(read(group,id,cl),cls);
-    }
-
-    /**
-     *
-     * @param group
-     * @param id
-     * @param cl
-     * @param <T>
      * @return
      * @throws NotFoundException
-     * @throws org.s1.misc.ClosureException
      */
-    public static <T> T read(String group, String id, Closure<FileReadBean,T> cl) throws NotFoundException, ClosureException {
-        return getLocalStorage().read(group,id,cl);
+    public static FileReadBean read(String group, String id) throws NotFoundException{
+        return getLocalStorage().read(group,id);
+    }
+
+    /**
+     *
+     * @param b
+     */
+    public static void closeAfterRead(FileReadBean b){
+        getLocalStorage().closeAfterRead(b);
+    }
+
+    /**
+     *
+     * @param b
+     */
+    public static void closeAfterWrite(FileWriteBean b){
+        getLocalStorage().closeAfterWrite(b);
     }
 
     /**
      *
      * @param group
      * @param id
-     * @param closure
+     * @param is
      * @param meta
-     * @throws org.s1.misc.ClosureException
      */
-    public static void write(String group, String id, Closure<OutputStream,Boolean> closure, FileMetaBean meta) throws ClosureException{
-        getLocalStorage().write(group, id, closure, meta);
-        DDSCluster.call(new MessageBean(FileStorage.class, null, group, id, "write", Objects.newHashMap(String.class, Object.class,
+    public static void write(String group, String id, InputStream is, FileMetaBean meta) {
+        FileWriteBean b = null;
+        try {
+            b = createFileWriteBean(group, id, meta);
+            IOUtils.copy(is,b.getOutputStream());
+        } catch (IOException e) {
+            throw S1SystemError.wrap(e);
+        } finally {
+            getLocalStorage().closeAfterWrite(b);
+        }
+        save(b);
+    }
+
+    public static FileWriteBean createFileWriteBean(String group, String id, FileMetaBean meta) {
+        return getLocalStorage().createFileWriteBean(group, id, meta);
+    }
+
+    public static void save(FileWriteBean b) {
+        getLocalStorage().save(b);
+        DDSCluster.call(new MessageBean(FileStorage.class, null, b.getGroup(), b.getId(), "write", Objects.newHashMap(String.class, Object.class,
                 "nodeId", DDSCluster.getCurrentNodeId(),
-                "meta", meta)));
+                "meta", b.getMeta())));
     }
 
     /**
@@ -287,6 +288,40 @@ public class FileStorage extends DistributedDataSource {
 
         public InputStream getInputStream() {
             return inputStream;
+        }
+
+        public FileMetaBean getMeta() {
+            return meta;
+        }
+
+    }
+
+    /**
+     *
+     */
+    public static class FileWriteBean{
+        private String group;
+        private String id;
+        private OutputStream outputStream;
+        private FileMetaBean meta;
+
+        public FileWriteBean(String group, String id, OutputStream outputStream, FileMetaBean meta) {
+            this.group = group;
+            this.id = id;
+            this.outputStream = outputStream;
+            this.meta = meta;
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public OutputStream getOutputStream() {
+            return outputStream;
         }
 
         public FileMetaBean getMeta() {
