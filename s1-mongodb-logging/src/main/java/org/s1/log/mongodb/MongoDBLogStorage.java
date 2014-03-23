@@ -22,7 +22,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import org.s1.log.LogStorage;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
 
@@ -43,7 +42,7 @@ public class MongoDBLogStorage extends LogStorage{
             //remove $where
             search = Objects.iterate(search,new Closure<ObjectIterator.IterateBean, Object>() {
                 @Override
-                public Object call(ObjectIterator.IterateBean input) throws ClosureException {
+                public Object call(ObjectIterator.IterateBean input) {
                     if(input.getValue() instanceof Map){
                         if(((Map) input.getValue()).containsKey("$where"))
                             ((Map) input.getValue()).remove("$where");

@@ -18,7 +18,6 @@ import com.mongodb.DBCollection;
 import org.s1.log.Loggers;
 import org.s1.log.mongodb.MongoDBLogConnectionHelper;
 import org.s1.misc.Closure;
-import org.s1.misc.ClosureException;
 import org.s1.objects.Objects;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
@@ -56,7 +55,7 @@ public class LogStorageTest extends ServerTest {
         title("Log, parallel: " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
-            public Object call(Integer input) throws ClosureException {
+            public Object call(Integer input) {
                 TestHttpClient client = client();
                 //authenticate
                 client.postJSON(getContext() + "/dispatcher/Auth.login", Objects.newHashMap(

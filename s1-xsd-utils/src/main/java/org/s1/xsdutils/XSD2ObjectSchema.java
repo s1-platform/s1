@@ -111,8 +111,11 @@ public class XSD2ObjectSchema {
     public static Map<String,Object> toSchemaMap(Element xsd){
         final List<Map<String,Object>> attributes = Objects.newArrayList();
         final List<Map<String,Object>> types = Objects.newArrayList();
-        final Map<String,Object> schema = Objects.newHashMap("attributes",attributes,"types",types);
-        final Map<String,Object> attrs = Objects.newHashMap();
+        final Map<String,Object> schema = Objects.newHashMap("attributes", attributes, "types", types);
+        //final Map<String,Object> attrs = Objects.newHashMap();
+        final List<RawAttr> rawAttributes = Objects.newArrayList();
+
+
         //def attrs = [:] as TreeMap;
         XSDIterator.iterateXSD(xsd, new Closure<XSDIterator.XSDIterateBean, Object>() {
             @Override
@@ -151,7 +154,7 @@ public class XSD2ObjectSchema {
                                 attr.put("max", input.getParticle().getMaxOccurs());
                         } else if (((XSElementDecl) term).getTypeDefinition() instanceof XSComplexTypeDecl) {
                             //map or ref
-                            attr.put("appearance", "required");
+                            //attr.put("appearance", "required");
                             attr.put("default", Objects.newHashMap());
                         } else {
                             //simple type
@@ -211,7 +214,7 @@ public class XSD2ObjectSchema {
                 }
                 //add attr
                 if (attr != null) {
-                    attrs.put(input.getPath(), attr);
+                    rawAttributes.add(new RawAttr(input.getPath(), attr));
                 }
 
                 return null;
@@ -219,20 +222,38 @@ public class XSD2ObjectSchema {
         });
 
         //create tree
-        for(Map.Entry<String,Object> it:attrs.entrySet()){
-            Map<String,Object> a = getParentAttrFromSchema(schema,it.getKey());
+        for(RawAttr it:rawAttributes){
+            Map<String,Object> a = getParentAttrFromSchema(schema,it.getPath());
             if(a==null){
                 a = schema;
             }
             //println(it.key+":::"+a+":::"+it.value);
             if(!a.containsKey("type") || "Map".equals(a.get("type"))){
-                ((List)a.get("attributes")).add(it.getValue());
+                ((List)a.get("attributes")).add(it.getAttribute());
             }else if("List".equals(a.get("type")) && "Map".equals(Objects.get(a, "element.type"))){
-                Objects.get(List.class,a,"element.attributes").add(it.getValue());
+                Objects.get(List.class,a,"element.attributes").add(it.getAttribute());
             }
         }
 
         return schema;
+    }
+
+    private static class RawAttr{
+        private String path;
+        private Map<String,Object> attribute;
+
+        private RawAttr(String path, Map<String, Object> attribute) {
+            this.path = path;
+            this.attribute = attribute;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public Map<String, Object> getAttribute() {
+            return attribute;
+        }
     }
 
     /**

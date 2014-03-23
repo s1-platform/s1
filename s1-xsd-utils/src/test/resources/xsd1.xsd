@@ -60,7 +60,7 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:attribute>
-            <xs:attribute name="b" use="required">
+            <xs:attribute name="b" use="optional">
                 <xs:annotation>
                     <xs:documentation>bbb</xs:documentation>
                 </xs:annotation>
@@ -108,6 +108,11 @@
             <xs:element name="a" type="xs:string">
                 <xs:annotation>
                     <xs:documentation>e aaa</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="b" type="xs:string" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>e bbb</xs:documentation>
                 </xs:annotation>
             </xs:element>
         </xs:sequence>

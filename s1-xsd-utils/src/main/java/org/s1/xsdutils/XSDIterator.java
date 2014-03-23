@@ -57,7 +57,7 @@ public class XSDIterator {
         for(int i=0;i<types.getLength();i++){
             XSTypeDefinition e = ((XSTypeDefinition)types.item(i));
             if(!"http://www.w3.org/2001/XMLSchema".equals(e.getNamespace())){
-                closure.callQuite(new XSDIterateBean(null,e));
+                closure.call(new XSDIterateBean(null,e));
                 if(e instanceof XSComplexTypeDecl){
                     processCT("#"+e.getName().replace(".","\\."),(XSComplexTypeDecl)e,closure);
                 }
@@ -91,7 +91,7 @@ public class XSDIterator {
 
         //process this type
         if(ct.getParticle()!=null){
-            closure.callQuite(new XSDIterateBean(path,(XSParticleDecl)ct.getParticle()));
+            closure.call(new XSDIterateBean(path,(XSParticleDecl)ct.getParticle()));
 
             //println(ct.getParticle().getTerm().getClass())
             //model group
@@ -109,7 +109,7 @@ public class XSDIterator {
             //def a = ((XSAttributeUse)ct.getAttrGrp().getAttributeUses().item(i)).getAttrDeclaration();
             //def req = ((XSAttributeUse)ct.getAttrGrp().getAttributeUses().item(i)).getRequired();
             String p = path+".@"+attr.getAttrDeclaration().getName().replace(".","\\.");
-            closure.callQuite(new XSDIterateBean(p,attr));
+            closure.call(new XSDIterateBean(p,attr));
         }
     }
 
@@ -122,9 +122,9 @@ public class XSDIterator {
 
         //call closure
         if(!root) //not root element
-            closure.callQuite(new XSDIterateBean(path,part));
+            closure.call(new XSDIterateBean(path,part));
         else //root element
-            closure.callQuite(new XSDIterateBean(path,el));
+            closure.call(new XSDIterateBean(path,el));
 
         //println(el.getTypeDefinition())
         if(el.getTypeDefinition() instanceof XSComplexTypeDecl){

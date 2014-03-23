@@ -113,12 +113,12 @@ public abstract class Table {
      * INDEXES
      ==========================================*/
 
-    protected abstract void collectionIndex(String collection, String name, IndexBean ind);
+    protected abstract void collectionIndex(String name, IndexBean ind);
 
     public void checkIndexes() {
         int i = 0;
         for (IndexBean b : getIndexes()) {
-            collectionIndex(getCollection(), "index_" + i, b);
+            collectionIndex("index_" + i, b);
             i++;
         }
     }
