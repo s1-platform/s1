@@ -129,7 +129,7 @@ public class LockTest extends BasicTest {
 
     public void testMultiLockGame(){
         HazelcastWrapper.getInstance();
-        final int p = 1000;
+        final int p = 100;
         final int c = 20;
         final int sum = 100;
         final int pay = 2;
