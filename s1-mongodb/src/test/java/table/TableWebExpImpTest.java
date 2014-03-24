@@ -49,7 +49,7 @@ public class TableWebExpImpTest extends ServerTest {
     }
 
     public void testExpImp() {
-        final int p = 1;
+        final int p = 10;
         final int c = 10;
         title("Export import, parallel: " + p);
         //add
@@ -64,6 +64,9 @@ public class TableWebExpImpTest extends ServerTest {
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
+
+        final File dir = new File("/home/travis/build/s1-platform/s1/s1-core/target/");
+        dir.mkdirs();
 
         //export
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
@@ -86,7 +89,7 @@ public class TableWebExpImpTest extends ServerTest {
 
                 //download
                 try{
-                    FileOutputStream fos = new FileOutputStream(new File("/var/exp_"+input));
+                    FileOutputStream fos = new FileOutputStream(new File(dir.getAbsolutePath()+"/exp_"+input));
                     fos.write(client().get(getContext() + "/dispatcher/Upload.download", Objects.newHashMap(String.class, Object.class,
                             "collection", "test1",
                             "id", m.get("id")), null, null).getData());
@@ -117,7 +120,7 @@ public class TableWebExpImpTest extends ServerTest {
                 //upload
                 String id = "";
                 try{
-                    FileInputStream fis = new FileInputStream(new File("/var/exp_0"));
+                    FileInputStream fis = new FileInputStream(new File(dir.getAbsolutePath()+"/exp_0"));
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     IOUtils.copy(fis,bos);
                     m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?collection=test2", new ByteArrayInputStream(bos.toByteArray()),

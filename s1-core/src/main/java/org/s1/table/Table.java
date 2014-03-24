@@ -361,22 +361,27 @@ public abstract class Table {
             try {
                 Map<String, Object> oldObject = null;
                 String id = Objects.get(element, "id");
-                if (id != null) {
-                    try {
-                        oldObject = get(id);
-                    } catch (NotFoundException e) {
-                    }
-                } else {
-                    id = newId();
-                    element.put("id", id);
-                }
-                if (getImportSchema() != null)
-                    element = getImportSchema().validate(element, Objects.newHashMap(String.class, Object.class, "record", oldObject));
-
                 String lockId = null;
                 try {
+                    boolean exists = !Objects.isNullOrEmpty(id);
+                    if(!exists) {
+                        id = newId();
+                        element.put("id", id);
+                    }
                     //lock and set
                     lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                    if (exists) {
+                        try {
+                            oldObject = get(id);
+                        } catch (NotFoundException e) {
+                        }
+                    }
+
+                    if (getImportSchema() != null)
+                        element = getImportSchema().validate(element, Objects.newHashMap(String.class, Object.class, "record", oldObject));
+
+
                     importRecord(id, oldObject, element);
                 } finally {
                     Locks.releaseLock(lockId);
