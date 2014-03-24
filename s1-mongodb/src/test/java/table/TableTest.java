@@ -189,12 +189,12 @@ public class TableTest extends ServerTest {
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
 
                             //list full-text
-                            l.clear();
+                            /*l.clear();
                             c = t.list(l, new Query(null,Objects.newHashMap(String.class,Object.class,
                                     "$text","a_0")), null, null, 0, 10);
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
-                            assertEquals("a_0", Objects.get(l.get(0), "a"));
+                            assertEquals("a_0", Objects.get(l.get(0), "a"));*/
 
                             //aggregate
                             AggregationBean ab = t.aggregate("b", null);

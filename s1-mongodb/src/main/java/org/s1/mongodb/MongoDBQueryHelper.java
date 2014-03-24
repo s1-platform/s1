@@ -75,18 +75,7 @@ public class MongoDBQueryHelper {
 
     public static final String SCORE = "_score";
 
-    /**
-     *
-     * @param res
-     * @param c
-     * @param fullTextQuery
-     * @param search
-     * @param fields
-     * @param skip
-     * @param max
-     * @return
-     */
-    public static long fullTextSearch(List<Map<String, Object>> res, CollectionId c,
+    /*public static long fullTextSearch(List<Map<String, Object>> res, CollectionId c,
                                       String fullTextQuery,
                                       Map<String,Object> search,
                                       Map<String,Object> fields, int skip, int max) {
@@ -124,7 +113,7 @@ public class MongoDBQueryHelper {
                     "\n\t> "+res);
 
         return cnt;
-    }
+    }*/
 
     /**
      *

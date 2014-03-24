@@ -78,7 +78,7 @@ public abstract class MongoDBTable extends Table{
 
         boolean exists = false;
 
-        for(DBObject o: ftlist){
+        /*for(DBObject o: ftlist){
             if("full_text_index".equals(o.get("name"))){
                 exists = true;
                 List<String> keys = Objects.newArrayList();
@@ -124,7 +124,7 @@ public abstract class MongoDBTable extends Table{
                         ", fields: "+getFullTextFields()+", language: "+getFullTextLanguage());
             if(!o.isEmpty())
                 coll.ensureIndex(o,opt);
-        }
+        }*/
     }
 
     @Override
@@ -141,19 +141,19 @@ public abstract class MongoDBTable extends Table{
     protected long collectionList(List<Map<String, Object>> result,
                                   Query search, Sort sort, FieldsMask fields, int skip, int max) {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        String fullTextQuery = Objects.get(search.getCustom(),"$text");
+        /*String fullTextQuery = Objects.get(search.getCustom(),"$text");
         if(search.getCustom()!=null)
-            search.getCustom().remove("$text");
-        if(Objects.isNullOrEmpty(fullTextQuery)){
+            search.getCustom().remove("$text");*/
+        //if(Objects.isNullOrEmpty(fullTextQuery)){
             return MongoDBQueryHelper.list(result,getCollectionId(),
                     MongoDBFormat.formatSearch(search),
                     MongoDBFormat.formatSort(sort),
                     MongoDBFormat.formatFieldsMask(fields),skip,max);
-        }else{
+        /*}else{
             return MongoDBQueryHelper.fullTextSearch(result, getCollectionId(), fullTextQuery,
                     MongoDBFormat.formatSearch(search),
                     MongoDBFormat.formatFieldsMask(fields), skip, max);
-        }
+        }*/
     }
 
     @Override

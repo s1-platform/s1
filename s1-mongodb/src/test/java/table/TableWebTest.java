@@ -148,7 +148,7 @@ public class TableWebTest extends ServerTest {
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
 
                             //list full-text
-                            l.clear();
+                            /*l.clear();
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
                                     "table","table.TestTable1",
                                     "skip",0,"max",10,
@@ -158,7 +158,7 @@ public class TableWebTest extends ServerTest {
                             c = Objects.get(m,"count");
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
-                            assertEquals("a_0", Objects.get(l.get(0), "a"));
+                            assertEquals("a_0", Objects.get(l.get(0), "a"));*/
 
                             //aggregate
                             m = client().postJSON(getContext()+"/dispatcher/Table.aggregate",Objects.newHashMap(String.class,Object.class,

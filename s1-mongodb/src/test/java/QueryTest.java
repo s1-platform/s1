@@ -139,7 +139,7 @@ public class QueryTest extends ServerTest {
         }));
     }
 
-    public void testFullText(){
+    /*public void testFullText(){
         int p=10;
         title("Full-text, parallel:"+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
@@ -156,6 +156,6 @@ public class QueryTest extends ServerTest {
                 return null;
             }
         }));
-    }
+    }*/
 
 }
