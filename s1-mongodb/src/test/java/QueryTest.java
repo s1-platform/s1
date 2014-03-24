@@ -65,11 +65,11 @@ public class QueryTest extends ServerTest {
                     "bool", i % 3 == 0
             )));
         }
-        coll.ensureIndex(new BasicDBObject(Objects.newHashMap(
+        /*coll.ensureIndex(new BasicDBObject(Objects.newHashMap(
                 "str","text",
                 "str2","text",
                 "text","text"
-        )));
+        )));*/
         trace("data inserted");
     }
 
