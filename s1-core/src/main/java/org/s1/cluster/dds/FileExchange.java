@@ -19,6 +19,7 @@ package org.s1.cluster.dds;
 import com.hazelcast.core.Member;
 import org.s1.S1SystemError;
 import org.s1.cluster.HazelcastWrapper;
+import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
@@ -35,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Cluster file exchange server and client
@@ -138,9 +141,15 @@ public class FileExchange {
 
         run = true;
 
-        executor = Executors.newFixedThreadPool(threads);
+        executor = Executors.newFixedThreadPool(threads,new ThreadFactory() {
+            private AtomicInteger i = new AtomicInteger(-1);
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "FileExchangeThread-"+i.incrementAndGet());
+            }
+        });
 
-        new Thread(new FileServer()).start();
+        new Thread(new FileServer(),"FileExchangeServerThread").start();
 
         status = "started";
         LOG.info("Node "+nodeId+" file server started ("+(System.currentTimeMillis()-t)+" ms.) on port "+port+" with "+threads+" threads");
@@ -210,12 +219,12 @@ public class FileExchange {
                         LOG.debug("Node "+nodeId+" recieved new file request: "+request.toString());
                     FileStorage.FileReadBean b = null;
                     try{
-                        b = FileStorage.read(request.getGroup(), request.getId());
-                        FileResponseBean resp = new FileResponseBean(nodeId, request.getId(), request.getGroup(), true, null, b.getMeta().getSize());
+                        b = FileStorage.read(request.getId());
+                        FileResponseBean resp = new FileResponseBean(nodeId, request.getId(),true, null, b.getMeta().getSize());
                         new ObjectOutputStream(socket.getOutputStream()).writeObject(resp);
                         IOUtils.copy(b.getInputStream(), socket.getOutputStream());
                         if (LOG.isDebugEnabled())
-                            LOG.debug("File (group: " + request.getGroup() + ", id: " + request.getId() + ", size: " + b.getMeta().getSize() + ") sended to " + request.getNodeId() + " successfully");
+                            LOG.debug("File (id: " + request.getId() + ", size: " + b.getMeta().getSize() + ") sended to " + request.getNodeId() + " successfully");
 
                     }finally {
                         FileStorage.closeAfterRead(b);
@@ -225,7 +234,7 @@ public class FileExchange {
                 if(LOG.isDebugEnabled())
                     LOG.debug("Error getting file for request: "+request+" - "+e.getClass().getName()+": "+e.getMessage());
                 try{
-                    FileResponseBean resp = new FileResponseBean(nodeId,request.getId(),request.getGroup(),false,e.getMessage(),0);
+                    FileResponseBean resp = new FileResponseBean(nodeId,request.getId(),false,e.getMessage(),0);
                     new ObjectOutputStream(socket.getOutputStream()).writeObject(resp);
                 }catch (Throwable e1){
                 }
@@ -247,12 +256,11 @@ public class FileExchange {
 
     /**
      *
-     * @param group
      * @param id
      * @return
      */
-    public static GetFileBean getFile(String group, String id){
-        FileRequestBean request = new FileRequestBean(DDSCluster.getCurrentNodeId(),id,group);
+    public static GetFileBean getFile(Id id){
+        FileRequestBean request = new FileRequestBean(DDSCluster.getCurrentNodeId(),id);
         GetFileBean result = null;
 
         //download from fileserver
@@ -284,11 +292,11 @@ public class FileExchange {
                         FileResponseBean resp = (FileResponseBean)new ObjectInputStream(is).readObject();
                         if(resp!=null && resp.isSuccess()){
                             if(LOG.isDebugEnabled())
-                                LOG.debug("File (group: "+resp.getGroup()+", id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", begin copying...");
+                                LOG.debug("File (id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", begin copying...");
                             long t = System.currentTimeMillis();
                             result = new GetFileBean(is,resp.getSize(),socket);
                             if(LOG.isDebugEnabled())
-                                LOG.debug("File (group: "+resp.getGroup()+", id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", copied successfully ("+(System.currentTimeMillis()-t)+" ms.)");
+                                LOG.debug("File (id: "+resp.getId()+") recieved from node "+resp.getNodeId()+", size: "+resp.getSize()+", copied successfully ("+(System.currentTimeMillis()-t)+" ms.)");
                         }else{
                             if(LOG.isDebugEnabled())
                                 LOG.debug("File not avaliable on node "+resp.getNodeId()+": "+resp.getErrorMessage());
@@ -326,29 +334,23 @@ public class FileExchange {
      */
     private static class FileRequestBean implements Serializable{
         private String nodeId;
-        private String id;
-        private String group;
+        private Id id;
 
-        private FileRequestBean(String nodeId, String id, String group) {
+        private FileRequestBean(String nodeId, Id id) {
             this.nodeId = nodeId;
             this.id = id;
-            this.group = group;
         }
 
         public String getNodeId() {
             return nodeId;
         }
 
-        public String getId() {
+        public Id getId() {
             return id;
         }
 
-        public String getGroup() {
-            return group;
-        }
-
         public String toString(){
-            return "nodeId: "+nodeId+", group: "+group+", id: "+id;
+            return "nodeId: "+nodeId+", id: "+id;
         }
     }
 
@@ -380,16 +382,14 @@ public class FileExchange {
      */
     private static class FileResponseBean implements Serializable{
         private String nodeId;
-        private String id;
-        private String group;
+        private Id id;
         private boolean success;
         private String errorMessage;
         private long size;
 
-        private FileResponseBean(String nodeId, String id, String group, boolean success, String errorMessage, long size) {
+        private FileResponseBean(String nodeId, Id id, boolean success, String errorMessage, long size) {
             this.nodeId = nodeId;
             this.id = id;
-            this.group = group;
             this.success = success;
             this.errorMessage = errorMessage;
             this.size = size;
@@ -399,12 +399,8 @@ public class FileExchange {
             return nodeId;
         }
 
-        public String getId() {
+        public Id getId() {
             return id;
-        }
-
-        public String getGroup() {
-            return group;
         }
 
         public boolean isSuccess() {
@@ -420,7 +416,7 @@ public class FileExchange {
         }
 
         public String toString(){
-            String s = "success: "+success+ ", nodeId: "+nodeId+", group: "+group+", id: "+id;
+            String s = "success: "+success+ ", nodeId: "+nodeId+", id: "+id;
             if(success)
                 s+=", size: "+size;
             else

@@ -19,7 +19,8 @@ package cluster.dds.nodes;
 import org.s1.S1SystemError;
 import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.cluster.Locks;
-import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.beans.Id;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.cluster.dds.file.FileStorage;
@@ -54,11 +55,11 @@ public class ClusterNode2 {
 
         Thread.sleep(20000);
 
-        FileStorage.remove("test", "a2");
+        FileStorage.remove(new Id(null,"test","a2"));
 
         FileStorage.FileWriteBean fb = null;
         try{
-            fb = FileStorage.createFileWriteBean("test", "a2", new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            fb = FileStorage.createFileWriteBean(new Id(null,"test","a2"), new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
             try {
                 fb.getOutputStream().write("qwer".getBytes());
             } catch (IOException e) {
@@ -77,7 +78,7 @@ public class ClusterNode2 {
             String lockId = null;
             String id = null;
             try{
-                lockId = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, "transact"), 30, TimeUnit.SECONDS);
+                lockId = Locks.lockEntityQuite(new StorageId(NumberSequence.class, null, null, "transact"), 30, TimeUnit.SECONDS);
                 id = Transactions.begin();
 
                 long l = NumberSequence.next("transact");

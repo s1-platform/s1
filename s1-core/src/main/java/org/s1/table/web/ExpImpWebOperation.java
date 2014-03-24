@@ -17,6 +17,7 @@
 package org.s1.table.web;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.objects.Objects;
 import org.s1.table.Table;
@@ -74,7 +75,7 @@ public class ExpImpWebOperation extends MapWebOperation{
         }
         try{
             f = (ExpImpFormat) Class.forName(cls).newInstance();
-        }catch (Exception e){
+        }catch (Throwable e){
             LOG.warn("Cannot initialize format ("+cls+") for type "+type+": "+e.getClass().getName()+": "+e.getMessage());
             throw S1SystemError.wrap(e);
         }
@@ -85,12 +86,13 @@ public class ExpImpWebOperation extends MapWebOperation{
     public Map<String,Object> viewData(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         String id = Objects.get(params,"id");
         final String type = Objects.get(params,"type");
-        String group = Objects.get(params,"group", UploadWebOperation.GROUP);
+        String database = Objects.get(params,"database");
+        String collection = Objects.get(params,"collection", UploadWebOperation.COLLECTION);
 
         ExpImpFormat.PreviewBean pb = null;
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(group,id);
+            b = FileStorage.read(new Id(database,collection,id));
             ExpImpFormat f = getFormat(type);
             pb = f.preview(b);
         }finally {
@@ -104,12 +106,13 @@ public class ExpImpWebOperation extends MapWebOperation{
     public Map<String,Object> importData(final Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         String id = Objects.get(params,"id");
         final String type = Objects.get(params,"type");
-        String group = Objects.get(params,"group", UploadWebOperation.GROUP);
+        String database = Objects.get(params,"database");
+        String collection = Objects.get(params,"collection", UploadWebOperation.COLLECTION);
         final List<Map<String,Object>> list = Objects.newArrayList();
 
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(group,id);
+            b = FileStorage.read(new Id(database,collection,id));
             ExpImpFormat f = getFormat(type);
             f.doImport(list, b, getTable(params));
         }finally {
@@ -122,7 +125,8 @@ public class ExpImpWebOperation extends MapWebOperation{
     @WebOperationMethod
     public Map<String,Object> exportData(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         String id = UUID.randomUUID().toString();
-        String group = Objects.get(params,"group", UploadWebOperation.GROUP);
+        String database = Objects.get(params,"database");
+        String collection = Objects.get(params,"collection", UploadWebOperation.COLLECTION);
         String type = Objects.get(params,"type");
         final ExpImpFormat format = getFormat(type);
         Map<String,Object> ctx = Objects.get(params,"context");
@@ -150,14 +154,14 @@ public class ExpImpWebOperation extends MapWebOperation{
 
         FileStorage.FileWriteBean b = null;
         try{
-            b = FileStorage.createFileWriteBean(group, id, meta);
+            b = FileStorage.createFileWriteBean(new Id(database,collection,id), meta);
             format.writeExport(b.getOutputStream());
             FileStorage.save(b);
         }finally {
             FileStorage.closeAfterWrite(b);
         }
 
-        return Objects.newHashMap("id",id,"group",group);
+        return Objects.newHashMap("id",id);
     }
 
     @Override

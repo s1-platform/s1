@@ -17,6 +17,7 @@
 package cluster.dds.nodes;
 
 import org.s1.cluster.ClusterLifecycleAction;
+import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.options.OptionsStorage;
 
@@ -44,11 +45,11 @@ public class ClusterNode3 {
 
         Thread.sleep(20000);
 
-        FileStorage.remove("test", "a3");
+        FileStorage.remove(new Id(null,"test","a3"));
 
         FileStorage.FileWriteBean fb = null;
         try{
-            fb = FileStorage.createFileWriteBean("test", "a3", new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
+            fb = FileStorage.createFileWriteBean(new Id(null,"test","a3"), new FileStorage.FileMetaBean("aaa", "txt", "text/plain", 4, null));
             try {
                 fb.getOutputStream().write("qwer".getBytes());
             } catch (IOException e) {

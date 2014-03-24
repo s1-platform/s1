@@ -16,9 +16,11 @@
 
 package org.s1.cluster.dds.sequence;
 
-import org.s1.S1SystemError;
 import org.s1.cluster.Locks;
 import org.s1.cluster.dds.*;
+import org.s1.cluster.dds.beans.CommandBean;
+import org.s1.cluster.dds.beans.MessageBean;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ public class NumberSequence extends DistributedDataSource {
     public static long next(final String name){
         String id = null;
         try{
-            id = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
+            id = Locks.lockEntityQuite(new StorageId(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
             long l = getLocalStorage().read(name);
             l++;
             DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
@@ -61,7 +63,7 @@ public class NumberSequence extends DistributedDataSource {
     public static void set(String name, long value){
         String id = null;
         try{
-            id = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
+            id = Locks.lockEntityQuite(new StorageId(NumberSequence.class, null, null, name), 30, TimeUnit.SECONDS);
             DDSCluster.call(new MessageBean(NumberSequence.class, null, null, name, "set",
                     Objects.newHashMap(String.class, Object.class, "value", value)));
         }finally {

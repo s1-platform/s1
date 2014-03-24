@@ -17,6 +17,9 @@
 package org.s1.cluster.dds;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.beans.CommandBean;
+import org.s1.cluster.dds.beans.MessageBean;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
@@ -29,6 +32,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Node queue worker
@@ -115,7 +120,13 @@ class QueueWorker {
             nameThreads.clear();
         }
 
-        executor = Executors.newFixedThreadPool(threads);
+        executor = Executors.newFixedThreadPool(threads,new ThreadFactory() {
+            private AtomicInteger i = new AtomicInteger(-1);
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "QueueWorkerThread-"+i.incrementAndGet());
+            }
+        });
 
         run = true;
         int s = 0;
@@ -202,7 +213,7 @@ class QueueWorker {
      *
      * @param entityId
      */
-    protected void flush(final EntityIdBean entityId){
+    protected void flush(final StorageId entityId){
         boolean t = true;
         while(t){
             t = false;

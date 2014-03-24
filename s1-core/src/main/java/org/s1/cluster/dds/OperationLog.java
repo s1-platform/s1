@@ -16,6 +16,7 @@
 
 package org.s1.cluster.dds;
 
+import org.s1.cluster.dds.beans.MessageBean;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 

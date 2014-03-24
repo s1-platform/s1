@@ -18,6 +18,9 @@ package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
 import org.s1.cluster.dds.*;
+import org.s1.cluster.dds.beans.CommandBean;
+import org.s1.cluster.dds.beans.Id;
+import org.s1.cluster.dds.beans.MessageBean;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -49,10 +52,9 @@ public class FileStorage extends DistributedDataSource {
                 FileExchange.GetFileBean gf = null;
                 FileWriteBean b = null;
                 try{
-                    gf = FileExchange.getFile(cmd.getCollection(),cmd.getEntity());
+                    gf = FileExchange.getFile(new Id(cmd.getDatabase(),cmd.getCollection(),cmd.getEntity()));
                     b = getLocalStorage().createFileWriteBean(
-                            cmd.getCollection(),
-                            cmd.getEntity(),
+                            new Id(cmd.getDatabase(),cmd.getCollection(),cmd.getEntity()),
                             Objects.get(FileMetaBean.class, cmd.getParams(), "meta"));
                     try {
                         IOUtils.copy(gf.getInputStream(), b.getOutputStream(), 0, gf.getSize());
@@ -67,8 +69,7 @@ public class FileStorage extends DistributedDataSource {
             }
         }else if("remove".equals(cmd.getCommand())){
             getLocalStorage().remove(
-                    cmd.getCollection(),
-                    cmd.getEntity()
+                    new Id(cmd.getDatabase(),cmd.getCollection(),cmd.getEntity())
             );
         }
     }
@@ -89,13 +90,12 @@ public class FileStorage extends DistributedDataSource {
 
     /**
      *
-     * @param group
      * @param id
      * @return
      * @throws NotFoundException
      */
-    public static FileReadBean read(String group, String id) throws NotFoundException{
-        return getLocalStorage().read(group,id);
+    public static FileReadBean read(Id id) throws NotFoundException{
+        return getLocalStorage().read(id);
     }
 
     /**
@@ -116,15 +116,14 @@ public class FileStorage extends DistributedDataSource {
 
     /**
      *
-     * @param group
      * @param id
      * @param is
      * @param meta
      */
-    public static void write(String group, String id, InputStream is, FileMetaBean meta) {
+    public static void write(Id id, InputStream is, FileMetaBean meta) {
         FileWriteBean b = null;
         try {
-            b = createFileWriteBean(group, id, meta);
+            b = createFileWriteBean(id, meta);
             IOUtils.copy(is,b.getOutputStream());
         } catch (IOException e) {
             throw S1SystemError.wrap(e);
@@ -134,24 +133,27 @@ public class FileStorage extends DistributedDataSource {
         save(b);
     }
 
-    public static FileWriteBean createFileWriteBean(String group, String id, FileMetaBean meta) {
-        return getLocalStorage().createFileWriteBean(group, id, meta);
+    public static FileWriteBean createFileWriteBean(Id id, FileMetaBean meta) {
+        return getLocalStorage().createFileWriteBean(id, meta);
     }
 
     public static void save(FileWriteBean b) {
         getLocalStorage().save(b);
-        DDSCluster.call(new MessageBean(FileStorage.class, null, b.getGroup(), b.getId(), "write", Objects.newHashMap(String.class, Object.class,
+        DDSCluster.call(new MessageBean(FileStorage.class,
+                b.getId().getDatabase(), b.getId().getCollection(), b.getId().getEntity(),
+                "write", Objects.newHashMap(String.class, Object.class,
                 "nodeId", DDSCluster.getCurrentNodeId(),
                 "meta", b.getMeta())));
     }
 
     /**
      *
-     * @param group
      * @param id
      */
-    public static void remove(String group, String id){
-        DDSCluster.call(new MessageBean(FileStorage.class, null, group, id, "remove", null));
+    public static void remove(Id id){
+        DDSCluster.call(new MessageBean(FileStorage.class,
+                id.getDatabase(), id.getCollection(), id.getEntity(),
+                "remove", null));
     }
 
     /**
@@ -300,23 +302,17 @@ public class FileStorage extends DistributedDataSource {
      *
      */
     public static class FileWriteBean{
-        private String group;
-        private String id;
+        private Id id;
         private OutputStream outputStream;
         private FileMetaBean meta;
 
-        public FileWriteBean(String group, String id, OutputStream outputStream, FileMetaBean meta) {
-            this.group = group;
+        public FileWriteBean(Id id, OutputStream outputStream, FileMetaBean meta) {
             this.id = id;
             this.outputStream = outputStream;
             this.meta = meta;
         }
 
-        public String getGroup() {
-            return group;
-        }
-
-        public String getId() {
+        public Id getId() {
             return id;
         }
 

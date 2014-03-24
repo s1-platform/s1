@@ -17,6 +17,7 @@
 package org.s1.cluster.dds;
 
 import org.s1.cluster.NodeMessageExchange;
+import org.s1.cluster.dds.beans.MessageBean;
 import org.s1.misc.Closure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

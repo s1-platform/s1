@@ -22,6 +22,7 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.s1.S1SystemError;
 import org.s1.cluster.HazelcastWrapper;
+import org.s1.cluster.dds.beans.MessageBean;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
@@ -152,7 +153,7 @@ class StartupUpdator {
         queue = HazelcastWrapper.getInstance().getQueue(QUEUE);
 
         run = true;
-        new Thread(new NewNodeWatcher()).start();
+        new Thread(new NewNodeWatcher(),"NewNodeWatcher").start();
 
         status = "started";
         LOG.info("Node "+nodeId+" message listener started ("+(System.currentTimeMillis()-t)+" ms.) and ready to recieve messages from other nodes");

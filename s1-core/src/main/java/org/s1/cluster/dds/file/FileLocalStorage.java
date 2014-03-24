@@ -17,6 +17,7 @@
 package org.s1.cluster.dds.file;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.beans.Id;
 import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.FileUtils;
@@ -40,44 +41,43 @@ public class FileLocalStorage {
 
     /**
      *
-     * @param group
      * @param id
      * @return
      * @throws NotFoundException
      */
-    public FileStorage.FileReadBean read(String group, String id) throws NotFoundException {
-        String dir = getBaseDirectory(group);
+    public FileStorage.FileReadBean read(Id id) throws NotFoundException {
+        String dir = getBaseDirectory(id.getDatabase(),id.getCollection());
 
         FileStorage.FileMetaBean meta = new FileStorage.FileMetaBean();
         String ms = null;
         try {
-            ms = FileUtils.readFileToString(new File(dir + File.separator + id + ".json"), "UTF-8");
+            ms = FileUtils.readFileToString(new File(dir + File.separator + id.getEntity() + ".json"), "UTF-8");
         } catch (IOException e) {
             throw S1SystemError.wrap(e);
         }
         if(ms==null)
-            throw new NotFoundException("Local file not found group: '" + group+"', id: '"+id+"'");
+            throw new NotFoundException("Local file not found : " + id);
 
         try{
             meta.fromMap(Objects.fromWire(JSONFormat.evalJSON(ms)));
         }catch(JSONFormatException e){
-            LOG.warn("File meta format error (group: "+group+", id: "+id+"): "+e.getMessage(),e);
+            LOG.warn("File meta format error ("+id+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
         }
 
-        File f = new File(dir+File.separator+id);
+        File f = new File(dir+File.separator+id.getEntity());
         if (!f.exists()){
-            throw new NotFoundException("Local file not found group: '" + group+"', id: '"+id+"'");
+            throw new NotFoundException("Local file not found: " + id);
         }
         meta.setSize(f.length());
         FileInputStream fis = null;
         try{
             fis = new FileInputStream(f);
             if(LOG.isDebugEnabled())
-                LOG.debug("File read successfully (group: "+group+", id: "+id+"): "+meta.toMap());
+                LOG.debug("File read successfully ("+id+"): "+meta.toMap());
             return new FileStorage.FileReadBean(fis, meta);
         }catch (IOException e){
-            LOG.warn("File read error (group: "+group+", id: "+id+"): "+e.getMessage(),e);
+            LOG.warn("File read error ("+id+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
         }
     }
@@ -93,25 +93,24 @@ public class FileLocalStorage {
 
     /**
      *
-     * @param group
      * @param id
      * @param meta
      * @return
      */
-    public FileStorage.FileWriteBean createFileWriteBean(String group, String id, FileStorage.FileMetaBean meta) {
-        String dir = getBaseDirectory(group);
+    public FileStorage.FileWriteBean createFileWriteBean(Id id, FileStorage.FileMetaBean meta) {
+        String dir = getBaseDirectory(id.getDatabase(),id.getCollection());
         if(!new File(dir+File.separator+id).exists())
             meta.setCreated(new Date());
         meta.setLastModified(new Date());
         Map<String,Object> m = meta.toMap();
         FileOutputStream fos = null;
         try{
-            fos = new FileOutputStream(dir+File.separator+id);
+            fos = new FileOutputStream(dir+File.separator+id.getEntity());
 
-            return new FileStorage.FileWriteBean(group,id,fos,meta);
+            return new FileStorage.FileWriteBean(id,fos,meta);
 
         }catch (IOException e){
-            LOG.warn("File write error (group: "+group+", id: "+id+", meta: "+m+"): "+e.getMessage(),e);
+            LOG.warn("File write error (id:"+id+", meta: "+m+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
         }
     }
@@ -122,15 +121,15 @@ public class FileLocalStorage {
      */
     public void save(FileStorage.FileWriteBean b){
         try {
-            String dir = getBaseDirectory(b.getGroup());
-            FileUtils.writeStringToFile(new File(dir + File.separator + b.getId() + ".json"), JSONFormat.toJSON(Objects.toWire(b.getMeta().toMap())), "UTF-8");
+            String dir = getBaseDirectory(b.getId().getDatabase(),b.getId().getCollection());
+            FileUtils.writeStringToFile(new File(dir + File.separator + b.getId().getEntity() + ".json"), JSONFormat.toJSON(Objects.toWire(b.getMeta().toMap())), "UTF-8");
 
         }catch (IOException e){
-            LOG.warn("File write error (group: "+b.getGroup()+", id: "+b.getId()+", meta: "+b.getMeta()+"): "+e.getMessage(),e);
+            LOG.warn("File write error (id: "+b.getId()+", meta: "+b.getMeta()+"): "+e.getMessage(),e);
             throw S1SystemError.wrap(e);
         }
         if(LOG.isDebugEnabled())
-            LOG.debug("File write successfully (group: "+b.getGroup()+", id: "+b.getId()+", meta: "+b.getMeta()+")");
+            LOG.debug("File write successfully (id: "+b.getId()+", meta: "+b.getMeta()+")");
     }
 
     /**
@@ -145,33 +144,37 @@ public class FileLocalStorage {
     /**
      * Remove file
      *
-     * @param group
      * @param id
      */
-    public void remove(String group, String id){
-        String dir = getBaseDirectory(group);
-        boolean i1 = new File(dir+File.separator+id).delete();
-        boolean i2 = new File(dir+File.separator+id+".json").delete();
+    public void remove(Id id){
+        String dir = getBaseDirectory(id.getDatabase(),id.getCollection());
+        boolean i1 = new File(dir+File.separator+id.getEntity()).delete();
+        boolean i2 = new File(dir+File.separator+id.getEntity()+".json").delete();
         if(LOG.isDebugEnabled())
-            LOG.debug("File removed successfully("+(i1&&i2)+") group: "+group+", id: "+id);
+            LOG.debug("File removed successfully("+(i1&&i2)+") id: "+id);
     }
 
     private static String baseDirectory;
 
     /**
      *
-     * @param path
+     * @param database
+     * @param collection
      * @return
      */
-    private static synchronized String getBaseDirectory(String path) {
+    private static synchronized String getBaseDirectory(String database, String collection) {
+        if(Objects.isNullOrEmpty(database))
+            database = "default";
+        if(Objects.isNullOrEmpty(collection))
+            collection = "default";
         if(Objects.isNullOrEmpty(baseDirectory)){
             baseDirectory = Options.getStorage().getSystem("fileStorage.home", System.getProperty("user.home") + File.separator + ".s1-files");
         }
-        File dir = new File(baseDirectory+File.separator+path);
+        File dir = new File(baseDirectory+File.separator+database+File.separator+collection);
         if(!dir.exists())
             dir.mkdirs();
         if(!dir.isDirectory())
-            throw new S1SystemError("Directory error: "+baseDirectory+File.separator+path);
+            throw new S1SystemError("Directory error: "+baseDirectory+File.separator+database+File.separator+collection);
         return dir.getAbsolutePath();
     }
 

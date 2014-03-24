@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Load testing helper
@@ -41,7 +43,13 @@ public class LoadTestUtils {
     public static int run(String message, int total, int parallel, Closure<Integer,Object> test) {
         long start = System.currentTimeMillis();
         List<ResultBean> results = Objects.newArrayList();
-        ExecutorService executor = Executors.newFixedThreadPool(parallel);
+        ExecutorService executor = Executors.newFixedThreadPool(parallel,new ThreadFactory() {
+            private AtomicInteger i = new AtomicInteger(-1);
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "LoadTestThread-"+i.incrementAndGet());
+            }
+        });
         for (int i = 0; i < total; i++) {
             Runnable worker = new LoadTestThread(i, results, test);
             executor.execute(worker);

@@ -32,6 +32,16 @@ public class ActionBean {
     private Types type;
     private ObjectSchema schema;
 
+    public ActionBean() {
+    }
+
+    public ActionBean(String name, String label, Types type, ObjectSchema schema) {
+        this.name = name;
+        this.label = label;
+        this.type = type;
+        this.schema = schema;
+    }
+
     /**
      *
      * @return

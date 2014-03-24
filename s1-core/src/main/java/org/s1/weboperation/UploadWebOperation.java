@@ -17,6 +17,7 @@
 package org.s1.weboperation;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
@@ -36,7 +37,7 @@ public class UploadWebOperation extends MapWebOperation {
     /**
      * Default group
      */
-    public static final String GROUP = "upload";
+    public static final String COLLECTION = "upload";
 
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -65,9 +66,10 @@ public class UploadWebOperation extends MapWebOperation {
      */
     public static void upload(Map<String, Object> params,
                               Map<String, Object> result) throws Exception {
-        String group = (String) params.get("group");
-        if (Objects.isNullOrEmpty(group))
-            group = GROUP;
+        String database = (String) params.get("database");
+        String collection = (String) params.get("collection");
+        if (Objects.isNullOrEmpty(collection))
+            collection = COLLECTION;
 
         if (params.containsKey("file")) {
             String id = UUID.randomUUID().toString();
@@ -76,7 +78,7 @@ public class UploadWebOperation extends MapWebOperation {
 
             FileStorage.FileWriteBean b = null;
             try{
-                b = FileStorage.createFileWriteBean(group, id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                b = FileStorage.createFileWriteBean(new Id(database,collection,id), new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
                 try {
                     IOUtils.copy(fp.getInputStream(), b.getOutputStream());
                 } catch (IOException e) {
@@ -97,7 +99,7 @@ public class UploadWebOperation extends MapWebOperation {
 
                 FileStorage.FileWriteBean b = null;
                 try{
-                    b = FileStorage.createFileWriteBean(group, id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+                    b = FileStorage.createFileWriteBean(new Id(database,collection,id), new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
                     try {
                         IOUtils.copy(fp.getInputStream(), b.getOutputStream());
                     } catch (IOException e) {
@@ -122,13 +124,13 @@ public class UploadWebOperation extends MapWebOperation {
      */
     public static void download(Map<String, Object> params,
                                 final HttpServletResponse response) throws Exception {
-
-        String group = Objects.get(params, "group", GROUP);
+        String database = Objects.get(params, "database");
+        String collection = Objects.get(params, "collection", COLLECTION);
         String id = Objects.get(params, "id");
 
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(group, id);
+            b = FileStorage.read(new Id(database,collection,id));
             response.setContentType(b.getMeta().getContentType());
             try {
                 IOUtils.copy(b.getInputStream(), response.getOutputStream());
@@ -150,13 +152,14 @@ public class UploadWebOperation extends MapWebOperation {
      */
     public static void downloadAsFile(Map<String, Object> params,
                                       final HttpServletResponse response) throws Exception {
-        String group = Objects.get(params, "group", GROUP);
+        String database = Objects.get(params, "database");
+        String collection = Objects.get(params, "collection", COLLECTION);
         String id = Objects.get(params, "id");
         String name = Objects.get(params, "name");
 
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(group,id);
+            b = FileStorage.read(new Id(database,collection,id));
             response.setContentType(b.getMeta().getContentType());
             if (Objects.isNullOrEmpty(name)) {
                 name = b.getMeta().getName();

@@ -20,9 +20,8 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.core.IMap;
 import org.s1.S1SystemError;
 import org.s1.cluster.dds.DDSCluster;
-import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.cluster.dds.Transactions;
-import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 
 import java.util.List;
@@ -178,7 +177,7 @@ public class Locks {
      * @param tu
      * @return
      */
-    public static String lockEntityQuite(EntityIdBean e, long timeout, TimeUnit tu) {
+    public static String lockEntityQuite(StorageId e, long timeout, TimeUnit tu) {
         return lockEntitiesQuite(Objects.newArrayList(e), timeout, tu);
     }
 
@@ -190,7 +189,7 @@ public class Locks {
      * @return
      * @throws TimeoutException
      */
-    public static String lockEntity(EntityIdBean e, long timeout, TimeUnit tu) throws TimeoutException {
+    public static String lockEntity(StorageId e, long timeout, TimeUnit tu) throws TimeoutException {
         return lockEntities(Objects.newArrayList(e), timeout, tu);
     }
 
@@ -201,7 +200,7 @@ public class Locks {
      * @param tu
      * @return
      */
-    public static String lockEntitiesQuite(final List<EntityIdBean> e, long timeout, TimeUnit tu) {
+    public static String lockEntitiesQuite(final List<StorageId> e, long timeout, TimeUnit tu) {
         try{
             return lockEntities(e,timeout,tu);
         }catch (TimeoutException ex){
@@ -217,16 +216,16 @@ public class Locks {
      * @return
      * @throws TimeoutException
      */
-    public static String lockEntities(final List<EntityIdBean> e, long timeout, TimeUnit tu) throws TimeoutException {
+    public static String lockEntities(final List<StorageId> e, long timeout, TimeUnit tu) throws TimeoutException {
         if(Transactions.isInTransaction()){
             return null;
         }else{
             List<String> l = Objects.newArrayList();
-            for(EntityIdBean _e:e){
+            for(StorageId _e:e){
                 l.add(_e.getLockName());
             }
             String id = Locks.lock(l,timeout,tu);
-            for(EntityIdBean _e:e){
+            for(StorageId _e:e){
                 DDSCluster.flush(_e);
             }
             return id;

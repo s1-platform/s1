@@ -16,10 +16,8 @@
 
 package cluster.dds;
 
-import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.Locks;
-import org.s1.cluster.dds.DDSCluster;
-import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.cluster.dds.Transactions;
 import org.s1.cluster.dds.sequence.NumberSequence;
 import org.s1.misc.Closure;
@@ -29,7 +27,6 @@ import org.s1.test.ServerTest;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * s1v2
@@ -78,7 +75,7 @@ public class NumberSequenceTest extends ServerTest {
                 String lockId = null;
                 String id = null;
                 try{
-                    lockId = Locks.lockEntityQuite(new EntityIdBean(NumberSequence.class,null,null,"transact"),30,TimeUnit.SECONDS);
+                    lockId = Locks.lockEntityQuite(new StorageId(NumberSequence.class,null,null,"transact"),30,TimeUnit.SECONDS);
                     id = Transactions.begin();
                     long l = NumberSequence.next("transact");
                     trace(l + "," + (l + 1));

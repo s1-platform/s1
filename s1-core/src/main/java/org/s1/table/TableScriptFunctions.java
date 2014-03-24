@@ -146,8 +146,8 @@ public class TableScriptFunctions extends ScriptFunctions{
      * @throws AlreadyExistsException
      * @throws CustomActionException
      */
-    public Map<String,Object> changeState(String table, String id, String action, Map<String,Object> data, Map<String,Object> foundation) throws ActionNotAvailableException, AccessDeniedException, ValidationException, NotFoundException, AlreadyExistsException, CustomActionException {
-        return getTable(table).changeState(id,action,data,foundation);
+    public Map<String,Object> changeState(String table, String id, String action, Map<String,Object> data) throws ActionNotAvailableException, AccessDeniedException, ValidationException, NotFoundException, AlreadyExistsException, CustomActionException {
+        return getTable(table).changeState(id,action,data);
     }
 
     /**

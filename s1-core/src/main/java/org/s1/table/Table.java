@@ -19,9 +19,9 @@ package org.s1.table;
 import org.s1.S1SystemError;
 import org.s1.cluster.Locks;
 import org.s1.cluster.Session;
-import org.s1.cluster.dds.DDSCluster;
 import org.s1.cluster.dds.DistributedDataSource;
-import org.s1.cluster.dds.EntityIdBean;
+import org.s1.cluster.dds.beans.CollectionId;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ListAttribute;
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Base table class
@@ -47,17 +46,6 @@ import java.util.concurrent.TimeoutException;
 public abstract class Table {
 
     private static final Logger LOG = LoggerFactory.getLogger(Table.class);
-
-    protected Class<? extends DistributedDataSource> dataSource;
-    protected String database;
-    protected String collection;
-    protected List<IndexBean> indexes = Objects.newArrayList(IndexBean.class,
-            new IndexBean(Objects.newArrayList(String.class, "id"), true, "id"));
-
-    protected ObjectSchema schema;
-    protected ObjectSchema importSchema;
-
-    protected List<ActionBean> actions = Objects.newArrayList();
 
     /**
      * LOCK TIMEOUT
@@ -67,6 +55,8 @@ public abstract class Table {
     public static final String CTX_VALIDATE_KEY = "validate";
     public static final String CTX_DEEP_KEY = "deep";
     public static final String CTX_EXPAND_KEY = "expand";
+
+    public static final String TABLE_LOCK_ID = "fictional_lock_id";
 
     /**
      *
@@ -81,33 +71,17 @@ public abstract class Table {
      * DESCRIPTOR
      ==========================================*/
 
-    public Class<? extends DistributedDataSource> getDataSource() {
-        return dataSource;
-    }
+    public abstract Class<? extends DistributedDataSource> getDataSource();
 
-    public String getDatabase() {
-        return database;
-    }
+    public abstract CollectionId getCollectionId();
 
-    public String getCollection() {
-        return collection;
-    }
+    public abstract List<IndexBean> getIndexes();
 
-    public List<IndexBean> getIndexes() {
-        return indexes;
-    }
+    public abstract ObjectSchema getSchema();
 
-    public ObjectSchema getSchema() {
-        return schema;
-    }
+    public abstract ObjectSchema getImportSchema();
 
-    public ObjectSchema getImportSchema() {
-        return importSchema;
-    }
-
-    public List<ActionBean> getActions() {
-        return actions;
-    }
+    public abstract List<ActionBean> getActions();
 
     /*==========================================
      * INDEXES
@@ -117,6 +91,7 @@ public abstract class Table {
 
     public void checkIndexes() {
         int i = 0;
+        collectionIndex("index_id", new IndexBean(Objects.newArrayList("id"),true,null));
         for (IndexBean b : getIndexes()) {
             collectionIndex("index_" + i, b);
             i++;
@@ -284,21 +259,21 @@ public abstract class Table {
     protected abstract void collectionRemove(String id);
 
     public Map<String, Object> changeState(final String id, final String action,
-                                           final Map<String, Object> data, final Map<String, Object> foundation)
+                                           final Map<String, Object> data)
             throws AccessDeniedException, ValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException, CustomActionException {
         checkAccess();
         String lockId = null;
         try {
             //lock and set
-            lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
-            return changeRecordState(id, action, data, foundation);
+            lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            return changeRecordState(id, action, data);
         } finally {
             Locks.releaseLock(lockId);
         }
     }
 
     protected Map<String, Object> changeRecordState(String id, String action,
-                                                    Map<String, Object> data, Map<String, Object> foundation)
+                                                    Map<String, Object> data)
             throws ValidationException, ActionNotAvailableException, AlreadyExistsException, NotFoundException, AccessDeniedException, CustomActionException {
         if (data == null)
             data = Objects.newHashMap();
@@ -318,7 +293,7 @@ public abstract class Table {
             data = a.getSchema().validate(data);
 
         //brules
-        runBefore(a, oldObject, data, foundation);
+        runBefore(a, Objects.copy(oldObject), data);
 
         Map<String, Object> newObject = null;
         if (type != ActionBean.Types.REMOVE) {
@@ -338,7 +313,8 @@ public abstract class Table {
             String lockId = null;
             try {
                 //lock and set
-                lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                //avoiding dead-lock we lock not collection, but some fictional id
+                lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
                 checkUnique(newObject, type == ActionBean.Types.ADD);
                 //save
                 if (type == ActionBean.Types.SET)
@@ -353,7 +329,7 @@ public abstract class Table {
             collectionRemove(id);
         }
 
-        runAfter(a, oldObject, newObject, data, foundation);
+        runAfter(a, Objects.copy(oldObject), Objects.copy(newObject), data);
 
         return type != ActionBean.Types.REMOVE ? newObject : oldObject;
     }
@@ -365,13 +341,13 @@ public abstract class Table {
 
     protected void runBefore(ActionBean action,
                              Map<String, Object> oldObject,
-                             Map<String, Object> data, Map<String, Object> foundation) throws CustomActionException {
+                             Map<String, Object> data) throws CustomActionException {
 
     }
 
     protected void runAfter(ActionBean action,
                             Map<String, Object> oldObject, Map<String, Object> newObject,
-                            Map<String, Object> data, Map<String, Object> foundation) throws CustomActionException {
+                            Map<String, Object> data) throws CustomActionException {
 
     }
 
@@ -400,7 +376,7 @@ public abstract class Table {
                 String lockId = null;
                 try {
                     //lock and set
-                    lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                    lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
                     importRecord(id, oldObject, element);
                 } finally {
                     Locks.releaseLock(lockId);
@@ -429,7 +405,7 @@ public abstract class Table {
         String lockId = null;
         try {
             //lock and set
-            lockId = Locks.lockEntityQuite(new EntityIdBean(getDataSource(), getDatabase(), getCollection(), ""),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
             checkUnique(newObject, oldObject==null);
             //save
             if (oldObject!=null)
@@ -477,11 +453,11 @@ public abstract class Table {
      ==========================================*/
 
     public String getName() {
-        return new EntityIdBean(getDataSource(), getDatabase(), getCollection(), "").getLockName();
+        return new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), "").getLockName();
     }
 
     protected String newId() {
-        return getCollection() + "_" + UUID.randomUUID().toString();
+        return getCollectionId().getDatabase() + "_" + getCollectionId().getCollection() + "_" + UUID.randomUUID().toString();
     }
 
     public ActionBean getAction(String id, String name, Map<String, Object> record) throws ActionNotAvailableException, NotFoundException {
@@ -528,7 +504,7 @@ public abstract class Table {
 
     public List<ActionBean> getAvailableActions(String id) throws NotFoundException, AccessDeniedException {
         Map<String, Object> obj = null;
-        if (id != null) {
+        if (!Objects.isNullOrEmpty(id)) {
             obj = get(id);
         }
         return getAvailableActions(obj);
@@ -537,6 +513,8 @@ public abstract class Table {
     public List<ActionBean> getAvailableActions(Map<String, Object> record) {
         List<ActionBean> a = Objects.newArrayList();
         for (ActionBean it : getActions()) {
+            if((record==null && it.getType()== ActionBean.Types.ADD)
+                    ||(record!=null && (it.getType() == ActionBean.Types.SET || it.getType() == ActionBean.Types.REMOVE)))
             //check access
             if (isActionAllowed(it, record))
                 a.add(it);

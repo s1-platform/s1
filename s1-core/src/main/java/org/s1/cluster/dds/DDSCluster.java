@@ -19,7 +19,8 @@ package org.s1.cluster.dds;
 import com.hazelcast.core.IAtomicLong;
 import org.s1.S1SystemError;
 import org.s1.cluster.HazelcastWrapper;
-import org.s1.cluster.Locks;
+import org.s1.cluster.dds.beans.MessageBean;
+import org.s1.cluster.dds.beans.StorageId;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -29,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.net.BindException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -200,7 +199,7 @@ public class DDSCluster {
      *
      * @param e
      */
-    public static void flush(EntityIdBean e){
+    public static void flush(StorageId e){
         queueWorker.flush(e);
     }
 

@@ -117,8 +117,7 @@ public class TableWebOperation extends MapWebOperation{
         String id = Objects.get(params,"id");
         String action = Objects.get(params,"action");
         Map<String,Object> data = Objects.get(params, "data");
-        Map<String,Object> foundation = Objects.get(params, "foundation");
-        return getTable(params).changeState(id,action,data,foundation);
+        return getTable(params).changeState(id,action,data);
     }
 
     @WebOperationMethod
@@ -131,7 +130,7 @@ public class TableWebOperation extends MapWebOperation{
                     "name",c.getName(),
                     "label",c.getLabel(),
                     "type",c.getType().toString().toLowerCase(),
-                    "schema",c.getSchema().toMap()));
+                    "schema",c.getSchema()==null?null:c.getSchema().toMap()));
         }
         return Objects.newHashMap("list", r);
     }
@@ -148,6 +147,8 @@ public class TableWebOperation extends MapWebOperation{
 
     @WebOperationMethod
     public Map<String,Object> getSchema(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        if(getTable(params).getSchema()==null)
+            return Objects.newHashMap();
         return getTable(params).getSchema().toMap();
     }
 

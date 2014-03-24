@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +52,13 @@ public class S1ScriptEngine {
 
     static{
         int ps = Options.getStorage().getSystem(Integer.class,OPTIONS_KEY+".threadCount",500);
-        service = Executors.newFixedThreadPool(ps);
+        service = Executors.newFixedThreadPool(ps,new ThreadFactory() {
+            private AtomicInteger i = new AtomicInteger(-1);
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "S1ScriptEngineThread-"+i.incrementAndGet());
+            }
+        });
     }
 
     private List<Map<String,Object>> functions = Objects.newArrayList();

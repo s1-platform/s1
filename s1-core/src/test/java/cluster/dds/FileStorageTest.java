@@ -16,6 +16,7 @@
 
 package cluster.dds;
 
+import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.Closure;
 
@@ -27,7 +28,6 @@ import org.s1.test.ServerTest;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * s1v2
@@ -50,7 +50,7 @@ public class FileStorageTest extends ServerTest {
 
                 FileStorage.FileWriteBean fw = null;
                 try{
-                    fw = FileStorage.createFileWriteBean("test","aa"+input,new FileStorage.FileMetaBean("test", "txt", "text/plain", 4, null));
+                    fw = FileStorage.createFileWriteBean(new Id(null,"test","aa"+input),new FileStorage.FileMetaBean("test", "txt", "text/plain", 4, null));
                     try {
                         fw.getOutputStream().write("qwer".getBytes());
                     } catch (IOException e) {
@@ -64,7 +64,7 @@ public class FileStorageTest extends ServerTest {
                 try {
                     FileStorage.FileReadBean fr = null;
                     try{
-                        fr = FileStorage.read("test","aa"+input);
+                        fr = FileStorage.read(new Id(null,"test","aa"+input));
                         assertEquals("qwer", IOUtils.toString(fr.getInputStream(), "UTF-8"));
                         assertEquals(4L, fr.getMeta().getSize());
                         assertEquals("text/plain", fr.getMeta().getContentType());
@@ -82,16 +82,16 @@ public class FileStorageTest extends ServerTest {
                     throw new RuntimeException(e);
                 }
 
-                assertTrue(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "test" + File.separator + "aa" + input).exists());
-                assertTrue(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "test" + File.separator + "aa" + input + ".json").exists());
+                assertTrue(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "default" + File.separator + "test" + File.separator + "aa" + input).exists());
+                assertTrue(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "default" + File.separator + "test" + File.separator + "aa" + input + ".json").exists());
 
-                FileStorage.remove("test", "aa" + input);
+                FileStorage.remove(new Id(null,"test","aa"+input));
 
                 if (input == 0)
-                    trace(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "test" + File.separator + "aa" + input).getAbsolutePath());
+                    trace(new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "default" + File.separator + "test" + File.separator + "aa" + input).getAbsolutePath());
 
-                assertTrue(!new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "test" + File.separator + "aa" + input).exists());
-                assertTrue(!new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "test" + File.separator + "aa" + input + ".json").exists());
+                assertTrue(!new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "default" + File.separator + "test" + File.separator + "aa" + input).exists());
+                assertTrue(!new File(Options.getStorage().getSystem("fileStorage.home") + File.separator + "default" + File.separator + "test" + File.separator + "aa" + input + ".json").exists());
 
                 return null;
             }
