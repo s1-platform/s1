@@ -63,12 +63,12 @@ public class TableWebTest extends ServerTest {
 
                             boolean b = false;
                             assertEquals(1,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "id",id),null),"list").size());
 
                             //add
                             m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "action","add",
                                     "data",Objects.newHashMap("a","a_"+input,"b",-1)),null);
 
@@ -80,11 +80,11 @@ public class TableWebTest extends ServerTest {
 
                             //set
                             assertEquals(2,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "id",id),null),"list").size());
 
                             m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "action","setB",
                                     "id",id,
                                     "data",Objects.newHashMap("b1",input)),null);
@@ -95,7 +95,7 @@ public class TableWebTest extends ServerTest {
 
                             //get
                             m = client().postJSON(getContext()+"/dispatcher/Table.get",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "id",id),null);
 
                             assertEquals(id, Objects.get(m, "id"));
@@ -123,7 +123,7 @@ public class TableWebTest extends ServerTest {
                             List<Map<String, Object>> l = Objects.newArrayList();
 
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "skip",0,"max",10,
                                     "search",Objects.newHashMap("node",Objects.newHashMap("field","a","operation","equals","value","a_"+input))
                                     ),null);
@@ -137,7 +137,7 @@ public class TableWebTest extends ServerTest {
                             //list all
                             l.clear();
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "skip",0,"max",10,
                                     "sort",Objects.newHashMap("name","a","desc",false)
                             ),null);
@@ -150,7 +150,7 @@ public class TableWebTest extends ServerTest {
                             //list full-text
                             /*l.clear();
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "skip",0,"max",10,
                                     "search",Objects.newHashMap("custom",Objects.newHashMap("$text","a_0"))
                             ),null);
@@ -162,7 +162,7 @@ public class TableWebTest extends ServerTest {
 
                             //aggregate
                             m = client().postJSON(getContext()+"/dispatcher/Table.aggregate",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "field","b"
                             ),null);
                             assertEquals(0,Objects.get(Integer.class,m,"min").intValue());
@@ -178,14 +178,14 @@ public class TableWebTest extends ServerTest {
 
                             //count group
                             m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "field","b"
                             ),null);
                             assertTrue(Objects.get(List.class,m,"list").size()>0);
                             if(input==0)
                                 trace(Objects.get(m,"list"));
                             m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "field","a"
                             ),null);
                             assertTrue(Objects.get(List.class,m,"list").size()>0);
@@ -211,11 +211,11 @@ public class TableWebTest extends ServerTest {
 
                             //remove
                             assertEquals(2,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "id",id),null),"list").size());
 
                             m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
-                                    "table","table.TestTable1",
+                                    "table","table1",
                                     "action","remove",
                                     "id",id),null);
 
@@ -225,7 +225,7 @@ public class TableWebTest extends ServerTest {
 
                             try{
                                 m = client().postJSON(getContext() + "/dispatcher/Table.get", Objects.newHashMap(String.class, Object.class,
-                                        "table","table.TestTable1",
+                                        "table","table1",
                                         "id", id
                                 ), null);
                             }catch (RuntimeException e){

@@ -18,10 +18,7 @@ package org.s1.table.web;
 
 import org.s1.S1SystemError;
 import org.s1.objects.Objects;
-import org.s1.table.ActionBean;
-import org.s1.table.AggregationBean;
-import org.s1.table.CountGroupBean;
-import org.s1.table.Table;
+import org.s1.table.*;
 import org.s1.table.format.FieldsMask;
 import org.s1.table.format.Query;
 import org.s1.table.format.Sort;
@@ -40,13 +37,7 @@ public class TableWebOperation extends MapWebOperation{
 
     protected Table getTable(Map<String,Object> params){
         String t = Objects.get(params,"table");
-        try{
-            Table tbl = (Table)Class.forName(t).newInstance();
-            tbl.init();
-            return tbl;
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
-        }
+        return Tables.get(t);
     }
 
     @WebOperationMethod

@@ -76,7 +76,7 @@ public class TableWebExpImpTest extends ServerTest {
 
                 //add
                 m = client().postJSON(getContext()+"/dispatcher/TableExpImp.exportData",Objects.newHashMap(String.class,Object.class,
-                        "table","table.TestTable1",
+                        "table","table1",
                         "collection","test1",
                         "type","default",
                         "search",Objects.newHashMap(
@@ -147,7 +147,7 @@ public class TableWebExpImpTest extends ServerTest {
 
                 //import
                 m = client().postJSON(getContext()+"/dispatcher/TableExpImp.importData",Objects.newHashMap(String.class,Object.class,
-                        "table","table.TestTable1",
+                        "table","table1",
                         "collection","test2",
                         "type","default",
                         "id",id),null);

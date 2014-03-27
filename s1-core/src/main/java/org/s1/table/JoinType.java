@@ -31,13 +31,7 @@ public class JoinType extends ComplexType{
 
     protected Table getTable(){
         String t = Objects.get(getConfig(),"table");
-        try{
-            Table tbl = (Table)Class.forName(t).newInstance();
-            tbl.init();
-            return tbl;
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
-        }
+        return Tables.get(t);
     }
 
     @Override

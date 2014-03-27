@@ -21,6 +21,7 @@ import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.objects.Objects;
 import org.s1.table.Table;
+import org.s1.table.Tables;
 import org.s1.table.format.Query;
 import org.s1.weboperation.MapWebOperation;
 import org.s1.weboperation.UploadWebOperation;
@@ -43,13 +44,7 @@ public class ExpImpWebOperation extends MapWebOperation{
 
     protected Table getTable(Map<String,Object> params){
         String t = Objects.get(params,"table");
-        try{
-            Table tbl = (Table)Class.forName(t).newInstance();
-            tbl.init();
-            return tbl;
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
-        }
+        return Tables.get(t);
     }
 
     protected Query getQuery(Map<String,Object> params){
