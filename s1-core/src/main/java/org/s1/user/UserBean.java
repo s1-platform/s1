@@ -28,7 +28,6 @@ public class UserBean extends HashMap<String,Object>{
 
     public static final String ID = "id";
     public static final String NAME = "name";
-    public static final String FULL_NAME = "fullName";
 
     public UserBean(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
@@ -62,11 +61,4 @@ public class UserBean extends HashMap<String,Object>{
         return Objects.get(this,NAME);
     }
 
-    /**
-     *
-     * @return
-     */
-    public String getFullName() {
-        return Objects.get(this, FULL_NAME);
-    }
 }

@@ -285,7 +285,7 @@ public abstract class Table {
             //add
             oldObject = null;
             if (Objects.isNullOrEmpty(id))
-                id = newId();
+                id = newId(a, data);
         }
 
         //validate data
@@ -293,7 +293,7 @@ public abstract class Table {
             data = a.getSchema().validate(data);
 
         //brules
-        runBefore(a, Objects.copy(oldObject), data);
+        runBefore(id, a, Objects.copy(oldObject), data);
 
         Map<String, Object> newObject = null;
         if (type != ActionBean.Types.REMOVE) {
@@ -329,7 +329,7 @@ public abstract class Table {
             collectionRemove(id);
         }
 
-        runAfter(a, Objects.copy(oldObject), Objects.copy(newObject), data);
+        runAfter(id, a, Objects.copy(oldObject), Objects.copy(newObject), data);
 
         return type != ActionBean.Types.REMOVE ? newObject : oldObject;
     }
@@ -339,13 +339,13 @@ public abstract class Table {
         return result;
     }
 
-    protected void runBefore(ActionBean action,
+    protected void runBefore(String id, ActionBean action,
                              Map<String, Object> oldObject,
                              Map<String, Object> data) throws CustomActionException {
 
     }
 
-    protected void runAfter(ActionBean action,
+    protected void runAfter(String id, ActionBean action,
                             Map<String, Object> oldObject, Map<String, Object> newObject,
                             Map<String, Object> data) throws CustomActionException {
 
@@ -365,7 +365,7 @@ public abstract class Table {
                 try {
                     boolean exists = !Objects.isNullOrEmpty(id);
                     if(!exists) {
-                        id = newId();
+                        id = newId(null,element);
                         element.put("id", id);
                     }
                     //lock and set
@@ -461,7 +461,7 @@ public abstract class Table {
         return new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), "").getLockName();
     }
 
-    protected String newId() {
+    protected String newId(ActionBean a, Map<String,Object> data) {
         return getCollectionId().getDatabase() + "_" + getCollectionId().getCollection() + "_" + UUID.randomUUID().toString();
     }
 
