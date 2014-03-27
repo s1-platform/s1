@@ -17,14 +17,14 @@
 package table;
 
 import org.s1.cluster.dds.beans.CollectionId;
-import org.s1.mongodb.table.MongoDBTable;
+import org.s1.mongodb.table.MongoDBTableStorage;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ObjectSchema;
 import org.s1.objects.schema.SimpleTypeAttribute;
 import org.s1.table.ActionBean;
 import org.s1.table.IndexBean;
 import org.s1.table.Table;
-import org.s1.table.errors.CustomActionException;
+import org.s1.table.TableStorage;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ import java.util.Map;
  * Date: 24.03.2014
  * Time: 12:24
  */
-public class TestTable1 extends MongoDBTable{
+public class TestTable1 extends Table {
 
     @Override
     public CollectionId getCollectionId() {
@@ -55,6 +55,11 @@ public class TestTable1 extends MongoDBTable{
                 new SimpleTypeAttribute("a","aaa",String.class).setRequired(true),
                 new SimpleTypeAttribute("b","bbb",Integer.class)
         );
+    }
+
+    @Override
+    protected TableStorage createTableStorage() {
+        return new MongoDBTableStorage();
     }
 
     @Override
@@ -89,8 +94,8 @@ public class TestTable1 extends MongoDBTable{
         }
     }
 
-    @Override
+    /*@Override
     public List<String> getFullTextFields() {
         return Objects.newArrayList("a","b");
-    }
+    }*/
 }

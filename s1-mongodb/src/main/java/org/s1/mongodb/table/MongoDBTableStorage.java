@@ -27,10 +27,7 @@ import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.mongodb.cluster.MongoDBDDS;
 import org.s1.objects.Objects;
-import org.s1.table.AggregationBean;
-import org.s1.table.CountGroupBean;
-import org.s1.table.IndexBean;
-import org.s1.table.Table;
+import org.s1.table.*;
 import org.s1.table.errors.MoreThanOneFoundException;
 import org.s1.table.errors.NotFoundException;
 import org.s1.table.format.FieldsMask;
@@ -43,11 +40,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MongoDB Table implementation
+ * MongoDB Table storage implementation
  */
-public abstract class MongoDBTable extends Table{
+public class MongoDBTableStorage extends TableStorage{
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDBTable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBTableStorage.class);
 
     /**
      *
@@ -72,12 +69,12 @@ public abstract class MongoDBTable extends Table{
 
     @Override
     public void init() {
-        super.init();
-        DBCollection coll = MongoDBConnectionHelper.getConnection(null).getCollection(getCollectionId().getCollection());
+        //super.init();
+        /*DBCollection coll = MongoDBConnectionHelper.getConnection(null).getCollection(getCollectionId().getCollection());
         List<DBObject> ftlist = coll.getIndexInfo();
 
         boolean exists = false;
-
+        */
         /*for(DBObject o: ftlist){
             if("full_text_index".equals(o.get("name"))){
                 exists = true;
@@ -128,24 +125,24 @@ public abstract class MongoDBTable extends Table{
     }
 
     @Override
-    protected void collectionIndex(String name, IndexBean ind) {
+    public void collectionIndex(String name, IndexBean ind) {
         DBObject i = new BasicDBObject();
         for(String f:ind.getFields()){
             i.put(f,1);
         }
-        MongoDBConnectionHelper.getConnection(getCollectionId().getDatabase())
-                .getCollection(getCollectionId().getCollection()).ensureIndex(i,name);
+        MongoDBConnectionHelper.getConnection(getTable().getCollectionId().getDatabase())
+                .getCollection(getTable().getCollectionId().getCollection()).ensureIndex(i,name);
     }
 
     @Override
-    protected long collectionList(List<Map<String, Object>> result,
+    public long collectionList(List<Map<String, Object>> result,
                                   Query search, Sort sort, FieldsMask fields, int skip, int max) {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
         /*String fullTextQuery = Objects.get(search.getCustom(),"$text");
         if(search.getCustom()!=null)
             search.getCustom().remove("$text");*/
         //if(Objects.isNullOrEmpty(fullTextQuery)){
-            return MongoDBQueryHelper.list(result,getCollectionId(),
+            return MongoDBQueryHelper.list(result,getTable().getCollectionId(),
                     MongoDBFormat.formatSearch(search),
                     MongoDBFormat.formatSort(sort),
                     MongoDBFormat.formatFieldsMask(fields),skip,max);
@@ -157,36 +154,36 @@ public abstract class MongoDBTable extends Table{
     }
 
     @Override
-    protected Map<String, Object> collectionGet(Query search) throws NotFoundException, MoreThanOneFoundException {
+    public Map<String, Object> collectionGet(Query search) throws NotFoundException, MoreThanOneFoundException {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBQueryHelper.get(getCollectionId(),MongoDBFormat.formatSearch(search));
+        return MongoDBQueryHelper.get(getTable().getCollectionId(),MongoDBFormat.formatSearch(search));
     }
 
     @Override
-    protected AggregationBean collectionAggregate(String field, Query search) {
+    public AggregationBean collectionAggregate(String field, Query search) {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBAggregationHelper.aggregate(getCollectionId(),field,MongoDBFormat.formatSearch(search));
+        return MongoDBAggregationHelper.aggregate(getTable().getCollectionId(),field,MongoDBFormat.formatSearch(search));
     }
 
     @Override
-    protected List<CountGroupBean> collectionCountGroup(String field, Query search) {
+    public List<CountGroupBean> collectionCountGroup(String field, Query search) {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBAggregationHelper.countGroup(getCollectionId(), field, MongoDBFormat.formatSearch(search));
+        return MongoDBAggregationHelper.countGroup(getTable().getCollectionId(), field, MongoDBFormat.formatSearch(search));
     }
 
     @Override
-    protected void collectionAdd(String id, Map<String, Object> data) {
-        MongoDBDDS.add(new Id(getCollectionId().getDatabase(),getCollectionId().getCollection(),id), data);
+    public void collectionAdd(String id, Map<String, Object> data) {
+        MongoDBDDS.add(new Id(getTable().getCollectionId().getDatabase(),getTable().getCollectionId().getCollection(),id), data);
     }
 
     @Override
-    protected void collectionSet(String id, Map<String, Object> data) {
-        MongoDBDDS.set(new Id(getCollectionId().getDatabase(), getCollectionId().getCollection(), id), data);
+    public void collectionSet(String id, Map<String, Object> data) {
+        MongoDBDDS.set(new Id(getTable().getCollectionId().getDatabase(), getTable().getCollectionId().getCollection(), id), data);
     }
 
     @Override
-    protected void collectionRemove(String id) {
-        MongoDBDDS.remove(new Id(getCollectionId().getDatabase(), getCollectionId().getCollection(), id));
+    public void collectionRemove(String id) {
+        MongoDBDDS.remove(new Id(getTable().getCollectionId().getDatabase(), getTable().getCollectionId().getCollection(), id));
     }
 
 }

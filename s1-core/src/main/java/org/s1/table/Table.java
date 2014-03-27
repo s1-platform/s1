@@ -47,6 +47,8 @@ public abstract class Table {
 
     private static final Logger LOG = LoggerFactory.getLogger(Table.class);
 
+    private TableStorage tableStorage;
+
     /**
      * LOCK TIMEOUT
      */
@@ -71,7 +73,20 @@ public abstract class Table {
      * DESCRIPTOR
      ==========================================*/
 
-    public abstract Class<? extends DistributedDataSource> getDataSource();
+    protected TableStorage getTableStorage() {
+        if(tableStorage==null){
+            synchronized (this){
+                if(tableStorage==null){
+                    tableStorage = createTableStorage();
+                    tableStorage.setTable(this);
+                    tableStorage.init();
+                }
+            }
+        }
+        return tableStorage;
+    }
+
+    protected abstract TableStorage createTableStorage();
 
     public abstract CollectionId getCollectionId();
 
@@ -87,13 +102,11 @@ public abstract class Table {
      * INDEXES
      ==========================================*/
 
-    protected abstract void collectionIndex(String name, IndexBean ind);
-
     public void checkIndexes() {
         int i = 0;
-        collectionIndex("index_id", new IndexBean(Objects.newArrayList("id"),true,null));
+        getTableStorage().collectionIndex("index_id", new IndexBean(Objects.newArrayList("id"),true,null));
         for (IndexBean b : getIndexes()) {
-            collectionIndex("index_" + i, b);
+            getTableStorage().collectionIndex("index_" + i, b);
             i++;
         }
     }
@@ -129,7 +142,7 @@ public abstract class Table {
                 }
                 try {
                     try {
-                        Map<String, Object> m = collectionGet(search);
+                        Map<String, Object> m = getTableStorage().collectionGet(search);
                     } catch (MoreThanOneFoundException e) {
                     }
                     throw new AlreadyExistsException(err);
@@ -181,7 +194,7 @@ public abstract class Table {
             sort = new Sort();
         prepareSort(sort);
 
-        long count = collectionList(result, search, sort, fields, skip, max);
+        long count = getTableStorage().collectionList(result, search, sort, fields, skip, max);
         for (Map<String, Object> m : result) {
             try {
                 enrichRecord(m, true, ctx);
@@ -201,7 +214,7 @@ public abstract class Table {
         prepareSearch(search);
         Map<String, Object> m = null;
         try {
-            m = collectionGet(search);
+            m = getTableStorage().collectionGet(search);
         } catch (MoreThanOneFoundException e) {
             throw S1SystemError.wrap(e);
         }
@@ -227,7 +240,7 @@ public abstract class Table {
         if (search == null)
             search = new Query();
         prepareSearch(search);
-        return collectionAggregate(field, search);
+        return getTableStorage().collectionAggregate(field, search);
     }
 
     public List<CountGroupBean> countGroup(String field, Query search) throws AccessDeniedException {
@@ -235,28 +248,12 @@ public abstract class Table {
         if (search == null)
             search = new Query();
         prepareSearch(search);
-        return collectionCountGroup(field, search);
+        return getTableStorage().collectionCountGroup(field, search);
     }
-
-    protected abstract long collectionList(List<Map<String, Object>> result,
-                                           Query search, Sort sort, FieldsMask fields,
-                                           int skip, int max);
-
-    protected abstract Map<String, Object> collectionGet(Query search) throws NotFoundException, MoreThanOneFoundException;
-
-    protected abstract AggregationBean collectionAggregate(String field, Query search);
-
-    protected abstract List<CountGroupBean> collectionCountGroup(String field, Query search);
 
     /*==========================================
      * WRITER
      ==========================================*/
-
-    protected abstract void collectionAdd(String id, Map<String, Object> data);
-
-    protected abstract void collectionSet(String id, Map<String, Object> data);
-
-    protected abstract void collectionRemove(String id);
 
     public Map<String, Object> changeState(final String id, final String action,
                                            final Map<String, Object> data)
@@ -265,7 +262,7 @@ public abstract class Table {
         String lockId = null;
         try {
             //lock and set
-            lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            lockId = Locks.lockEntityQuite(new StorageId(getTableStorage().getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
             return changeRecordState(id, action, data);
         } finally {
             Locks.releaseLock(lockId);
@@ -314,19 +311,19 @@ public abstract class Table {
             try {
                 //lock and set
                 //avoiding dead-lock we lock not collection, but some fictional id
-                lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                lockId = Locks.lockEntityQuite(new StorageId(getTableStorage().getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
                 checkUnique(newObject, type == ActionBean.Types.ADD);
                 //save
                 if (type == ActionBean.Types.SET)
-                    collectionSet(id, newObject);
+                    getTableStorage().collectionSet(id, newObject);
                 else
-                    collectionAdd(id, newObject);
+                    getTableStorage().collectionAdd(id, newObject);
             } finally {
                 Locks.releaseLock(lockId);
             }
 
         } else {
-            collectionRemove(id);
+            getTableStorage().collectionRemove(id);
         }
 
         runAfter(id, a, Objects.copy(oldObject), Objects.copy(newObject), data);
@@ -369,7 +366,7 @@ public abstract class Table {
                         element.put("id", id);
                     }
                     //lock and set
-                    lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                    lockId = Locks.lockEntityQuite(new StorageId(getTableStorage().getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), id),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
 
                     if (exists) {
                         try {
@@ -410,13 +407,13 @@ public abstract class Table {
         String lockId = null;
         try {
             //lock and set
-            lockId = Locks.lockEntityQuite(new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            lockId = Locks.lockEntityQuite(new StorageId(getTableStorage().getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), TABLE_LOCK_ID),Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
             checkUnique(newObject, oldObject==null);
             //save
             if (oldObject!=null)
-                collectionSet(id, newObject);
+                getTableStorage().collectionSet(id, newObject);
             else
-                collectionAdd(id, newObject);
+                getTableStorage().collectionAdd(id, newObject);
         } finally {
             Locks.releaseLock(lockId);
         }
@@ -458,7 +455,7 @@ public abstract class Table {
      ==========================================*/
 
     public String getName() {
-        return new StorageId(getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), "").getLockName();
+        return new StorageId(getTableStorage().getDataSource(), getCollectionId().getDatabase(), getCollectionId().getCollection(), "").getLockName();
     }
 
     protected String newId(ActionBean a, Map<String,Object> data) {
@@ -483,7 +480,7 @@ public abstract class Table {
             Query search = new Query(new FieldQueryNode("id", FieldQueryNode.FieldOperation.EQUALS, id));
             prepareSearch(search);
             try {
-                oldObject = collectionGet(search);
+                oldObject = getTableStorage().collectionGet(search);
             } catch (MoreThanOneFoundException e) {
                 throw S1SystemError.wrap(e);
             }
