@@ -4,6 +4,7 @@ import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.*;
 import org.s1.objects.schema.errors.CustomValidationException;
+import org.s1.objects.schema.errors.DeniedAttributeException;
 import org.s1.objects.schema.errors.ValidationException;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
@@ -92,14 +93,14 @@ public class SchemaTest extends BasicTest{
         }));
     }
 
-    public void testMap1(){
+    public void testMapLax(){
         title("map");
-        int p=10;
+        int p=1;
         assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
             @Override
             public Object call(Integer input) {
 
-                ObjectSchema s = new ObjectSchema(
+                ObjectSchema s = new ObjectSchema(ObjectSchema.Mode.LAX,
                         new MapAttribute("m", "map",
                                 new SimpleTypeAttribute("str", "string", String.class)
                         )
@@ -128,6 +129,42 @@ public class SchemaTest extends BasicTest{
         }));
     }
 
+    public void testMapStrict(){
+        title("map");
+        int p=10;
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input) {
+
+                ObjectSchema s = new ObjectSchema(ObjectSchema.Mode.STRICT,
+                        new MapAttribute("m", "map",
+                                new SimpleTypeAttribute("str", "string", String.class)
+                        )
+                );
+
+                Map<String, Object> data = Objects.newHashMap(
+                        "m", Objects.newHashMap(
+                                "str", "qwer",
+                                "str1", "asdf"
+                        )
+                );
+
+                boolean b = false;
+                Map<String, Object> data1 = null;
+                try {
+                    data1 = s.validate(data);
+                } catch (DeniedAttributeException e) {
+                    b = true;
+                } catch (ValidationException e) {
+                    throw new RuntimeException(e);
+                }
+
+                assertTrue(b);
+                return null;
+            }
+        }));
+    }
+
     public void testMapList(){
         title("maps and lists");
         int p=10;
@@ -135,7 +172,7 @@ public class SchemaTest extends BasicTest{
             @Override
             public Object call(Integer input) {
 
-                ObjectSchema s = new ObjectSchema(
+                ObjectSchema s = new ObjectSchema(ObjectSchema.Mode.LAX,
                         new MapAttribute("m", "map",
                                 new SimpleTypeAttribute("str", "string", String.class),
                                 new MapAttribute("m", "map",

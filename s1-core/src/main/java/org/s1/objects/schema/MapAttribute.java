@@ -16,7 +16,9 @@
 
 package org.s1.objects.schema;
 
+import org.s1.misc.Closure;
 import org.s1.objects.Objects;
+import org.s1.objects.schema.errors.DeniedAttributeException;
 import org.s1.objects.schema.errors.ObjectSchemaFormatException;
 import org.s1.objects.schema.errors.WrongTypeException;
 
@@ -85,6 +87,21 @@ public class MapAttribute extends ObjectSchemaAttribute<Map<String, Object>> {
                     data.put(a.getName(), va.getData());
                 attrs.add(va);
             }
+            //if strict, then error on undefined attributes
+            if(attributes.size()>0 && getSchema().getMode() == ObjectSchema.Mode.STRICT){
+                for(final String k:data.keySet()){
+                    if(Objects.find(attributes,new Closure<ObjectSchemaAttribute, Boolean>() {
+                        @Override
+                        public Boolean call(ObjectSchemaAttribute input) {
+                            return k.equals(input.getName());
+                        }
+                    })==null){
+                        //attr not found
+                        throw new DeniedAttributeException();
+                    }
+                }
+            }
+
             attributes = attrs;
         }
     }

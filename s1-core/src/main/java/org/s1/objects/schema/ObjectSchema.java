@@ -33,6 +33,16 @@ import java.util.Map;
  */
 public class ObjectSchema implements Serializable{
 
+    public static enum Mode{
+        STRICT,LAX
+    }
+
+    private Mode mode;
+
+    public Mode getMode() {
+        return mode;
+    }
+
     private boolean resolved = false;
 
     private List<ObjectSchemaAttribute> attributes = Objects.newArrayList();
@@ -40,6 +50,11 @@ public class ObjectSchema implements Serializable{
     private List<ObjectSchemaType> types = Objects.newArrayList();
 
     public ObjectSchema(Object... args) {
+        this(Mode.STRICT, args);
+    }
+
+    public ObjectSchema(Mode mode, Object... args) {
+        this.mode = mode;
         this.attributes = Objects.newArrayList();
         this.types = Objects.newArrayList();
         for(Object a:args){
@@ -53,6 +68,11 @@ public class ObjectSchema implements Serializable{
     }
 
     public ObjectSchema(List<ObjectSchemaAttribute> attributes, List<ObjectSchemaType> types) {
+        this(Mode.STRICT, attributes, types);
+    }
+
+    public ObjectSchema(Mode mode,List<ObjectSchemaAttribute> attributes, List<ObjectSchemaType> types) {
+        this.mode = mode;
         if(attributes==null)
             this.attributes = Objects.newArrayList();
         else
@@ -65,6 +85,7 @@ public class ObjectSchema implements Serializable{
     }
 
     public ObjectSchema fromMap(Map<String,Object> m) throws ObjectSchemaFormatException {
+        this.mode = Mode.valueOf(Objects.get(m,"mode","strict").toUpperCase());
         List<Map<String,Object>> attrs = Objects.get(m, "attributes");
         this.attributes = Objects.newArrayList();
         if(!Objects.isNullOrEmpty(attrs)){
@@ -114,7 +135,7 @@ public class ObjectSchema implements Serializable{
             t.add(a.toMap());
         }
 
-        Map<String,Object> m = Objects.newHashMap("attributes", attrs, "types", t);
+        Map<String,Object> m = Objects.newHashMap("attributes", attrs, "types", t, "mode", mode.toString().toLowerCase());
         return m;
     }
 
@@ -191,6 +212,7 @@ public class ObjectSchema implements Serializable{
 
     public ObjectSchema copyAndReset(){
         ObjectSchema a = new ObjectSchema();
+        a.mode = mode;
         a.attributes = Objects.newArrayList();
         for(ObjectSchemaAttribute a1:attributes){
             a.attributes.add(a1.copyAndReset());
