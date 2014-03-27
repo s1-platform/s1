@@ -72,6 +72,15 @@ public class Objects {
     }
 
     /**
+     *
+     * @param args
+     * @return
+     */
+    public static Map<String, Object> newSOHashMap(Object... args) {
+        return newHashMap(String.class,Object.class,args);
+    }
+
+    /**
      * @param k
      * @param v
      * @param args

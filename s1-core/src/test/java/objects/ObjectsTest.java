@@ -37,6 +37,12 @@ public class ObjectsTest extends BasicTest {
                 assertEquals("aaa", m1.get("a"));
                 assertEquals(123, m1.get("b"));
                 assertEquals("bbb", ((Map<String, Object>) m1.get("c")).get("a"));
+
+                m1 = Objects.newSOHashMap("a", "aaa", "b", 123, "c", Objects.newHashMap("a", "bbb"));
+                assertEquals("aaa", m1.get("a"));
+                assertEquals(123, m1.get("b"));
+                assertEquals("bbb", ((Map<String, Object>) m1.get("c")).get("a"));
+
                 return null;
             }
         }));
