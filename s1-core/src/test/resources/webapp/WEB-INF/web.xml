@@ -35,5 +35,16 @@
         <url-pattern>/dispatcher/*</url-pattern>
     </servlet-mapping>
 
+    <!-- S1 script servlet. -->
+    <servlet>
+        <servlet-name>S1Script</servlet-name>
+        <servlet-class>org.s1.script.S1ScriptServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>S1Script</servlet-name>
+        <url-pattern>*.html</url-pattern>
+    </servlet-mapping>
+
 
 </web-app>
