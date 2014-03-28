@@ -30,6 +30,12 @@ import java.util.Map;
  */
 public class ASTEvaluator {
 
+    private String source;
+
+    public ASTEvaluator(String source) {
+        this.source = source;
+    }
+
     /**
      * Eval container
      *
@@ -585,7 +591,18 @@ public class ASTEvaluator {
      * @param node
      */
     protected void throwScriptError(String message, AstNode node){
-        throw new ScriptException(message+": line "+node.getLineno()+", column "+node.getPosition());
+        String m = getErrorMessage(source,node.getLineno()-1,node.getPosition());
+        throw new ScriptException(message+": "+m);
+    }
+
+    protected static String getErrorMessage(String source, int lineno, int position){
+        String arr [] = source.split("\n");
+        String line = lineno<arr.length?arr[lineno]:"";
+        int s = position-20;
+        int e = position+20;
+        s = s<0?0:s;
+        e = e<line.length()?e:line.length()-1;
+        return "line "+(lineno+1)+", column "+position+": ... "+line.substring(s,e)+" ...";
     }
 
 }

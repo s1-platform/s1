@@ -17,6 +17,7 @@
 package org.s1.script;
 
 import org.mozilla.javascript.CompilerEnvirons;
+import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.AstRoot;
 import org.s1.S1SystemError;
@@ -193,7 +194,7 @@ public class S1ScriptEngine {
      * @throws ScriptLimitException
      * @throws SyntaxException
      */
-    public <T> T eval(String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
+    public <T> T eval(final String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
         long t = System.currentTimeMillis();
         if(data==null)
             data = Objects.newHashMap();
@@ -211,7 +212,14 @@ public class S1ScriptEngine {
         try {
             root = new Parser(ce).parse(script,"S1RestrictedScript",1);
         } catch (Throwable e) {
-            throw new SyntaxException(e.getMessage(),e);
+            String message = "";
+            if(e instanceof EvaluatorException){
+                EvaluatorException ex = (EvaluatorException)e;
+                message = ASTEvaluator.getErrorMessage(script,ex.getLineNumber()-1,ex.getColumnNumber());
+            }else{
+                message = e.getMessage();
+            }
+            throw new SyntaxException(message,e);
         }
         if(LOG.isDebugEnabled()){
             LOG.debug(root.debugPrint());
@@ -247,7 +255,8 @@ public class S1ScriptEngine {
                     String id = null;
                     try{
                         id = Session.start(sb.getId());
-                        return new ASTEvaluator().eval(root,ctx);
+                        ASTEvaluator ast = new ASTEvaluator(script);
+                        return ast.eval(root,ctx);
                     }finally {
                         Session.end(id);
                     }
@@ -258,7 +267,8 @@ public class S1ScriptEngine {
             f = service.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
-                    return new ASTEvaluator().eval(root,ctx);
+                    ASTEvaluator ast = new ASTEvaluator(script);
+                    return ast.eval(root,ctx);
                 }
             });
         }
@@ -435,7 +445,8 @@ public class S1ScriptEngine {
                 return null;
             }
         });
-        eval(template,data);
+
+        eval(template, data);
 
         template = sb.toString();
         template = template

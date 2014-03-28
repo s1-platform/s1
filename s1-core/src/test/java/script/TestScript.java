@@ -126,6 +126,33 @@ public class TestScript extends BasicTest{
         }));
     }
 
+    public void testTemplateError(){
+        int p=1;
+        title("Template error test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        boolean b = false;
+        try{
+            scriptEngine.template("hello \n" +
+                    "<%var a=b();%>",null);
+        }catch (ScriptException e){
+            trace(e);
+            assertTrue(e.getMessage().contains("var a=b()"));
+            b = true;
+        }
+        assertTrue(b);
+        b = false;
+        try{
+            scriptEngine.template("<% var a = function(){};\n" +
+                    "  a(;) %>\n" +
+                    "test",null);
+        }catch (SyntaxException e){
+            trace(e);
+            assertTrue(e.getMessage().contains("a(;)"));
+            b = true;
+        }
+        assertTrue(b);
+    }
+
     public void testEvalInFunction(){
         final File dir = new File(getTestClassesHome()+"/script/templates");
         int p=1;
