@@ -215,7 +215,7 @@ public abstract class ObjectSchemaAttribute<T> {
                 public String call(ObjectSchemaAttribute input) {
                     Map<String,Object> m = input.getScriptMap();
                     try{
-                        return scriptEngine.evalInFunction(validate,m);
+                        return scriptEngine.evalInFunction(String.class,validate,m);
                     }catch (ScriptException e){
                         return ""+e.getData();
                     }

@@ -21,6 +21,7 @@ import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.AstRoot;
 import org.s1.S1SystemError;
+import org.s1.cache.Cache;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
@@ -67,6 +68,9 @@ public class S1ScriptEngine {
     private long sizeLimit = 0;
     private long memoryLimit = 0;
 
+    private Cache astCache;
+    private Cache templateCache;
+
     /**
      * Create with path='scriptEngine'
      */
@@ -94,6 +98,8 @@ public class S1ScriptEngine {
         timeLimit = Options.getStorage().get(options,path+".timeLimit",30000L);
         memoryLimit = Options.getStorage().get(options,path+".memoryLimit",16*1024*1024L);
         sizeLimit = Options.getStorage().get(options,path+".sizeLimit",16*1024*1024L);
+        astCache = new Cache(Options.getStorage().get(Integer.class,options,path+".astCacheSize",1000));
+        templateCache = new Cache(Options.getStorage().get(Integer.class,options,path+".templateCacheSize",1000));
     }
 
     /**
@@ -156,31 +162,15 @@ public class S1ScriptEngine {
      * @return
      */
     public <T> T evalInFunction(Class<T> cls, String script, Map<String,Object> data){
-        return Objects.cast(evalInFunction(script,data),cls);
+        return evalInFunction(null,cls,script,data);
     }
 
-    /**
-     *
-     * @param script
-     * @param data
-     * @param <T>
-     * @return
-     */
-    public <T> T evalInFunction(String script, Map<String,Object> data){
-        return eval("(function(){"+script+"\n})();",data);
+    public <T> T evalInFunction(String name, Class<T> cls, String script, Map<String,Object> data){
+        return eval(name,"(function(){"+script+"\n})();",data);
     }
 
-    /**
-     * Eval script and cast result
-     *
-     * @param cls
-     * @param script
-     * @param data
-     * @param <T>
-     * @return
-     */
-    public <T> T eval(Class<T> cls, String script, Map<String,Object> data){
-        return Objects.cast(eval(script,data),cls);
+    public <T> T eval(String script, Map<String,Object> data){
+        return eval((String)null,script,data);
     }
 
     /**
@@ -194,7 +184,7 @@ public class S1ScriptEngine {
      * @throws ScriptLimitException
      * @throws SyntaxException
      */
-    public <T> T eval(final String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
+    public <T> T eval(String name, final String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
         long t = System.currentTimeMillis();
         if(data==null)
             data = Objects.newHashMap();
@@ -203,27 +193,19 @@ public class S1ScriptEngine {
         if(LOG.isDebugEnabled()){
             LOG.debug("Evaluating S1 script:\n"+script+"\nWith data:"+data);
         }
-        CompilerEnvirons ce = new CompilerEnvirons();
-        ce.setRecordingComments(false);
-        ce.setStrictMode(true);
-        ce.setXmlAvailable(false);
 
-        final AstRoot root;
-        try {
-            root = new Parser(ce).parse(script,"S1RestrictedScript",1);
-        } catch (Throwable e) {
-            String message = "";
-            if(e instanceof EvaluatorException){
-                EvaluatorException ex = (EvaluatorException)e;
-                message = ASTEvaluator.getErrorMessage(script,ex.getLineNumber()-1,ex.getColumnNumber());
-            }else{
-                message = e.getMessage();
-            }
-            throw new SyntaxException(message,e);
+        AstRoot _root = null;
+        if(Objects.isNullOrEmpty(name)){
+            _root = parseScript(script);
+        }else{
+            _root = astCache.get(name,new Closure<String, AstRoot>() {
+                @Override
+                public AstRoot call(String input) {
+                    return parseScript(script);
+                }
+            });
         }
-        if(LOG.isDebugEnabled()){
-            LOG.debug(root.debugPrint());
-        }
+        final AstRoot root = _root;
 
         final Context ctx=new Context(getMemoryLimit());
         ctx.getVariables().putAll(data);
@@ -305,6 +287,31 @@ public class S1ScriptEngine {
         }
     }
 
+    protected AstRoot parseScript(String script){
+        CompilerEnvirons ce = new CompilerEnvirons();
+        ce.setRecordingComments(false);
+        ce.setStrictMode(true);
+        ce.setXmlAvailable(false);
+
+        final AstRoot root;
+        try {
+            root = new Parser(ce).parse(script,"S1RestrictedScript",1);
+        } catch (Throwable e) {
+            String message = "";
+            if(e instanceof EvaluatorException){
+                EvaluatorException ex = (EvaluatorException)e;
+                message = "Syntax error: "+ASTEvaluator.getErrorMessage(script,ex.getLineNumber()-1,ex.getColumnNumber());
+            }else{
+                message = e.getMessage();
+            }
+            throw new SyntaxException(message,e);
+        }
+        if(LOG.isDebugEnabled()){
+            LOG.debug(root.debugPrint());
+        }
+        return root;
+    }
+
     /**
      * System functions namespace
      */
@@ -348,10 +355,20 @@ public class S1ScriptEngine {
         }
     }
 
+    public void invalidateCache(String name){
+        astCache.invalidate(name);
+        templateCache.invalidate(name);
+    }
+
     /**
      * Function name for printing
      */
     public static final String TEMPLATE_PRINT_FUNCTION = "_print";
+
+    protected static final String startExpr="<%=";
+    protected static final String endExpr="%>";
+    protected static final String startCode = "<%";
+    protected static final String endCode = "%>";
 
     /**
      * Run template
@@ -364,18 +381,59 @@ public class S1ScriptEngine {
      * @throws SyntaxException
      */
     public String template(String template, Map<String,Object> data)
+            throws ScriptException,ScriptLimitException,SyntaxException{
+        return template(null,template,data);
+    }
+
+    public String template(String name, String template, Map<String,Object> data)
         throws ScriptException,ScriptLimitException,SyntaxException{
-        String startExpr="<%=";
-        String endExpr="%>";
-        String startCode = "<%";
-        String endCode = "%>";
 
         if(LOG.isDebugEnabled()){
-            LOG.debug("Building S1 template:\n"+template+"\nWith data:"+data+"\n"
-                    +startExpr+"expression"+endExpr
-                    +startCode+"code"+endCode);
+            LOG.debug("Building S1 template "+name+":\n"+template+"\nWith data:"+data);
+        }
+        if(Objects.isNullOrEmpty(name)){
+            template = parseTemplate(template);
+        }else{
+            final String t = template;
+            template = templateCache.get(name,new Closure<String, String>() {
+                @Override
+                public String call(String input) {
+                    return parseTemplate(t);
+                }
+            });
         }
 
+        //eval
+        final StringBuilder sb = new StringBuilder();
+        if(data==null){
+            data = Objects.newHashMap();
+        }
+        data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList("text")) {
+            @Override
+            public Object call() throws ScriptException {
+                //String text = getContext().get(String.class,"text");
+                //sb.append(text);
+                List<Object> args = getContext().get("arguments");
+                for(Object o:args){
+                    sb.append(o);
+                }
+                return null;
+            }
+        });
+
+        eval(name, template, data);
+
+        template = sb.toString();
+        template = template
+                .replace("&startCode;",startCode)
+                .replace("&endCode;",endCode)
+                .replace("&startExpr;",startExpr)
+                .replace("&endExpr;",endExpr)
+                .replace("&amp;","&");
+        return template;
+    }
+
+    protected String parseTemplate(String template){
         template = template
                 .replace("&","&amp;")
                 .replace("\\"+startCode+"\\","&startCode;")
@@ -427,34 +485,6 @@ public class S1ScriptEngine {
                 template = template.replace(END+text+BEGIN,printText(text));
             }
         }
-
-        //eval
-        final StringBuilder sb = new StringBuilder();
-        if(data==null){
-            data = Objects.newHashMap();
-        }
-        data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList("text")) {
-            @Override
-            public Object call() throws ScriptException {
-                //String text = getContext().get(String.class,"text");
-                //sb.append(text);
-                List<Object> args = getContext().get("arguments");
-                for(Object o:args){
-                    sb.append(o);
-                }
-                return null;
-            }
-        });
-
-        eval(template, data);
-
-        template = sb.toString();
-        template = template
-                .replace("&startCode;",startCode)
-                .replace("&endCode;",endCode)
-                .replace("&startExpr;",startExpr)
-                .replace("&endExpr;",endExpr)
-                .replace("&amp;","&");
         return template;
     }
 

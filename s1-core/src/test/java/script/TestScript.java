@@ -142,7 +142,7 @@ public class TestScript extends BasicTest{
         assertTrue(b);
         b = false;
         try{
-            scriptEngine.template("<% var a = function(){};\n" +
+            scriptEngine.template("test","<% var a = function(){};\n" +
                     "  a(;) %>\n" +
                     "test",null);
         }catch (SyntaxException e){
@@ -151,6 +151,10 @@ public class TestScript extends BasicTest{
             b = true;
         }
         assertTrue(b);
+
+        //clear caches
+        scriptEngine.invalidateCache("test");
+        scriptEngine.template("test","test",null);
     }
 
     public void testEvalInFunction(){
