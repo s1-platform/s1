@@ -93,7 +93,7 @@ public class TestScript extends BasicTest{
 
     public void testTemplate(){
         final File dir = new File(getTestClassesHome()+"/script/templates");
-        int p=1;
+        int p=2;
         title("Template test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
@@ -121,6 +121,94 @@ public class TestScript extends BasicTest{
                         throw new RuntimeException(f.getName()+":"+e.getMessage(),e);
                     }
                 }
+                return null;
+            }
+        }));
+    }
+
+    public void testCustomPrintTemplate(){
+        int p=10;
+        title("Template custom print test, parallel: "+p);
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer input)  {
+
+                String t = scriptEngine.template("test" +
+                        "<%startPrint('test1');%>" +
+                        "qwer" +
+                        "<%endPrint();%>" +
+                        "zxcv",Objects.newSOHashMap(
+                        "test1",new CustomPrintFunction(new Context(10000)) {
+                            @Override
+                            public String print(String text) throws ScriptException {
+                                return text+"...";
+                            }
+                        }
+                ));
+                if(input==0){
+                    trace(t);
+                }
+                assertEquals("testqwer...zxcv",t);
+
+
+                t = scriptEngine.template("test" +
+                        "<%startPrint('test1');%>" +
+                        "111" +
+                        "<%startPrint('test2');%>" +
+                        "qwer" +
+                        "<%endPrint();%>" +
+                        "222" +
+                        "<%endPrint();%>" +
+                        "zxcv",Objects.newSOHashMap(
+                        "test1",new CustomPrintFunction(new Context(10000)) {
+                            @Override
+                            public String print(String text) throws ScriptException {
+                                return text+"...";
+                            }
+                        },
+                        "test2",new CustomPrintFunction(new Context(10000)) {
+                            @Override
+                            public String print(String text) throws ScriptException {
+                                return "/"+text+"/";
+                            }
+                        }
+                ));
+                if(input==0){
+                    trace(t);
+                }
+                assertEquals("test111/qwer/222...zxcv",t);
+
+                boolean b = false;
+                try{
+                    scriptEngine.template("test" +
+                            "<%startPrint('test1');%>" +
+                            "qwer" +
+                            "<%endPrint();%>" +
+                            "zxcv",null
+                    );
+                }catch (ScriptException e){
+                    if (input==0)
+                        trace(e.getMessage());
+                    b = true;
+                }
+                assertTrue(b);
+
+                b = false;
+                try{
+                    scriptEngine.template("test" +
+                                    "<%startPrint('test1');%>" +
+                                    "qwer" +
+                                    "<%endPrint();%>" +
+                                    "zxcv",Objects.newSOHashMap("test1","qwer")
+                    );
+                }catch (ScriptException e){
+                    if (input==0)
+                        trace(e.getMessage());
+                    b = true;
+                }
+                assertTrue(b);
+
                 return null;
             }
         }));

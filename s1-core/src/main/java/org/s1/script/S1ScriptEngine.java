@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -364,6 +365,8 @@ public class S1ScriptEngine {
      * Function name for printing
      */
     public static final String TEMPLATE_PRINT_FUNCTION = "_print";
+    public static final String TEMPLATE_START_CUSTOM_FUNCTION = "startPrint";
+    public static final String TEMPLATE_END_CUSTOM_FUNCTION = "endPrint";
 
     protected static final String startExpr="<%=";
     protected static final String endExpr="%>";
@@ -404,18 +407,77 @@ public class S1ScriptEngine {
         }
 
         //eval
-        final StringBuilder sb = new StringBuilder();
+        final Map<String,StringBuilder> customPrintMap = Objects.newHashMap();
+        final List<String> customPrintStack = Objects.newArrayList();
+
+        final StringBuilder printBuffer = new StringBuilder();
         if(data==null){
             data = Objects.newHashMap();
         }
+        final Map<String,Object> _data = data;
         data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList("text")) {
             @Override
             public Object call() throws ScriptException {
-                //String text = getContext().get(String.class,"text");
-                //sb.append(text);
                 List<Object> args = getContext().get("arguments");
+                StringBuilder sb = printBuffer;
+                String name = null;
+                if(customPrintStack.size()>0)
+                    name = customPrintStack.get(customPrintStack.size()-1);
+                if(!Objects.isNullOrEmpty(name)){
+                    sb = customPrintMap.get(name);
+                }
                 for(Object o:args){
                     sb.append(o);
+                }
+                return null;
+            }
+        });
+        data.put(TEMPLATE_START_CUSTOM_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()), Objects.newArrayList("name")) {
+            @Override
+            public Object call() throws ScriptException {
+                String name = getContext().get(String.class, "name");
+                customPrintMap.put(name, new StringBuilder());
+                customPrintStack.add(name);
+                return null;
+            }
+        });
+        data.put(TEMPLATE_END_CUSTOM_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList(String.class)) {
+            @Override
+            public Object call() throws ScriptException {
+                String name = null;
+                if(customPrintStack.size()>0) {
+                    name = customPrintStack.get(customPrintStack.size() - 1);
+                    customPrintStack.remove(customPrintStack.size() - 1);
+                }
+                if(!Objects.isNullOrEmpty(name)){
+                    String text = "";
+                    StringBuilder sb = customPrintMap.get(name);
+                    customPrintMap.remove(name);
+                    if(sb!=null){
+                        text = sb.toString();
+                    }
+                    Object o = _data.get(name);
+                    if(o==null){
+                        throw new ScriptException("Custom print function "+name+" is not defined");
+                    }
+                    if(o instanceof ScriptFunction){
+                        ScriptFunction sf = ((ScriptFunction)o);
+                        List<String> params = Objects.newArrayList(text);
+                        sf.getContext().getVariables().put("text",text);
+                        sf.getContext().getVariables().put("arguments",params);
+
+                        StringBuilder sb2 = printBuffer;
+                        String name2 = null;
+                        if(customPrintStack.size()>0)
+                            name2 = customPrintStack.get(customPrintStack.size()-1);
+                        if(!Objects.isNullOrEmpty(name2)){
+                            sb2 = customPrintMap.get(name2);
+                        }
+
+                        sb2.append(sf.call());
+                    }else{
+                        throw new ScriptException("Custom print function "+name+" is not instanceof ScriptFunction");
+                    }
                 }
                 return null;
             }
@@ -423,7 +485,7 @@ public class S1ScriptEngine {
 
         eval(name, template, data);
 
-        template = sb.toString();
+        template = printBuffer.toString();
         template = template
                 .replace("&startCode;",startCode)
                 .replace("&endCode;",endCode)
@@ -452,7 +514,7 @@ public class S1ScriptEngine {
         final Matcher matcherExpr = exprP.matcher(template);
         while (matcherExpr.find()) {
             String text = matcherExpr.group(1);
-            template = template.replace(startExpr+matcherExpr.group(1)+endExpr,
+            template = template.replace(startExpr+text+endExpr,
                     BEGIN+TEMPLATE_PRINT_FUNCTION+"("+text+");"+END);
         }
 
@@ -460,8 +522,8 @@ public class S1ScriptEngine {
         final Matcher matcherCode = codeP.matcher(template);
         while (matcherCode.find()) {
             String text = matcherCode.group(1);
-            template = template.replace(startCode+matcherCode.group(1)+endCode,
-                    BEGIN+"\n"+matcherCode.group(1)+"\n"+END);
+            template = template.replace(startCode+text+endCode,
+                    BEGIN+"\n"+text+"\n"+END);
         }
 
         //text
