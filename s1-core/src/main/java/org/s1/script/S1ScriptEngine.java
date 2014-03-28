@@ -167,7 +167,7 @@ public class S1ScriptEngine {
     }
 
     public <T> T evalInFunction(String name, Class<T> cls, String script, Map<String,Object> data){
-        return eval(name,"(function(){"+script+"\n})();",data);
+        return Objects.cast(eval(name,"(function(){"+script+"\n})();",data),cls);
     }
 
     public <T> T eval(String script, Map<String,Object> data){
