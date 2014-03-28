@@ -14,33 +14,27 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
+package org.s1.script.function;
 
-import org.s1.objects.Objects;
+import org.s1.script.Context;
 
 /**
- * Will be thrown on
- * <code>return ...;</code>
- * command
+ * Base class for script functions
  */
-public class FunctionReturnException extends RuntimeException {
+public abstract class ScriptFunctionSet {
 
-    private Object data;
+    private Context context;
 
-    public Object getData() {
-        return data;
+    /**
+     * Get function context
+     *
+     * @return
+     */
+    public Context getContext() {
+        return context;
     }
 
-    public void setData(Object data) {
-        this.data = data;
-    }
-
-    public FunctionReturnException(Object data) {
-        super();
-        this.data = data;
-    }
-
-    public String getMessage(){
-        return Objects.cast(data,String.class);
+    public void setContext(Context context) {
+        this.context = context;
     }
 }

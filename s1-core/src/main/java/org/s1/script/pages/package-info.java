@@ -14,17 +14,7 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
-
 /**
- * Will be thrown on
- * <code>continue;</code>
- * command
+ * S1 Script pages
  */
-public class LoopContinueException extends RuntimeException {
-
-    public LoopContinueException() {
-        super();
-    }
-
-}
+package org.s1.script.pages;

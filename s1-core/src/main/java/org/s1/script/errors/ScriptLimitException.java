@@ -14,28 +14,30 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
+package org.s1.script.errors;
 
 /**
- * Script syntax exception.
- * Will be thrown if building ast goes wrong
+ * Script limit exception
  */
-public class SyntaxException extends RuntimeException {
+public class ScriptLimitException extends RuntimeException {
 
-    public SyntaxException() {
-        super();
+    public static enum Limits{
+        MEMORY, SIZE, TIME
     }
 
-    public SyntaxException(String message) {
-        super(message);
+    private long limit;
+    private Limits type;
+
+    public ScriptLimitException(Limits type, long limit) {
+        this.type = type;
+        this.limit = limit;
     }
 
-    public SyntaxException(String message, Throwable cause) {
-        super(message,cause);
+    public long getLimit() {
+        return limit;
     }
 
-    public SyntaxException(Throwable cause) {
-        super(cause);
+    public Limits getType() {
+        return type;
     }
-
 }

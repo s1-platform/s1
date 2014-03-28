@@ -8,6 +8,11 @@ import org.s1.misc.FileUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.script.*;
+import org.s1.script.errors.ScriptException;
+import org.s1.script.errors.ScriptLimitException;
+import org.s1.script.errors.SyntaxException;
+import org.s1.script.function.CustomPrintFunction;
+import org.s1.script.function.ScriptFunction;
 import org.s1.test.BasicTest;
 import org.s1.test.LoadTestUtils;
 
@@ -27,7 +32,7 @@ public class TestScript extends BasicTest{
 
     public void testCases(){
         final File dir = new File(getTestClassesHome()+"/script");
-        int p=1;
+        int p=10;
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         final Map<String,Object> data = Objects.newHashMap(
                 "assert",
@@ -93,7 +98,7 @@ public class TestScript extends BasicTest{
 
     public void testTemplate(){
         final File dir = new File(getTestClassesHome()+"/script/templates");
-        int p=2;
+        int p=10;
         title("Template test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
@@ -215,7 +220,7 @@ public class TestScript extends BasicTest{
     }
 
     public void testTemplateError(){
-        int p=1;
+        int p=10;
         title("Template error test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         boolean b = false;
@@ -247,7 +252,7 @@ public class TestScript extends BasicTest{
 
     public void testEvalInFunction(){
         final File dir = new File(getTestClassesHome()+"/script/templates");
-        int p=1;
+        int p=10;
         title("Eval in function, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
@@ -319,7 +324,7 @@ public class TestScript extends BasicTest{
     }
 
     public void testSizeLimit(){
-        int p=1;
+        int p=10;
         title("Size limit test, parallel: "+p);
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setSizeLimit(10);

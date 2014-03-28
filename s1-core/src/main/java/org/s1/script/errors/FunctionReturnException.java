@@ -14,17 +14,17 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
+package org.s1.script.errors;
 
 import org.s1.objects.Objects;
 
 /**
- * Script exception.
  * Will be thrown on
- * <code>throw ...;</code>
- * command or on some runtime error
+ * <code>return ...;</code>
+ * command
  */
-public class ScriptException extends RuntimeException {
+public class FunctionReturnException extends RuntimeException {
+
     private Object data;
 
     public Object getData() {
@@ -35,13 +35,8 @@ public class ScriptException extends RuntimeException {
         this.data = data;
     }
 
-    public ScriptException(Object data) {
-        super(""+data);
-        this.data = data;
-    }
-
-    public ScriptException(Object data, Throwable cause) {
-        super(""+data,cause);
+    public FunctionReturnException(Object data) {
+        super();
         this.data = data;
     }
 

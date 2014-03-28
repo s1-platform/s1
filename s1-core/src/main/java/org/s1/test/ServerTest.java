@@ -42,10 +42,9 @@ public abstract class ServerTest extends BasicTest {
         return Objects.cast(getProperties().get("context"),String.class);
     }
 
-    protected String getWebXml(){
-        String s = Objects.cast(getProperties().get("web.xml"),String.class);
+    protected String getWebapp(){
+        String s = Objects.cast(getProperties().get("webapp"),String.class);
         s = s.replace(".",File.separator);
-        s = s+File.separator+"web.xml";
         return getTestClassesHome()+s;
     }
 
@@ -71,11 +70,8 @@ public abstract class ServerTest extends BasicTest {
             tomcat.getHost().setAutoDeploy(true);
             tomcat.getHost().setDeployOnStartup(true);
 
-            File webinf = new File(SERVER_HOME+File.separator+"webapps"+getContext()+File.separator+"WEB-INF");
-            webinf.mkdirs();
-            FileUtils.copyFile(new File(getWebXml()), new File(webinf.getAbsolutePath() + File.separator + "web.xml"));
-            Context ctx = tomcat.addWebapp(tomcat.getHost(), getContext(), SERVER_HOME+File.separator+"webapps"+getContext());
-            trace("web.xml path: " + getWebXml());
+            Context ctx = tomcat.addWebapp(tomcat.getHost(), getContext(), getWebapp());
+            trace("webapp path: " + getWebapp());
             trace("Context path: " + getContext());
             try {
                 tomcat.start();

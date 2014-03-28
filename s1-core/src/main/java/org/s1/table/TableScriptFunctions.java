@@ -19,7 +19,7 @@ package org.s1.table;
 import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.errors.ValidationException;
-import org.s1.script.functions.ScriptFunctions;
+import org.s1.script.function.ScriptFunctionSet;
 import org.s1.table.errors.ActionNotAvailableException;
 import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.CustomActionException;
@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * API for S1 scripting
  */
-public class TableScriptFunctions extends ScriptFunctions{
+public class TableScriptFunctions extends ScriptFunctionSet {
 
     /**
      *

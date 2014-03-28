@@ -14,27 +14,28 @@
  *    limitations under the License.
  */
 
-package org.s1.script.functions;
-
-import org.s1.script.Context;
+package org.s1.script.errors;
 
 /**
- * Base class for script functions
+ * Script syntax exception.
+ * Will be thrown if building ast goes wrong
  */
-public abstract class ScriptFunctions {
+public class SyntaxException extends RuntimeException {
 
-    private Context context;
-
-    /**
-     * Get function context
-     *
-     * @return
-     */
-    public Context getContext() {
-        return context;
+    public SyntaxException() {
+        super();
     }
 
-    public void setContext(Context context) {
-        this.context = context;
+    public SyntaxException(String message) {
+        super(message);
     }
+
+    public SyntaxException(String message, Throwable cause) {
+        super(message,cause);
+    }
+
+    public SyntaxException(Throwable cause) {
+        super(cause);
+    }
+
 }

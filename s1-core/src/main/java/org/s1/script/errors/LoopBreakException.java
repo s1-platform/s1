@@ -14,29 +14,17 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
-
-import org.s1.objects.Objects;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+package org.s1.script.errors;
 
 /**
- * Custom print
+ * Will be thrown on
+ * <code>break;</code>
+ * command
  */
-public abstract class CustomPrintFunction extends ScriptFunction {
+public class LoopBreakException extends RuntimeException {
 
-    public CustomPrintFunction(Context context) {
-        super(context,Objects.newArrayList("text"));
+    public LoopBreakException() {
+        super();
     }
-
-
-    public Object call() throws ScriptException{
-        String text = getContext().get("text");
-        return print(text);
-    }
-
-    public abstract String print(String text) throws ScriptException;
 
 }

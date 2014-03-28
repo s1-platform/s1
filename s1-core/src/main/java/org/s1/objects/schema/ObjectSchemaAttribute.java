@@ -21,7 +21,7 @@ import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.errors.*;
 import org.s1.script.S1ScriptEngine;
-import org.s1.script.ScriptException;
+import org.s1.script.errors.ScriptException;
 
 import java.util.Arrays;
 import java.util.List;

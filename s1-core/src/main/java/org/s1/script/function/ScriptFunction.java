@@ -14,9 +14,11 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
+package org.s1.script.function;
 
 import org.s1.objects.Objects;
+import org.s1.script.Context;
+import org.s1.script.errors.ScriptException;
 
 import java.io.Serializable;
 import java.util.List;
@@ -57,7 +59,7 @@ public abstract class ScriptFunction implements Serializable {
      *
      * @param m put this in context
      * @return
-     * @throws ScriptException
+     * @throws org.s1.script.errors.ScriptException
      */
     public Object call(Map<String,Object> m) throws ScriptException {
         List<Object> args = Objects.newArrayList();

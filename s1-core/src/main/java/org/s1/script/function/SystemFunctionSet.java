@@ -14,14 +14,13 @@
  *    limitations under the License.
  */
 
-package org.s1.script.functions;
+package org.s1.script.function;
 
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
-import org.s1.script.ScriptFunction;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 
@@ -32,7 +31,7 @@ import java.util.Map;
 /**
  * System script functions (available in all scripts)
  */
-public class ScriptSystemFunctions extends ScriptFunctions{
+public class SystemFunctionSet extends ScriptFunctionSet {
 
     /**
      * Get string|list|map length

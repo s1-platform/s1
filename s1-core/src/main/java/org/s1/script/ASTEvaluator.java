@@ -20,6 +20,11 @@ import org.mozilla.javascript.Node;
 import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.*;
 import org.s1.objects.Objects;
+import org.s1.script.errors.FunctionReturnException;
+import org.s1.script.errors.LoopBreakException;
+import org.s1.script.errors.LoopContinueException;
+import org.s1.script.errors.ScriptException;
+import org.s1.script.function.ScriptFunction;
 
 import java.util.Iterator;
 import java.util.List;
@@ -591,7 +596,7 @@ public class ASTEvaluator {
      * @param node
      */
     protected void throwScriptError(String message, AstNode node){
-        String m = getErrorMessage(source,node.getLineno()-1,node.getPosition());
+        String m = getErrorMessage(source, node.getLineno() - 1, node.getPosition());
         throw new ScriptException(message+": "+m);
     }
 

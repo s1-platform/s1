@@ -16,6 +16,8 @@
 
 package org.s1.script;
 
+import org.s1.script.errors.ScriptLimitException;
+
 /**
  * Memory heap
  */
@@ -33,9 +35,9 @@ public class MemoryHeap {
      * Takes object size from heap
      *
      * @param obj
-     * @throws ScriptLimitException
+     * @throws org.s1.script.errors.ScriptLimitException
      */
-    public synchronized void take(Object obj) throws ScriptLimitException{
+    public synchronized void take(Object obj) throws ScriptLimitException {
         String s = ""+obj;
         take(s.length());
     }

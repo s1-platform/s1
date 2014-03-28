@@ -14,16 +14,16 @@
  *    limitations under the License.
  */
 
-package org.s1.script;
+package org.s1.script.errors;
 
 /**
  * Will be thrown on
- * <code>break;</code>
+ * <code>continue;</code>
  * command
  */
-public class LoopBreakException extends RuntimeException {
+public class LoopContinueException extends RuntimeException {
 
-    public LoopBreakException() {
+    public LoopContinueException() {
         super();
     }
 

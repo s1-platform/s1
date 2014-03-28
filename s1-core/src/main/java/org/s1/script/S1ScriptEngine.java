@@ -27,14 +27,17 @@ import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.options.OptionsStorage;
-import org.s1.script.functions.ScriptFunctions;
-import org.s1.script.functions.ScriptSystemFunctions;
+import org.s1.script.errors.ScriptException;
+import org.s1.script.errors.ScriptLimitException;
+import org.s1.script.errors.SyntaxException;
+import org.s1.script.function.ScriptFunction;
+import org.s1.script.function.ScriptFunctionSet;
+import org.s1.script.function.SystemFunctionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -167,7 +170,7 @@ public class S1ScriptEngine {
     }
 
     public <T> T evalInFunction(String name, Class<T> cls, String script, Map<String,Object> data){
-        return Objects.cast(eval(name,"(function(){"+script+"\n})();",data),cls);
+        return Objects.cast(eval(name, "(function(){" + script + "\n})();", data), cls);
     }
 
     public <T> T eval(String script, Map<String,Object> data){
@@ -181,11 +184,11 @@ public class S1ScriptEngine {
      * @param data context
      * @param <T>
      * @return last script statement result
-     * @throws ScriptException
-     * @throws ScriptLimitException
-     * @throws SyntaxException
+     * @throws org.s1.script.errors.ScriptException
+     * @throws org.s1.script.errors.ScriptLimitException
+     * @throws org.s1.script.errors.SyntaxException
      */
-    public <T> T eval(String name, final String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException{
+    public <T> T eval(String name, final String script, Map<String,Object> data) throws ScriptException,ScriptLimitException,SyntaxException {
         long t = System.currentTimeMillis();
         if(data==null)
             data = Objects.newHashMap();
@@ -217,9 +220,9 @@ public class S1ScriptEngine {
             String ns = Objects.get(f,"namespace","");
             if(ns.length()>0 && !ns.endsWith("."))
                 ns+=".";
-            Class<? extends ScriptFunctions> cls = null;
+            Class<? extends ScriptFunctionSet> cls = null;
             try {
-                cls = (Class<? extends ScriptFunctions>)Class.forName(clName);
+                cls = (Class<? extends ScriptFunctionSet>)Class.forName(clName);
                 addFunctions(ns, ctx, cls);
             } catch (Throwable e) {
                 LOG.warn("Class "+cls+" cannot be initialized as ScriptFunctions: "+e.getMessage(),e);
@@ -227,7 +230,7 @@ public class S1ScriptEngine {
         }
 
         //system functions
-        addFunctions(SYSTEM_FUNCTION_NS+".", ctx, ScriptSystemFunctions.class);
+        addFunctions(SYSTEM_FUNCTION_NS+".", ctx, SystemFunctionSet.class);
         final Session.SessionBean sb = Session.getSessionBean();
         Future<Object> f = null;
         if(sb!=null){
@@ -239,7 +242,8 @@ public class S1ScriptEngine {
                     try{
                         id = Session.start(sb.getId());
                         ASTEvaluator ast = new ASTEvaluator(script);
-                        return ast.eval(root,ctx);
+                        Object o = ast.eval(root,ctx);
+                        return o;
                     }finally {
                         Session.end(id);
                     }
@@ -251,31 +255,40 @@ public class S1ScriptEngine {
                 @Override
                 public Object call() throws Exception {
                     ASTEvaluator ast = new ASTEvaluator(script);
-                    return ast.eval(root,ctx);
+                    Object o = ast.eval(root,ctx);
+                    return o;
                 }
             });
         }
 
         try {
             long l = System.currentTimeMillis();
+            T result = null;
+            /*try {
+                // Try to get answer in short timeout, should be available
+                result = (T)f.get(getTimeLimit(), TimeUnit.MILLISECONDS);
+            } catch (TimeoutException te) {
+                f.cancel(true);
+                throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
+            }*/
             while(true){
                 if(System.currentTimeMillis()-l>getTimeLimit()){
                     f.cancel(true);
                     throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
-                    //break;
                 }
+
                 if(f.isDone()){
                     break;
                 }
+                Thread.sleep(1);
             }
-            T result = (T)f.get();
+            result = (T)f.get();
+
             if(LOG.isDebugEnabled()){
                 LOG.debug("Script result ("+(System.currentTimeMillis()-t)+"ms.): "+result);
             }
             return result;
-        } /*catch (CancellationException e){
-            throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
-        }*/ catch (InterruptedException e){
+        } catch (InterruptedException e){
             throw S1SystemError.wrap(e);
         } catch (ExecutionException e){
             if(e.getCause()!=null){
@@ -324,7 +337,7 @@ public class S1ScriptEngine {
      * @param c
      * @param cls
      */
-    private void addFunctions(final String ns, Context c, final Class<? extends ScriptFunctions> cls){
+    private void addFunctions(final String ns, Context c, final Class<? extends ScriptFunctionSet> cls){
         for(final Method method:cls.getDeclaredMethods()){
             if(!Modifier.isPublic(method.getModifiers())){
                 continue;
@@ -345,7 +358,7 @@ public class S1ScriptEngine {
                         if(LOG.isTraceEnabled()){
                             LOG.trace(ns+method.getName()+"("+args+")");
                         }
-                        ScriptFunctions sf = cls.newInstance();
+                        ScriptFunctionSet sf = cls.newInstance();
                         sf.setContext(getContext());
                         return method.invoke(sf, args.toArray());
                     } catch (Throwable e) {

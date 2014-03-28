@@ -14,7 +14,27 @@
  *    limitations under the License.
  */
 
+package org.s1.script.function;
+
+import org.s1.objects.Objects;
+import org.s1.script.Context;
+import org.s1.script.errors.ScriptException;
+
 /**
- * Script functions base class and system functions classes
+ * Custom print
  */
-package org.s1.script.functions;
+public abstract class CustomPrintFunction extends ScriptFunction {
+
+    public CustomPrintFunction(Context context) {
+        super(context,Objects.newArrayList("text"));
+    }
+
+
+    public Object call() throws ScriptException {
+        String text = getContext().get("text");
+        return print(text);
+    }
+
+    public abstract String print(String text) throws ScriptException;
+
+}
