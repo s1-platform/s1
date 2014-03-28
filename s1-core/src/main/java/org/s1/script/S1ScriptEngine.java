@@ -348,17 +348,17 @@ public class S1ScriptEngine {
      *
      * @param template template text
      * @param data context
-     * @param startExpr tag for expression start
-     * @param endExpr tag for expression end
-     * @param startCode tag for code start
-     * @param endCode tag for code end
      * @return evaluated template
      * @throws ScriptException
      * @throws ScriptLimitException
      * @throws SyntaxException
      */
-    public String template(String template, Map<String,Object> data, String startExpr, String endExpr, String startCode, String endCode)
+    public String template(String template, Map<String,Object> data)
         throws ScriptException,ScriptLimitException,SyntaxException{
+        String startExpr="<%=";
+        String endExpr="%>";
+        String startCode = "<%";
+        String endCode = "%>";
 
         if(LOG.isDebugEnabled()){
             LOG.debug("Building S1 template:\n"+template+"\nWith data:"+data+"\n"
@@ -401,7 +401,7 @@ public class S1ScriptEngine {
         if(s==-1){
             template = printText(template);
         }else{
-            if(s>0){
+            if(s>=0){
                 String text = template.substring(0,s);
                 template = printText(text)+template.substring(s+BEGIN.length());
             }

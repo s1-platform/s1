@@ -113,7 +113,7 @@ public class TestScript extends BasicTest{
                         throw S1SystemError.wrap(e);
                     }
                     try{
-                        String t = scriptEngine.template(template,null,"{{","}}","<%","%>");
+                        String t = scriptEngine.template(template,null);
                         if(input==0){
                             //trace(f.getName()+":\nINPUT:\n"+template+"\nOUTPUT:\n"+t);
                         }
