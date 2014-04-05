@@ -126,7 +126,10 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
             f.setFaultString(e.getClass().getName() + ": " + e.getMessage());
             Detail d = f.addDetail();
             d.addDetailEntry(QName.valueOf("class")).addTextNode(e.getClass().getName());
-            d.addDetailEntry(QName.valueOf("message")).addTextNode(e.getMessage());
+            String m = e.getMessage();
+            if(m==null)
+                m = "";
+            d.addDetailEntry(QName.valueOf("message")).addTextNode(m);
             d.addDetailEntry(QName.valueOf("requestId")).addTextNode(MDC.get("requestId"));
             return msg;
         }catch (Exception ex){

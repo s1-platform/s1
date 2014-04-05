@@ -43,13 +43,7 @@ public class TableScriptFunctions extends ScriptFunctionSet {
      * @return
      */
     protected Table getTable(String table){
-        try{
-            Table tbl = (Table)Class.forName(table).newInstance();
-            tbl.init();
-            return tbl;
-        }catch (Exception e){
-            throw S1SystemError.wrap(e);
-        }
+        return Tables.get(table);
     }
 
     /**
@@ -78,7 +72,7 @@ public class TableScriptFunctions extends ScriptFunctionSet {
      * @return
      * @throws AccessDeniedException
      */
-    public long list(String table, List<Map<String,Object>> list, Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fieldMask, int skip, int max, Map<String,Object> ctx) throws AccessDeniedException {
+    public long list(String table, List<Map<String,Object>> list, Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fieldMask, Integer skip, Integer max, Map<String,Object> ctx) throws AccessDeniedException {
         Query q = new Query();
         if(search!=null){
             q.fromMap(search);

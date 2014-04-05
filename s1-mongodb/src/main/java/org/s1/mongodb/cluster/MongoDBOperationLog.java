@@ -63,7 +63,7 @@ public class MongoDBOperationLog extends OperationLog {
     public void listUndone(Closure<MessageBean, Object> cl) {
         DBCollection coll = getCollection();
         DBCursor cur = coll.find(new BasicDBObject("done",false))
-                .sort(new BasicDBObject("messageId", 1));
+                .sort(new BasicDBObject("id", 1));
         while(cur.hasNext()){
             DBObject o = cur.next();
             Map<String,Object> m1 = MongoDBFormat.toMap(o);
@@ -96,12 +96,12 @@ public class MongoDBOperationLog extends OperationLog {
     @Override
     public long getLastId() {
         DBCollection coll = getCollection();
-        DBCursor cur = coll.find().sort(new BasicDBObject("messageId", -1)).limit(1);
+        DBCursor cur = coll.find().sort(new BasicDBObject("id", -1)).limit(1);
         DBObject o = null;
         if(cur.hasNext())
             o = cur.next();
         if(o!=null){
-            return (Long)o.get("messageId");
+            return (Long)o.get("id");
         }
         return 0;
     }

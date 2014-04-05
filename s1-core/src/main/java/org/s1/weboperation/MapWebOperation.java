@@ -62,12 +62,13 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
                 String nv [] = it.split("=");
                 String n = nv[0];
                 String v = null;
-                if(nv.length>1)
+                if(nv.length>1) {
                     v = nv[1];
-                try {
-                    v = URLDecoder.decode(v, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    throw S1SystemError.wrap(e);
+                    try {
+                        v = URLDecoder.decode(v, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        throw S1SystemError.wrap(e);
+                    }
                 }
                 if(PARAMS_PARAMETER.equals(n)){
                     inParams.putAll(Objects.fromWire(JSONFormat.evalJSON(v)));

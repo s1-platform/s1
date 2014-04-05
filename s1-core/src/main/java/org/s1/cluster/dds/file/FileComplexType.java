@@ -36,10 +36,10 @@ public class FileComplexType extends ComplexType{
     public Map<String, Object> expand(Map<String, Object> m, boolean expand) throws Exception {
         String database = Objects.get(m,"database");
         String collection = Objects.get(m,"collection");
-        String entity = Objects.get(m,"entity");
+        String id = Objects.get(m,"id");
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(new Id(database,collection,entity));
+            b = FileStorage.read(new Id(database,collection,id));
             m.put("meta", b.getMeta().toMap());
         }finally {
             FileStorage.closeAfterRead(b);
@@ -51,10 +51,10 @@ public class FileComplexType extends ComplexType{
     public Map<String, Object> validate(Map<String, Object> m) throws ValidationException {
         String database = Objects.get(m,"database");
         String collection = Objects.get(m,"collection");
-        String entity = Objects.get(m,"entity");
+        String id = Objects.get(m,"id");
         FileStorage.FileReadBean b = null;
         try{
-            b = FileStorage.read(new Id(database,collection,entity));
+            b = FileStorage.read(new Id(database,collection,id));
         }catch (NotFoundException e){
             throw new CustomValidationException(e.getMessage(),e);
         }finally {

@@ -95,6 +95,7 @@ public class Base64 {
      * @throws Base64FormatException
      */
     public static byte [] decode(String base64) throws Base64FormatException{
+        base64 = base64.replace("\n","").replace("\r","");
         if(base64.length()%4!=0)
             throw new Base64FormatException("Bad base64 string");
 

@@ -17,6 +17,8 @@
 package org.s1.script.function;
 
 import org.s1.cluster.Session;
+import org.s1.format.json.JSONFormat;
+import org.s1.format.json.JSONFormatException;
 import org.s1.misc.Closure;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
@@ -208,6 +210,22 @@ public class SystemFunctionSet extends ScriptFunctionSet {
                         ));
             }
         });
+    }
+
+    public Map<String,Object> toWire(Map<String,Object> o){
+        return Objects.toWire(o);
+    }
+
+    public Map<String,Object> fromWire(Map<String,Object> o){
+        return Objects.fromWire(o);
+    }
+
+    public String toJSON(Map<String,Object> o){
+        return JSONFormat.toJSON(o);
+    }
+
+    public Map<String,Object> evalJSON(String json) throws JSONFormatException {
+        return JSONFormat.evalJSON(json);
     }
 
     /**

@@ -35,6 +35,7 @@ import org.s1.user.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -104,7 +105,7 @@ public abstract class Table {
 
     public void checkIndexes() {
         int i = 0;
-        getTableStorage().collectionIndex("index_id", new IndexBean(Objects.newArrayList("id"),true,null));
+        getTableStorage().collectionIndex("index_id", new IndexBean(Objects.newArrayList("id"), true, null));
         for (IndexBean b : getIndexes()) {
             getTableStorage().collectionIndex("index_" + i, b);
             i++;
@@ -113,7 +114,10 @@ public abstract class Table {
 
     protected void checkUnique(Map<String, Object> object, boolean isNew) throws AlreadyExistsException {
         //validate unique
-        for (IndexBean ind : getIndexes()) {
+        List<IndexBean> indexBeans = new ArrayList<IndexBean>();
+        indexBeans.addAll(getIndexes());
+        indexBeans.add(new IndexBean(Objects.newArrayList("id"),true,null));
+        for (IndexBean ind : indexBeans) {
             if (ind.isUnique()) {
                 //check unique
                 GroupQueryNode gqn = new GroupQueryNode(GroupQueryNode.GroupOperation.AND);

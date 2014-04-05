@@ -22,6 +22,10 @@ import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.objects.Objects;
+import org.s1.script.Context;
+import org.s1.script.S1ScriptEngine;
+import org.s1.script.errors.ScriptException;
+import org.s1.script.function.ScriptFunction;
 import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
 import org.s1.table.Table;
@@ -339,6 +343,50 @@ public class TableTest extends ServerTest {
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
+    }
+
+    public void testScript() {
+        final int p = 10;
+        final int c = 10;
+        title("Script, parallel: " + p);
+        final Table t = new TestTable1();
+
+        try {
+            Session.start("s_" + 1);
+
+            try {
+                List<Map<String,Object>> l = Objects.newArrayList();
+                for(int i=0;i<c;i++){
+                    l.add(Objects.newHashMap(String.class,Object.class,
+                            "a","test_"+i,
+                            "b",i
+                    ));
+                }
+                l.add(Objects.newHashMap(String.class,Object.class,
+                        "a1","test_"
+                ));
+                l = t.doImport(l);
+                assertEquals(c+1,l.size());
+            } catch (Throwable e) {
+                throw S1SystemError.wrap(e);
+            }
+
+        } finally {
+            Session.end("s_" + 1);
+        }
+
+        S1ScriptEngine se = new S1ScriptEngine();
+
+        String t1 = Objects.cast(se.eval(null,"var count = 0;\n" +
+                "var list = [];\n" +
+                "count = table.list('table1',list,{},{},{},0,10,{});\n" +
+                "s1.length(list);",Objects.newSOHashMap()),String.class);
+        assertEquals(""+c,t1);
+        String t2 = se.template(null,"<%var count = 0;\n" +
+                "var list = [];\n" +
+                "count = table.list('table1',list,{},{},{},0,10,{});\n" +
+                "%><%=s1.length(list)%>",Objects.newSOHashMap());
+        assertEquals(""+c,t2);
     }
 
 }

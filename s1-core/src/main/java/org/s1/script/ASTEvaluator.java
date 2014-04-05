@@ -426,7 +426,7 @@ public class ASTEvaluator {
             Object l = get(((InfixExpression) node).getLeft(),ctx);
             Object r = get(((InfixExpression) node).getRight(),ctx);
             if(operator==Token.ASSIGN){
-                set(((InfixExpression) node).getLeft(),ctx,get(((InfixExpression) node).getRight(),ctx));
+                set(((InfixExpression) node).getLeft(),ctx,r);
                 getResult = r;
             }else if(operator==Token.OR){
                 if(!(l instanceof Boolean))

@@ -69,11 +69,11 @@ public class S1ScriptFilter implements Filter{
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        scriptEngine = new S1ScriptEngine("scriptServlet.scriptEngine");
+        scriptEngine = new S1ScriptEngine("pages.scriptEngine");
         debug = Options.getStorage().getSystem(Boolean.class,"pages.debug",false);
         String eu = filterConfig.getInitParameter("exclude");
         excludeUrls = new String[]{"/dispatcher"};
-        if(Objects.isNullOrEmpty(eu))
+        if(!Objects.isNullOrEmpty(eu))
             excludeUrls = eu.split(";");
 
         pageCache = new Cache(Options.getStorage().getSystem(Integer.class,"pages.cacheSize",1000));
@@ -144,12 +144,12 @@ public class S1ScriptFilter implements Filter{
 
         final String url = req.getRequestURL().toString();
         final String context = req.getContextPath();
-        final UserBean user = Users.getUser(Session.getSessionBean().getId());
+        final UserBean user = Users.getUser(Session.getSessionBean().getUserId());
         final Map<String,Object> headers = Objects.newHashMap();
         final Map<String,Object> responseHeaders = Objects.newHashMap();
 
-        final Map<String,String> includePages = Objects.newHashMap();
-        final Map<String,Map<String,Object>> includeParams = Objects.newHashMap();
+        //final Map<String,String> includePages = Objects.newHashMap();
+        //final Map<String,Map<String,Object>> includeParams = Objects.newHashMap();
 
         Enumeration<String> eh = req.getHeaderNames();
         while(eh.hasMoreElements()){
@@ -160,16 +160,18 @@ public class S1ScriptFilter implements Filter{
 
         LOG.debug("Rendering page: " + page);
         String text = null;
-        if(debug)
+        if(debug) {
+            scriptEngine.invalidateCache(page);
             text = FileUtils.readFileToString(new File(page), "UTF-8");
-        else {
+        } else {
             final String _page = page;
             text = pageCache.get(page, new Closure<String, String>() {
                 @Override
                 public String call(String input) {
                     try {
+                        scriptEngine.invalidateCache(_page);
                         String s = FileUtils.readFileToString(new File(_page), "UTF-8");
-                        if(s==null)
+                        if (s == null)
                             s = "";
                         return s;
                     } catch (IOException e) {
@@ -184,14 +186,28 @@ public class S1ScriptFilter implements Filter{
             LOG.info("Page not found: "+page);
             return "";
         }
+        String port = "";
+        if(req.getScheme().equals("http") && req.getServerPort()!=80)
+            port = ":"+req.getServerPort();
+        else if(req.getScheme().equals("https") && req.getServerPort()!=443)
+            port = ":"+req.getServerPort();
         text = scriptEngine.template(page, text, Objects.newSOHashMap(
                 "page",Objects.newSOHashMap(
                         "params",params,
                         "headers",headers,
                         "responseHeaders",responseHeaders,
                         "url",url,
-                        "dir",dir,
+                        "method",req.getMethod().toLowerCase(),
+                        "query",req.getQueryString(),
+                        "uri",req.getRequestURI(),
+                        "scheme",req.getScheme(),
+                        "host",req.getServerName(),
+                        "hostname",req.getServerName()+port,
+                        "port",req.getServerPort(),
+                        "relative",req.getRequestURI().substring(req.getContextPath().length()),
                         "context",context,
+                        "debug",debug,
+                        "isAnonymous",Session.getSessionBean().getUserId().equals(Session.ANONYMOUS),
                         "user",user
                 ),
                 "args",local,
@@ -201,9 +217,20 @@ public class S1ScriptFilter implements Filter{
                         Map<String,Object> l = getContext().get("params");
                         String p = getContext().get(String.class,"path");
                         String id = UUID.randomUUID().toString();
-                        includePages.put(id,p);
-                        includeParams.put(id,l);
-                        return "---"+id+"---";
+                        //includePages.put(id,p);
+                        //includeParams.put(id,l);
+                        //return "---"+id+"---";
+                        String t = "";
+                        try {
+                            t = get(cp, dir, p, params, l, req, resp);
+                        } catch (Throwable e) {
+                            LOG.error("Inner page: " + p + " error", e);
+                            if (debug)
+                                t = "<b>Inner page: " + p + " error: "
+                                        + e.getClass().getName() + ": " + e.getMessage() + "</b>";
+                            t = "";
+                        }
+                        return t;
                     }
                 },
                 "layout",new ScriptFunction(new Context(10000),Objects.newArrayList("path","params")) {
@@ -222,7 +249,7 @@ public class S1ScriptFilter implements Filter{
             resp.setHeader(s,Objects.get(String.class,responseHeaders,s));
         }
 
-        for(String id:includePages.keySet()) {
+        /*for(String id:includePages.keySet()) {
             String p = includePages.get(id);
             Map<String,Object> l = includeParams.get(id);
             String t = "";
@@ -236,7 +263,7 @@ public class S1ScriptFilter implements Filter{
                 t = "";
             }
             text = text.replace("---"+id+"---",t);
-        }
+        }*/
 
         if(!layout.isEmpty()){
             String p = Objects.get(layout,"page");

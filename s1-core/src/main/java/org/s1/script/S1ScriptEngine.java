@@ -55,6 +55,7 @@ public class S1ScriptEngine {
 
     public static final String OPTIONS_KEY = "scriptEngine";
     private static final ExecutorService service;
+    private static final ThreadLocal<Boolean> isInside = new ThreadLocal<Boolean>();
 
     static{
         int ps = Options.getStorage().getSystem(Integer.class,OPTIONS_KEY+".threadCount",500);
@@ -232,33 +233,43 @@ public class S1ScriptEngine {
         //system functions
         addFunctions(SYSTEM_FUNCTION_NS+".", ctx, SystemFunctionSet.class);
         final Session.SessionBean sb = Session.getSessionBean();
+
         Future<Object> f = null;
-        if(sb!=null){
-            //run script
-            f = service.submit(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    String id = null;
-                    try{
-                        id = Session.start(sb.getId());
-                        ASTEvaluator ast = new ASTEvaluator(script);
-                        Object o = ast.eval(root,ctx);
-                        return o;
-                    }finally {
-                        Session.end(id);
+        if(isInside.get() == null || !isInside.get()) {
+            if (sb != null) {
+                //run script
+                f = service.submit(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        String id = null;
+                        try {
+                            isInside.set(true);
+                            id = Session.start(sb.getId());
+                            ASTEvaluator ast = new ASTEvaluator(script);
+                            Object o = ast.eval(root, ctx);
+                            return o;
+                        } finally {
+                            Session.end(id);
+                            isInside.set(false);
+                        }
                     }
-                }
-            });
-        }else{
-            //run script
-            f = service.submit(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    ASTEvaluator ast = new ASTEvaluator(script);
-                    Object o = ast.eval(root,ctx);
-                    return o;
-                }
-            });
+                });
+            } else {
+                //run script
+                f = service.submit(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        try {
+                            isInside.set(true);
+                            ASTEvaluator ast = new ASTEvaluator(script);
+                            Object o = ast.eval(root, ctx);
+                            return o;
+                        }finally {
+                            isInside.set(false);
+                        }
+                    }
+                });
+            }
         }
 
         try {
@@ -271,19 +282,23 @@ public class S1ScriptEngine {
                 f.cancel(true);
                 throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
             }*/
-            while(true){
-                if(System.currentTimeMillis()-l>getTimeLimit()){
-                    f.cancel(true);
-                    throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
-                }
+            if(f==null){
+                ASTEvaluator ast = new ASTEvaluator(script);
+                result = (T)ast.eval(root, ctx);
+            }else {
+                while (true) {
+                    if (System.currentTimeMillis() - l > getTimeLimit()) {
+                        f.cancel(true);
+                        throw new ScriptLimitException(ScriptLimitException.Limits.TIME, getTimeLimit());
+                    }
 
-                if(f.isDone()){
-                    break;
+                    if (f.isDone()) {
+                        break;
+                    }
+                    Thread.sleep(1);
                 }
-                Thread.sleep(1);
+                result = (T) f.get();
             }
-            result = (T)f.get();
-
             if(LOG.isDebugEnabled()){
                 LOG.debug("Script result ("+(System.currentTimeMillis()-t)+"ms.): "+result);
             }
@@ -500,28 +515,26 @@ public class S1ScriptEngine {
 
         template = printBuffer.toString();
         template = template
-                .replace("&startCode;",startCode)
-                .replace("&endCode;",endCode)
-                .replace("&startExpr;",startExpr)
-                .replace("&endExpr;",endExpr)
-                .replace("&amp;","&");
+                .replace("|--startCode--|",startCode)
+                .replace("|--endCode--|",endCode)
+                .replace("|--startExpr--|",startExpr)
+                .replace("|--endExpr--|",endExpr);
         return template;
     }
 
     protected String parseTemplate(String template){
         template = template
-                .replace("&","&amp;")
-                .replace("\\"+startCode+"\\","&startCode;")
-                .replace("\\"+endCode+"\\","&endCode;")
-                .replace("\\"+startExpr+"\\","&startExpr;")
-                .replace("\\"+endExpr+"\\","&endExpr;");
+                .replace("\\"+startCode+"\\","|--startCode--|")
+                .replace("\\"+endCode+"\\","|--endCode--|")
+                .replace("\\"+startExpr+"\\","|--startExpr--|")
+                .replace("\\"+endExpr+"\\","|--endExpr--|");
 
         final String BEGIN = "|--"+ UUID.randomUUID().toString() +"--|";
         final String END = "|--"+ UUID.randomUUID().toString() +"--|";
 
         final Pattern codeP = Pattern.compile(Pattern.quote(startCode)+"(.+?)"+Pattern.quote(endCode),Pattern.DOTALL);
         final Pattern exprP = Pattern.compile(Pattern.quote(startExpr)+"(.+?)"+Pattern.quote(endExpr),Pattern.DOTALL);
-        final Pattern textP = Pattern.compile(Pattern.quote(END)+"(.+?)"+Pattern.quote(BEGIN),Pattern.DOTALL);
+        final Pattern textP = Pattern.compile(Pattern.quote(END)+"(.*?)"+Pattern.quote(BEGIN),Pattern.DOTALL);
 
         //expr
         final Matcher matcherExpr = exprP.matcher(template);

@@ -251,6 +251,8 @@ public class OptionsStorage {
         InputStream is = null;
         try{
             is = openConfig(name);
+            if(is==null)
+                return null;
             return IOUtils.toString(is, "UTF-8");
         }finally {
             IOUtils.closeQuietly(is);
