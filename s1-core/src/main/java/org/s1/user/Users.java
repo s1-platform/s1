@@ -17,9 +17,13 @@
 package org.s1.user;
 
 import org.s1.S1SystemError;
+import org.s1.cache.Cache;
+import org.s1.misc.Closure;
 import org.s1.options.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * User helper class
@@ -30,14 +34,33 @@ public class Users {
 
     private static volatile UserFactory userFactory;
 
-    private static synchronized UserFactory getUserFactory(){
+    private static volatile Cache cache;
+
+    public static Cache getCache(){
+        if(cache==null){
+            synchronized (Users.class) {
+                if(cache==null) {
+                    long TTL = Options.getStorage().getSystem("users.cache.TTL", 3600000L);
+                    int capacity = Options.getStorage().getSystem("users.cache.capacity", 100);
+                    cache = new Cache(capacity,TTL, TimeUnit.MILLISECONDS);
+                }
+            }
+        }
+        return cache;
+    }
+
+    private static UserFactory getUserFactory(){
         if(userFactory==null){
-            String cls = Options.getStorage().getSystem("users.factoryClass",UserFactory.class.getName());
-            try{
-                userFactory = (UserFactory) Class.forName(cls).newInstance();
-            }catch (Throwable e){
-                LOG.warn("Cannot initialize UserFactory ("+cls+") :"+e.getClass().getName()+": "+e.getMessage());
-                throw S1SystemError.wrap(e);
+            synchronized (Users.class) {
+                if(userFactory==null) {
+                    String cls = Options.getStorage().getSystem("users.factoryClass", UserFactory.class.getName());
+                    try {
+                        userFactory = (UserFactory) Class.forName(cls).newInstance();
+                    } catch (Throwable e) {
+                        LOG.warn("Cannot initialize UserFactory (" + cls + ") :" + e.getClass().getName() + ": " + e.getMessage());
+                        throw S1SystemError.wrap(e);
+                    }
+                }
             }
         }
         return userFactory;
@@ -48,8 +71,13 @@ public class Users {
      * @param id
      * @return
      */
-    public static UserBean getUser(String id){
-        return getUserFactory().getUser(id);
+    public static UserBean getUser(final String id){
+        return getCache().get(id,new Closure<String, UserBean>() {
+            @Override
+            public UserBean call(String input) {
+                return getUserFactory().getUser(id);
+            }
+        });
     }
 
     /**

@@ -45,6 +45,8 @@ public class IOUtils {
      * @return
      */
     public static String toString(InputStream is, String charset) {
+        if(is==null)
+            return null;
         Scanner s = new Scanner(is, charset).useDelimiter("\\A");
         return s.hasNext() ? s.next() : null;
     }
