@@ -22,7 +22,7 @@ import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ObjectSchema;
+import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.user.AccessDeniedException;
 
@@ -46,28 +46,24 @@ public class ZipExpImpFormat extends ExpImpFormat{
     protected PreviewBean preview(FileStorage.FileReadBean file) {
         try{
             List<Map<String,Object>> l = null;
-            ObjectSchema schema = new ObjectSchema();
             long count = 0;
             ZipInputStream zis = new ZipInputStream(file.getInputStream());
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if(entry.getName().equals("list_0.json") && !entry.isDirectory()){
                     l = Objects.get(Objects.fromWire(JSONFormat.evalJSON(IOUtils.toString(zis,"UTF-8"))),"list");
-                }else if(entry.getName().equals("schema.json") && !entry.isDirectory()){
-                    Map<String,Object> m = Objects.fromWire(JSONFormat.evalJSON(IOUtils.toString(zis, "UTF-8")));
-                    schema.fromMap(m);
                 }else if(entry.getName().equals("info.json") && !entry.isDirectory()){
                     count = Objects.get(Objects.fromWire(JSONFormat.evalJSON(IOUtils.toString(zis,"UTF-8"))),"count");
                 }
             }
-            return new PreviewBean(schema,count,l);
+            return new PreviewBean(count,l);
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
     }
 
     @Override
-    protected void doImport(List<Map<String, Object>> list, FileStorage.FileReadBean file, Table table)
+    protected void doImport(List<ImportResultBean> list, FileStorage.FileReadBean file, Table table)
             throws AccessDeniedException {
         try{
             ZipInputStream zis = new ZipInputStream(file.getInputStream());
@@ -95,13 +91,11 @@ public class ZipExpImpFormat extends ExpImpFormat{
     private ByteArrayOutputStream os;
 
     @Override
-    protected void prepareExport(ObjectSchema schema, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+    protected void prepareExport(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
         try{
             os = new ByteArrayOutputStream();
             zos = new ZipOutputStream(os);
-            zos.putNextEntry(new ZipEntry("schema.json"));
-            zos.write(JSONFormat.toJSON(Objects.toWire(schema.toMap())).getBytes("UTF-8"));
-            zos.closeEntry();
+
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }

@@ -19,21 +19,21 @@ package org.s1.table.errors;
 /**
  * Requested action not available
  */
-public class ActionNotAvailableException extends Exception {
+public class ActionNotFoundException extends Exception {
 
-    public ActionNotAvailableException() {
+    public ActionNotFoundException() {
         super();
     }
 
-    public ActionNotAvailableException(String message) {
+    public ActionNotFoundException(String message) {
         super(message);
     }
 
-    public ActionNotAvailableException(String message, Throwable cause) {
+    public ActionNotFoundException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public ActionNotAvailableException(Throwable cause) {
+    public ActionNotFoundException(Throwable cause) {
         super(cause);
     }
 }

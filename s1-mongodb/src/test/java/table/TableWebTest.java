@@ -62,12 +62,8 @@ public class TableWebTest extends ServerTest {
                             Map<String, Object> m = null;
 
                             boolean b = false;
-                            assertEquals(1,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "id",id),null),"list").size());
-
                             //add
-                            m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
+                            m = client().postJSON(getContext()+"/dispatcher/Table.add",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "action","add",
                                     "data",Objects.newHashMap("a","a_"+input,"b",-1)),null);
@@ -79,11 +75,7 @@ public class TableWebTest extends ServerTest {
                             assertEquals(-1, Objects.get(Integer.class, m, "b").intValue());
 
                             //set
-                            assertEquals(2,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "id",id),null),"list").size());
-
-                            m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
+                            m = client().postJSON(getContext()+"/dispatcher/Table.set",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "action","setB",
                                     "id",id,
@@ -210,11 +202,8 @@ public class TableWebTest extends ServerTest {
                             boolean b = false;
 
                             //remove
-                            assertEquals(2,Objects.get(List.class,client().postJSON(getContext()+"/dispatcher/Table.getAvailableActions",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "id",id),null),"list").size());
 
-                            m = client().postJSON(getContext()+"/dispatcher/Table.changeState",Objects.newHashMap(String.class,Object.class,
+                            m = client().postJSON(getContext()+"/dispatcher/Table.remove",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "action","remove",
                                     "id",id),null);

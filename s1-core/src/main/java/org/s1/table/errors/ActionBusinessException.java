@@ -14,40 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.table;
-
-import org.s1.objects.Objects;
-import org.s1.table.errors.ActionBusinessException;
-import org.s1.user.AccessDeniedException;
-
-import java.util.Map;
+package org.s1.table.errors;
 
 /**
- * Table action
+ *
  */
-public abstract class ActionBean {
+public class ActionBusinessException extends Exception {
 
-    private String name;
-    private Table table;
-
-    protected Table getTable() {
-        return table;
+    public ActionBusinessException() {
+        super();
     }
 
-    void setTable(Table table) {
-        this.table = table;
+    public ActionBusinessException(String message) {
+        super(message);
     }
 
-    public ActionBean(String name) {
-        this.name = name;
+    public ActionBusinessException(String message, Throwable cause) {
+        super(message,cause);
     }
 
-    /**
-     *
-     * @return
-     */
-    public String getName() {
-        return name;
+    public ActionBusinessException(Throwable cause) {
+        super(cause);
     }
-
 }

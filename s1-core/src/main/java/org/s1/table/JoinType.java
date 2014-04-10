@@ -37,10 +37,10 @@ public class JoinType extends ComplexType{
     @Override
     public Map<String, Object> expand(Map<String, Object> m, boolean expand) throws Exception {
         String id = Objects.get(m,"id");
-        m.putAll(getTable().get(id, Objects.newHashMap(String.class, Object.class,
-                Table.CTX_VALIDATE_KEY, true,
-                Table.CTX_EXPAND_KEY, true,
-                Table.CTX_DEEP_KEY, expand
+        m.putAll(getTable().get(id, Objects.newHashMap(String.class, Object.class
+                //Table.CTX_VALIDATE_KEY, true,
+                //Table.CTX_EXPAND_KEY, true,
+                //Table.CTX_DEEP_KEY, expand
         )));
         return m;
     }

@@ -104,26 +104,26 @@ public class TableWebOperation extends MapWebOperation{
     }
 
     @WebOperationMethod
-    public Map<String,Object> changeState(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String id = Objects.get(params,"id");
+    public Map<String,Object> add(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         String action = Objects.get(params,"action");
         Map<String,Object> data = Objects.get(params, "data");
-        return getTable(params).changeState(id,action,data);
+        return getTable(params).add(action,data);
     }
 
     @WebOperationMethod
-    public Map<String,Object> getAvailableActions(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String id = Objects.get(params, "id");
-        List<ActionBean> l = getTable(params).getAvailableActions(id);
-        List<Map<String,Object>> r = Objects.newArrayList();
-        for(ActionBean c:l){
-            r.add(Objects.newHashMap(String.class,Object.class,
-                    "name",c.getName(),
-                    "label",c.getLabel(),
-                    "type",c.getType().toString().toLowerCase(),
-                    "schema",c.getSchema()==null?null:c.getSchema().toMap()));
-        }
-        return Objects.newHashMap("list", r);
+    public Map<String,Object> set(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        String id = Objects.get(params,"id");
+        String action = Objects.get(params,"action");
+        Map<String,Object> data = Objects.get(params, "data");
+        return getTable(params).set(id,action,data);
+    }
+
+    @WebOperationMethod
+    public Map<String,Object> remove(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        String id = Objects.get(params,"id");
+        String action = Objects.get(params,"action");
+        Map<String,Object> data = Objects.get(params, "data");
+        return getTable(params).remove(id,action,data);
     }
 
     @WebOperationMethod
@@ -134,13 +134,6 @@ public class TableWebOperation extends MapWebOperation{
     @WebOperationMethod
     public Map<String,Object> isImportAccessAllowed(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
         return Objects.newHashMap("allowed",getTable(params).isImportAllowed());
-    } 
-
-    @WebOperationMethod
-    public Map<String,Object> getSchema(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        if(getTable(params).getSchema()==null)
-            return Objects.newHashMap();
-        return getTable(params).getSchema().toMap();
     }
 
     @Override

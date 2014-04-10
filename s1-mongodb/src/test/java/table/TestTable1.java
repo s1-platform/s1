@@ -19,15 +19,15 @@ package table;
 import org.s1.cluster.dds.beans.CollectionId;
 import org.s1.mongodb.table.MongoDBTableStorage;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ObjectSchema;
-import org.s1.objects.schema.SimpleTypeAttribute;
-import org.s1.table.ActionBean;
-import org.s1.table.IndexBean;
-import org.s1.table.Table;
-import org.s1.table.TableStorage;
+import org.s1.table.*;
+import org.s1.table.errors.ActionBusinessException;
+import org.s1.table.errors.AlreadyExistsException;
+import org.s1.table.errors.BadDataException;
+import org.s1.user.AccessDeniedException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * s1v2
@@ -50,48 +50,67 @@ public class TestTable1 extends Table {
     }
 
     @Override
-    public ObjectSchema getSchema() {
-        return new ObjectSchema(
-                new SimpleTypeAttribute("a","aaa",String.class).setRequired(true),
-                new SimpleTypeAttribute("b","bbb",Integer.class)
-        );
-    }
-
-    @Override
     protected TableStorage createTableStorage() {
         return new MongoDBTableStorage();
     }
 
     @Override
-    public ObjectSchema getImportSchema() {
-        return new ObjectSchema(
-                new SimpleTypeAttribute("a","imp_aaa",String.class).setRequired(true),
-                new SimpleTypeAttribute("b","imp_bbb",Integer.class)
+    protected Map<String, Object> mergeRecordBeforeImport(String id, Map<String, Object> oldObject, Map<String, Object> data) throws BadDataException {
+        if(Objects.isNullOrEmpty(id))
+            id = UUID.randomUUID().toString();
+        String a = Objects.get(data,"a");
+        int b = Objects.get(Integer.class,data,"b");
+        if(Objects.isNullOrEmpty(a))
+            throw new BadDataException("imp_aaa");
+
+        Map<String,Object> m = Objects.newSOHashMap(
+                "id",id,
+                "a",a,
+                "b",b
         );
+        return m;
     }
 
     @Override
-    public List<ActionBean> getActions() {
-        return Objects.newArrayList(
-                new ActionBean("add","Add", ActionBean.Types.ADD, new ObjectSchema(
-                        new SimpleTypeAttribute("a","aaa",String.class).setRequired(true),
-                        new SimpleTypeAttribute("b","bbb",Integer.class)
-                )),
-                new ActionBean("setB","Set b", ActionBean.Types.SET, new ObjectSchema(
-                        new SimpleTypeAttribute("b1","bbb1",Integer.class)
-                )),
-                new ActionBean("remove","Remove", ActionBean.Types.REMOVE, null)
-        );
+    public List<AddActionBean> getAddActions() {
+        return Objects.newArrayList(AddActionBean.class, new AddActionBean("add"){
+            @Override
+            public Map<String, Object> run(Map<String, Object> data) throws AccessDeniedException, ActionBusinessException, AlreadyExistsException, BadDataException {
+                String id = UUID.randomUUID().toString();
+                String a = Objects.get(data,"a");
+                int b = Objects.get(Integer.class,data,"b");
+                if(Objects.isNullOrEmpty(a))
+                    throw new BadDataException("aaa");
+
+                Map<String,Object> m = Objects.newSOHashMap(
+                        "a",a,
+                        "b",b
+                );
+                addIternal(id, m);
+                return m;
+            }
+        });
     }
 
     @Override
-    protected Map<String, Object> merge(ActionBean action, Map<String, Object> object, Map<String, Object> data) {
-        if(action.getName().equals("setB")){
-            object.put("b",data.get("b1"));
-            return object;
-        }else {
-            return super.merge(action, object, data);
-        }
+    public List<SetActionBean> getSetActions() {
+        return Objects.newArrayList(SetActionBean.class, new SetActionBean("setB"){
+            @Override
+            public Map<String, Object> run(String id, Map<String, Object> record, Map<String, Object> data) throws AccessDeniedException, ActionBusinessException, AlreadyExistsException, BadDataException {
+                int b = Objects.get(Integer.class,data,"b1");
+                if(Objects.isNullOrEmpty(b))
+                    throw new BadDataException("bbb1");
+
+                record.put("b",b);
+                setIternal(id,record);
+                return record;
+            }
+        });
+    }
+
+    @Override
+    public List<RemoveActionBean> getRemoveActions() {
+        return Objects.newArrayList(RemoveActionBean.class, new RemoveActionBean("remove"));
     }
 
     /*@Override

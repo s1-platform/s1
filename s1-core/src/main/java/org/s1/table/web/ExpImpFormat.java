@@ -19,6 +19,7 @@ package org.s1.table.web;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.ObjectSchema;
+import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.user.AccessDeniedException;
 
@@ -35,12 +36,12 @@ public abstract class ExpImpFormat {
 
     protected abstract PreviewBean preview(FileStorage.FileReadBean file);
 
-    protected abstract void doImport(List<Map<String,Object>> list, FileStorage.FileReadBean file, Table table)
+    protected abstract void doImport(List<ImportResultBean> list, FileStorage.FileReadBean file, Table table)
         throws AccessDeniedException;
 
     protected abstract void setFileMeta(FileStorage.FileMetaBean meta);
 
-    protected abstract void prepareExport(ObjectSchema schema, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response);
+    protected abstract void prepareExport(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response);
 
     protected abstract void addPortionToExport(int i, List<Map<String,Object>> list);
 
@@ -50,22 +51,12 @@ public abstract class ExpImpFormat {
 
 
     public static class PreviewBean{
-        private ObjectSchema schema;
         private long count=0;
         private List<Map<String,Object>> list = Objects.newArrayList();
 
-        public PreviewBean(ObjectSchema schema, long count, List<Map<String,Object>> list) {
-            this.schema = schema;
+        public PreviewBean(long count, List<Map<String,Object>> list) {
             this.count = count;
             this.list = list;
-        }
-
-        /**
-         *
-         * @return
-         */
-        public ObjectSchema getSchema() {
-            return schema;
         }
 
         /**

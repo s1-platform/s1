@@ -28,6 +28,7 @@ import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
 import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
+import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.NotFoundException;
@@ -77,7 +78,7 @@ public class TableTest extends ServerTest {
 
                     try {
                         //add
-                        m = t.changeState(null, "add", Objects.newHashMap(String.class, Object.class,
+                        m = t.add("add", Objects.newHashMap(String.class, Object.class,
                                 "a", "a",
                                 "b", 1
                         ));
@@ -122,10 +123,9 @@ public class TableTest extends ServerTest {
                             Map<String, Object> m = null;
 
                             boolean b = false;
-                            assertEquals(1, t.getAvailableActions("").size());
 
                             //add
-                            m = t.changeState(null, "add", Objects.newHashMap(String.class, Object.class,
+                            m = t.add("add", Objects.newHashMap(String.class, Object.class,
                                     "a", "a_" + input,
                                     "b", -1
                             ));
@@ -136,8 +136,7 @@ public class TableTest extends ServerTest {
                             assertEquals(-1, Objects.get(m, "b"));
 
                             //set
-                            assertEquals(2, t.getAvailableActions(id).size());
-                            m = t.changeState(id, "setB", Objects.newHashMap(String.class, Object.class,
+                            m = t.set(id, "setB", Objects.newHashMap(String.class, Object.class,
                                     "b1", input
                             ));
                             assertEquals(id, Objects.get(m, "id"));
@@ -245,8 +244,7 @@ public class TableTest extends ServerTest {
                             boolean b = false;
 
                             //remove
-                            assertEquals(2, t.getAvailableActions(id).size());
-                            m = t.changeState(id, "remove", null);
+                            m = t.remove(id, "remove", null);
                             assertEquals(id, Objects.get(m, "id"));
                             assertEquals("a_" + input, Objects.get(m, "a"));
                             assertEquals(input, Objects.get(m, "b"));
@@ -293,8 +291,8 @@ public class TableTest extends ServerTest {
                             l.add(Objects.newHashMap(String.class,Object.class,
                                     "a1","test_"
                             ));
-                            l = t.doImport(l);
-                            assertEquals(c+1,l.size());
+                            List<ImportResultBean> lr = t.doImport(l);
+                            assertEquals(c+1,lr.size());
                         } catch (Throwable e) {
                             throw S1SystemError.wrap(e);
                         }
@@ -365,7 +363,7 @@ public class TableTest extends ServerTest {
                 l.add(Objects.newHashMap(String.class,Object.class,
                         "a1","test_"
                 ));
-                l = t.doImport(l);
+                List<ImportResultBean> lr = t.doImport(l);
                 assertEquals(c+1,l.size());
             } catch (Throwable e) {
                 throw S1SystemError.wrap(e);

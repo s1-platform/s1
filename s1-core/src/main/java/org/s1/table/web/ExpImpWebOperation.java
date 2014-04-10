@@ -20,6 +20,7 @@ import org.s1.S1SystemError;
 import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.objects.Objects;
+import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.table.Tables;
 import org.s1.table.format.Query;
@@ -94,7 +95,7 @@ public class ExpImpWebOperation extends MapWebOperation{
             FileStorage.closeAfterRead(b);
         }
 
-        return Objects.newHashMap("schema",pb.getSchema().toMap(),"list",pb.getList(),"count",pb.getCount());
+        return Objects.newHashMap("list",pb.getList(),"count",pb.getCount());
     }
 
     @WebOperationMethod
@@ -103,7 +104,7 @@ public class ExpImpWebOperation extends MapWebOperation{
         final String type = Objects.get(params,"type");
         String database = Objects.get(params,"database");
         String collection = Objects.get(params,"collection", UploadWebOperation.COLLECTION);
-        final List<Map<String,Object>> list = Objects.newArrayList();
+        final List<ImportResultBean> list = Objects.newArrayList();
 
         FileStorage.FileReadBean b = null;
         try{
@@ -114,7 +115,11 @@ public class ExpImpWebOperation extends MapWebOperation{
             FileStorage.closeAfterRead(b);
         }
 
-        return Objects.newHashMap("list",list);
+        final List<Map<String,Object>> ml = Objects.newArrayList();
+        for(ImportResultBean i:list){
+            ml.add(i.toMap());
+        }
+        return Objects.newHashMap("list",ml);
     }
 
     @WebOperationMethod
@@ -131,7 +136,7 @@ public class ExpImpWebOperation extends MapWebOperation{
         int i=0;
         long c = 0;
         //prepare file
-        format.prepareExport(getTable(params).getSchema(), params, request, response);
+        format.prepareExport(params, request, response);
         while(true){
             List<Map<String,Object>> list = Objects.newArrayList();
             c = getTable(params).list(list, q, null, null, skip, 10, ctx);

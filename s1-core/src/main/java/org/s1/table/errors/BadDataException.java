@@ -17,23 +17,23 @@
 package org.s1.table.errors;
 
 /**
- *
+ * Requested action not available
  */
-public class CustomActionException extends Exception {
+public class BadDataException extends Exception {
 
-    public CustomActionException() {
+    public BadDataException() {
         super();
     }
 
-    public CustomActionException(String message) {
+    public BadDataException(String message) {
         super(message);
     }
 
-    public CustomActionException(String message, Throwable cause) {
+    public BadDataException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public CustomActionException(Throwable cause) {
+    public BadDataException(Throwable cause) {
         super(cause);
     }
 }

@@ -18,6 +18,8 @@ package org.s1.table;
 
 import org.s1.objects.Objects;
 import org.s1.table.errors.ActionBusinessException;
+import org.s1.table.errors.AlreadyExistsException;
+import org.s1.table.errors.BadDataException;
 import org.s1.user.AccessDeniedException;
 
 import java.util.Map;
@@ -25,29 +27,19 @@ import java.util.Map;
 /**
  * Table action
  */
-public abstract class ActionBean {
+public class RemoveActionBean extends ActionBean{
 
-    private String name;
-    private Table table;
-
-    protected Table getTable() {
-        return table;
+    public RemoveActionBean(String name) {
+        super(name);
     }
 
-    void setTable(Table table) {
-        this.table = table;
+    public void run(String id, Map<String,Object> record, Map<String,Object> data)
+            throws AccessDeniedException, ActionBusinessException, BadDataException {
+        removeInternal(id);
     }
 
-    public ActionBean(String name) {
-        this.name = name;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public String getName() {
-        return name;
+    protected final void removeInternal(String id){
+        getTable().getTableStorage().collectionRemove(id);
     }
 
 }

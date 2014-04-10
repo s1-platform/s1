@@ -16,14 +16,10 @@
 
 package org.s1.table;
 
-import org.s1.S1SystemError;
 import org.s1.objects.Objects;
 import org.s1.objects.schema.errors.ValidationException;
 import org.s1.script.function.ScriptFunctionSet;
-import org.s1.table.errors.ActionNotAvailableException;
-import org.s1.table.errors.AlreadyExistsException;
-import org.s1.table.errors.CustomActionException;
-import org.s1.table.errors.NotFoundException;
+import org.s1.table.errors.*;
 import org.s1.table.format.FieldsMask;
 import org.s1.table.format.Query;
 import org.s1.table.format.Sort;
@@ -125,44 +121,17 @@ public class TableScriptFunctions extends ScriptFunctionSet {
         return l;
     }
 
-    /**
-     *
-     * @param table
-     * @param id
-     * @param action
-     * @param data
-     * @param foundation
-     * @return
-     * @throws ActionNotAvailableException
-     * @throws AccessDeniedException
-     * @throws ValidationException
-     * @throws NotFoundException
-     * @throws AlreadyExistsException
-     * @throws CustomActionException
-     */
-    public Map<String,Object> changeState(String table, String id, String action, Map<String,Object> data) throws ActionNotAvailableException, AccessDeniedException, ValidationException, NotFoundException, AlreadyExistsException, CustomActionException {
-        return getTable(table).changeState(id,action,data);
+
+    public Map<String,Object> add(String table, String action, Map<String,Object> data) throws AlreadyExistsException, AccessDeniedException, ActionBusinessException, BadDataException {
+        return getTable(table).add(action, data);
     }
 
-    /**
-     *
-     * @param table
-     * @param id
-     * @return
-     * @throws NotFoundException
-     * @throws AccessDeniedException
-     */
-    public List<Map<String,Object>> getAvailableActions(String table, String id) throws NotFoundException, AccessDeniedException {
-        List<Map<String,Object>> l = Objects.newArrayList();
-        List<ActionBean> lc = getTable(table).getAvailableActions(id);
-        for(ActionBean c:lc){
-            l.add(Objects.newHashMap(String.class,Object.class,
-                    "name",c.getName(),
-                    "label",c.getLabel(),
-                    "type",c.getType().toString().toLowerCase(),
-                    "schema",c.getSchema().toMap()));
-        }
-        return l;
+    public Map<String,Object> set(String table, String id, String action, Map<String,Object> data) throws AccessDeniedException, BadDataException, ActionBusinessException, NotFoundException, AlreadyExistsException {
+        return getTable(table).set(id, action, data);
+    }
+
+    public Map<String,Object> remove(String table, String id, String action, Map<String,Object> data) throws AccessDeniedException, ActionBusinessException, NotFoundException, BadDataException {
+        return getTable(table).remove(id, action, data);
     }
 
     /**
