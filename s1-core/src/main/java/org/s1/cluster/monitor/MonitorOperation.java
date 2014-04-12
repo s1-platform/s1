@@ -19,9 +19,6 @@ package org.s1.cluster.monitor;
 import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.NodeMessageExchange;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.MapAttribute;
-import org.s1.objects.schema.ObjectSchema;
-import org.s1.objects.schema.SimpleTypeAttribute;
 import org.s1.options.Options;
 import org.s1.weboperation.MapWebOperation;
 import org.slf4j.Logger;
@@ -101,35 +98,35 @@ public class MonitorOperation extends MapWebOperation {
         if("getClusterInfo".equals(method)){
             result.put("nodes",getClusterInfo());
         }else if("getNodeInfo".equals(method)){
-            params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true))
-                    .validate(params);
             String nodeId = Objects.get(params,"nodeId");
+            Objects.assertNotEmpty("NodeId must not be empty",nodeId);
             result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.getNodeInfo",null);
         }else if("listNodeLogs".equals(method)){
-            params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true),
-                    new SimpleTypeAttribute("skip","skip",Integer.class).setRequired(true).setDefault(0),
-                    new SimpleTypeAttribute("max","max",Integer.class).setRequired(true).setDefault(10),
-                    new MapAttribute("search","search")).validate(params);
             String nodeId = Objects.get(params,"nodeId");
+            int skip = Objects.get(Integer.class,params,"skip",0);
+            int max = Objects.get(Integer.class,params,"max",10);
+            Map<String,Object> search = Objects.get(params,"search",Objects.newSOHashMap());
+            Objects.assertNotEmpty("NodeId must not be empty",nodeId);
+
             result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.listNodeLogs",
                     Objects.newHashMap(
-                            "search",Objects.get(params,"search"),
-                            "skip",Objects.get(params,"skip"),
-                            "max",Objects.get(params,"max")));
+                            "search",search,
+                            "skip",skip,
+                            "max",max));
         }else if("setLogLevel".equals(method)){
-            params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true),
-                    new SimpleTypeAttribute("name","name",String.class),
-                    new SimpleTypeAttribute("level","level",String.class).setRequired(true)
-            ).validate(params);
             String nodeId = Objects.get(params,"nodeId");
+            String name = Objects.get(params,"name");
+            String level = Objects.get(params,"level");
+            Objects.assertNotEmpty("NodeId must not be empty",nodeId);
+            Objects.assertNotEmpty("Level must not be empty",level);
+
             NodeMessageExchange.getInstance().request(nodeId,"monitor.setLogLevel",
                     Objects.newHashMap(
-                            "name",Objects.get(params,"name"),
-                            "level",Objects.get(params,"level")));
+                            "name",name,
+                            "level",level));
         }else if("getLoggers".equals(method)){
-            params = new ObjectSchema(new SimpleTypeAttribute("nodeId","nodeId",String.class).setRequired(true)
-            ).validate(params);
             String nodeId = Objects.get(params,"nodeId");
+            Objects.assertNotEmpty("NodeId must not be empty",nodeId);
             result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.getLoggers",null);
         }else{
             throwMethodNotFound(method);

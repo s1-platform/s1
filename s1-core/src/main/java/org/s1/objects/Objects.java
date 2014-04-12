@@ -321,4 +321,14 @@ public class Objects {
     public static Map<String, Object> fromWire(Map<String, Object> data) {
         return ObjectWire.fromWire(data);
     }
+
+    /*validation*/
+    public static void assertNotEmpty(String message, Object o) throws BadDataException {
+        assertTrue(message,!Objects.isNullOrEmpty(o));
+    }
+
+    public static void assertTrue(String message, boolean b) throws BadDataException{
+        if(!b)
+            throw new BadDataException(message);
+    }
 }

@@ -22,6 +22,7 @@ import org.s1.cluster.Session;
 import org.s1.cluster.dds.beans.CollectionId;
 import org.s1.cluster.dds.beans.StorageId;
 import org.s1.misc.Closure;
+import org.s1.objects.BadDataException;
 import org.s1.objects.Objects;
 import org.s1.table.errors.*;
 import org.s1.table.format.*;
@@ -85,7 +86,7 @@ public abstract class Table {
 
     public abstract List<IndexBean> getIndexes();
 
-    public void check(Map<String,Object> record) throws BadDataException{
+    public void check(Map<String,Object> record) throws BadDataException {
         if(Objects.isNullOrEmpty(record.get("id")))
             throw new BadDataException("id");
     }

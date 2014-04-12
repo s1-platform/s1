@@ -14,26 +14,26 @@
  *    limitations under the License.
  */
 
-package org.s1.objects.schema.errors;
+package org.s1.objects;
 
 /**
- * Required attribute missing
+ * Requested action not available
  */
-public class RequiredAttributeException extends ValidationException {
+public class BadDataException extends Exception {
 
-    public RequiredAttributeException() {
+    public BadDataException() {
         super();
     }
 
-    public RequiredAttributeException(String message) {
+    public BadDataException(String message) {
         super(message);
     }
 
-    public RequiredAttributeException(String message, Throwable cause) {
+    public BadDataException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public RequiredAttributeException(Throwable cause) {
+    public BadDataException(Throwable cause) {
         super(cause);
     }
 }

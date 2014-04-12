@@ -1,6 +1,7 @@
 package objects;
 
 import org.s1.misc.Closure;
+import org.s1.objects.BadDataException;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
@@ -469,6 +470,37 @@ public class ObjectsTest extends BasicTest {
                 String str1 = Objects.formatDate(dt, "yyyy-MM-dd HH:mm:ss.SSS");
                 assertTrue(Objects.equals(dt, dt1));
                 assertTrue(Objects.equals(str, str1));
+                return null;
+            }
+        }));
+    }
+
+    public void testAssert(){
+        int p = 10;
+        title("Assert, parallel "+p);
+        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+            @Override
+            public Object call(Integer index) {
+                boolean b = false;
+
+                b = false;
+                try{
+                    Objects.assertNotEmpty("qwer",null);
+                }catch (BadDataException e){
+                    assertEquals("qwer",e.getMessage());
+                    b = true;
+                }
+                assertTrue(b);
+
+                b = false;
+                try{
+                    Objects.assertTrue("qwer",false);
+                }catch (BadDataException e){
+                    assertEquals("qwer",e.getMessage());
+                    b = true;
+                }
+                assertTrue(b);
+
                 return null;
             }
         }));

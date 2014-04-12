@@ -94,6 +94,23 @@ public class FileStorage extends DistributedDataSource {
      * @return
      * @throws NotFoundException
      */
+    public static FileMetaBean readMeta(Id id) throws NotFoundException{
+        FileReadBean fr = null;
+        try{
+            fr = read(id);
+            return fr.getMeta();
+        }finally {
+            closeAfterRead(fr);
+        }
+    }
+
+
+    /**
+     *
+     * @param id
+     * @return
+     * @throws NotFoundException
+     */
     public static FileReadBean read(Id id) throws NotFoundException{
         return getLocalStorage().read(id);
     }

@@ -23,6 +23,7 @@ import org.s1.misc.Closure;
 import org.s1.misc.FileUtils;
 import org.s1.misc.IOUtils;
 import org.s1.options.Options;
+import org.s1.table.errors.NotFoundException;
 import org.s1.test.LoadTestUtils;
 import org.s1.test.ServerTest;
 
@@ -60,7 +61,23 @@ public class FileStorageTest extends ServerTest {
                 }finally {
                     FileStorage.closeAfterWrite(fw);
                 }
+                
+                //read meta
 
+                try {
+                    FileStorage.FileMetaBean fm = FileStorage.readMeta(new Id(null,"test","aa"+input));
+                    assertEquals(4L, fm.getSize());
+                    assertEquals("text/plain", fm.getContentType());
+                    assertEquals("txt", fm.getExt());
+                    assertEquals("test", fm.getName());
+                    assertTrue(fm.getInfo().isEmpty());
+                    assertNotNull(fm.getCreated());
+                    assertNotNull(fm.getLastModified());
+                } catch (NotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+
+                //read full
                 try {
                     FileStorage.FileReadBean fr = null;
                     try{

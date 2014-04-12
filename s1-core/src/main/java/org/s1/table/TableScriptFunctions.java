@@ -16,8 +16,8 @@
 
 package org.s1.table;
 
+import org.s1.objects.BadDataException;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.errors.ValidationException;
 import org.s1.script.function.ScriptFunctionSet;
 import org.s1.table.errors.*;
 import org.s1.table.format.FieldsMask;

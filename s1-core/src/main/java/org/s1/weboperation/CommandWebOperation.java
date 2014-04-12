@@ -17,13 +17,9 @@
 package org.s1.weboperation;
 
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ListAttribute;
-import org.s1.objects.schema.MapAttribute;
-import org.s1.objects.schema.ObjectSchema;
-import org.s1.objects.schema.SimpleTypeAttribute;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,23 +38,17 @@ public class CommandWebOperation extends MapWebOperation {
 
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        params = new ObjectSchema(
-                new ListAttribute("list","list",new MapAttribute(null,null,
-                        new SimpleTypeAttribute("operation","operation",String.class).setRequired(true),
-                        new SimpleTypeAttribute("method","method",String.class),
-                        new MapAttribute("params","params").setRequired(true).setDefault(Objects.newHashMap())
-                ))
-        ).validate(params);
-
-        List<Map<String,Object>> listParams = Objects.get(params,"list");
+        List<Map<String,Object>> listParams = Objects.get(params,"list",new ArrayList<Map<String, Object>>());
         List<Map<String,Object>> listResults = Objects.newArrayList();
 
+        int i=0;
         for (Map<String,Object> cmd : listParams) {
             Map<String,Object> cmdFinalResult = null;
             try {
-                Object cmdParams = Objects.get(cmd,"params");
+                Object cmdParams = Objects.get(cmd,"params",Objects.newSOHashMap());
                 String cmdOperation = Objects.get(cmd,"operation");
                 String cmdMethod = Objects.get(cmd,"method");
+                Objects.assertNotEmpty("Operation ("+i+") must not be empty",cmdOperation);
                 WebOperation wo = DispatcherServlet.getOperationByName(cmdOperation);
 
                 Object cmdResult = wo.process(cmdMethod, cmdParams, request, response);
@@ -68,6 +58,7 @@ public class CommandWebOperation extends MapWebOperation {
                 cmdFinalResult = Objects.newHashMap("data",transformError(e, request, response),"success",false);
             }
             listResults.add(cmdFinalResult);
+            i++;
         }
 
         return Objects.newHashMap("list",listResults);

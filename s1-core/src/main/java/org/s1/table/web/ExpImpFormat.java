@@ -18,7 +18,6 @@ package org.s1.table.web;
 
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.objects.Objects;
-import org.s1.objects.schema.ObjectSchema;
 import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.user.AccessDeniedException;
