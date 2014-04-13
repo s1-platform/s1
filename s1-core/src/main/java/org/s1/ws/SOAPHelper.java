@@ -152,23 +152,23 @@ public class SOAPHelper {
 
             if(LOG.isTraceEnabled()){
                 LOG.trace("Sending soap to endpoint succeed\n" +
-                        "                        Endpoint: ${endpoint}\n" +
-                        "                SOAP: \\n${data?SOAPHelper.toString(data):null}\n" +
-                        "                SOAP Response: \\n${data?SOAPHelper.toString(soapResponse):null}");
+                        "                        Endpoint: "+endpoint+"\n" +
+                        "                SOAP: \n"+(data!=null?SOAPHelper.toString(data):null)+"\n" +
+                        "                SOAP Response: \n"+(soapResponse!=null?SOAPHelper.toString(soapResponse):null));
             }else if(LOG.isDebugEnabled()){
                 LOG.trace("Sending soap to endpoint succeed\n" +
-                        "                        Endpoint: ${endpoint}");
+                        "                        Endpoint: "+endpoint);
             }
 
             return soapResponse;
         } catch (SOAPException e) {
             if(LOG.isTraceEnabled()){
-                LOG.trace("Sending soap to endpoint error: ${e.getClass().getName()}: ${e.getMessage()}\n" +
-                        "                        Endpoint: ${endpoint}\n" +
+                LOG.trace("Sending soap to endpoint error: "+e.getClass().getName()+": "+e.getMessage()+"\n" +
+                        "                        Endpoint: "+endpoint+"\n" +
                         "                SOAP: \\n${data?SOAPHelper.toString(data):null}",e);
             }else if(LOG.isDebugEnabled()){
-                LOG.debug("Sending soap to endpoint error: ${e.getClass().getName()}: ${e.getMessage()}\n" +
-                        "                        Endpoint: ${endpoint}",e);
+                LOG.debug("Sending soap to endpoint error: "+e.getClass().getName()+": "+e.getMessage()+"\n" +
+                        "                        Endpoint: "+endpoint,e);
             }
             throw e;
         } finally {
