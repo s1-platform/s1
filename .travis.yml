@@ -5,5 +5,3 @@ jdk:
   - openjdk7
 services:
   - mongodb
-
-./gradlew check
