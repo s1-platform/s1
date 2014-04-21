@@ -1,7 +1,12 @@
 language: java
+
 jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
+
 services:
   - mongodb
+
+before_install:
+ - chmod +x gradlew
