@@ -97,7 +97,8 @@ subprojects {
 
                 //~/.gradle/gradle.properties
                 repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: mavenCentralUser, password: mavenCentralPassword)
+                    if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword'))
+                        authentication(userName: mavenCentralUser, password: mavenCentralPassword)
                 }
 
                 pom.project {
