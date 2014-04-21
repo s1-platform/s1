@@ -79,8 +79,11 @@ subprojects {
         archives javadocJar
     }
 
-    signing {
-        sign configurations.archives
+    //sign only if mavenCentralUser/mavenCentralPassword present
+    if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword')) {
+        signing {
+            sign configurations.archives
+        }
     }
     uploadArchives {
         doFirst {
@@ -91,8 +94,11 @@ subprojects {
             mavenDeployer {
                 configuration = configurations.archives
 
-                beforeDeployment { MavenDeployment deployment ->
-                    signPom(deployment)
+                //sign only if mavenCentralUser/mavenCentralPassword present
+                if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword')) {
+                    beforeDeployment { MavenDeployment deployment ->
+                        signPom(deployment)
+                    }
                 }
 
                 //~/.gradle/gradle.properties
