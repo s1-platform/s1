@@ -11,13 +11,13 @@
 
     <name>s1-testing</name>
     <artifactId>s1-testing</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <description>S1 testing dependencies</description>
 
     <properties>
         <junit.version>4.11</junit.version>
         <httpclient.version>4.2.5</httpclient.version>
-        <tomcat.version>7.0.40</tomcat.version>
+        <tomcat.version>8.0.5</tomcat.version>
         <ecj.version>4.2.2</ecj.version>
     </properties>
 
@@ -30,6 +30,28 @@
             <version>${junit.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-logging-log4j</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+
         <!-- server testing-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -40,26 +62,6 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
             <version>${httpclient.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>${tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-juli</artifactId>
-            <version>${tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jdt.core.compiler</groupId>
-            <artifactId>ecj</artifactId>
-            <version>${ecj.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-jasper</artifactId>
-            <version>${tomcat.version}</version>
         </dependency>
 
     </dependencies>

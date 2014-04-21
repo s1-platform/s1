@@ -14,9 +14,7 @@
  *    limitations under the License.
  */
 
-package org.s1.test;
-
-import org.s1.misc.Closure;
+package org.s1.testing;
 
 import java.util.List;
 
@@ -26,14 +24,14 @@ import java.util.List;
 public class LoadTestThread implements Runnable {
     private final int index;
     private final List<LoadTestUtils.ResultBean> results;
-    private final Closure closure;
+    private final LoadTestUtils.LoadTestProcedure closure;
 
     /**
      * @param i
      * @param results
      * @param closure
      */
-    public LoadTestThread(int i, List<LoadTestUtils.ResultBean> results, Closure closure) {
+    public LoadTestThread(int i, List<LoadTestUtils.ResultBean> results, LoadTestUtils.LoadTestProcedure closure) {
         index = i;
         this.results = results;
         this.closure = closure;

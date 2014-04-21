@@ -15,6 +15,7 @@
  */
 
 /**
- * Some useful testing utils
+ *
+ * @author Grigory Pykhov
  */
-package org.s1.test;
+package org.s1.testing;

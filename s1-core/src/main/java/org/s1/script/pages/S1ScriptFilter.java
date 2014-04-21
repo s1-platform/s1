@@ -54,7 +54,6 @@ public class S1ScriptFilter implements Filter{
 
     private S1ScriptEngine scriptEngine;
     private boolean debug;
-    private String[] excludeUrls;
     private Cache pageCache;
 
     protected String getPage(String path){
@@ -71,10 +70,6 @@ public class S1ScriptFilter implements Filter{
     public void init(FilterConfig filterConfig) throws ServletException {
         scriptEngine = new S1ScriptEngine("pages.scriptEngine");
         debug = Options.getStorage().getSystem(Boolean.class,"pages.debug",false);
-        String eu = filterConfig.getInitParameter("exclude");
-        excludeUrls = new String[]{"/dispatcher"};
-        if(!Objects.isNullOrEmpty(eu))
-            excludeUrls = eu.split(";");
 
         pageCache = new Cache(Options.getStorage().getSystem(Integer.class,"pages.cacheSize",1000));
     }
@@ -84,11 +79,9 @@ public class S1ScriptFilter implements Filter{
         HttpServletRequest request = (HttpServletRequest)req;
         HttpServletResponse response = (HttpServletResponse)resp;
         String page = request.getRequestURI().substring(request.getContextPath().length());
-        for(String e:excludeUrls){
-            if(page.matches("^"+e+".*")){
-                chain.doFilter(req, resp);
-                return;
-            }
+        if(page.matches(".*/.+\\.\\w+$")){
+            chain.doFilter(req, resp);
+            return;
         }
         process(request,response);
     }

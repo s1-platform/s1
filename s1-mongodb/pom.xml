@@ -28,7 +28,6 @@
             <groupId>org.s1-platform</groupId>
             <artifactId>s1-testing</artifactId>
             <version>${project.version}</version>
-            <type>pom</type>
             <scope>test</scope>
         </dependency>
 

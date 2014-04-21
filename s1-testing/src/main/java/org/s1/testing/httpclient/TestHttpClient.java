@@ -14,8 +14,11 @@
  *    limitations under the License.
  */
 
-package org.s1.test;
+package org.s1.testing.httpclient;
 
+import groovy.json.JsonBuilder;
+import groovy.json.JsonOutput;
+import groovy.json.JsonSlurper;
 import org.apache.http.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
@@ -34,12 +37,6 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.s1.S1SystemError;
-import org.s1.format.json.JSONFormat;
-import org.s1.format.json.JSONFormatException;
-import org.s1.misc.Closure;
-import org.s1.misc.IOUtils;
-import org.s1.objects.Objects;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -47,8 +44,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Http client for server testing
@@ -95,7 +91,7 @@ public class TestHttpClient {
      */
     protected String getURL(String u, Map<String,Object> data){
         if(data==null)
-            data = Objects.newHashMap();
+            data = new HashMap<String,Object>();
 
         String query = "";
         int i=0;
@@ -105,11 +101,11 @@ public class TestHttpClient {
             try {
                 query+=(key+"="+ URLEncoder.encode("" + data.get(key), "UTF-8"));
             } catch (UnsupportedEncodingException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
             i++;
         }
-        if(!Objects.isNullOrEmpty(query))
+        if(!query.isEmpty())
             u+=("?"+query);
         return u;
     }
@@ -119,39 +115,37 @@ public class TestHttpClient {
      * @param u
      * @param data
      * @param headers
-     * @param before
      * @return
      */
-    public HttpResponseBean get(String u, Map<String,Object> data, Map<String,Object> headers, Closure<HttpGet,Object> before){
+    public HttpResponseBean get(String u, Map<String,Object> data, Map<String,String> headers){
         if(headers==null)
-            headers = Objects.newHashMap();
+            headers = new HashMap<String,String>();
 
         HttpGet get = new HttpGet(getURL(u,data));
         try{
             for(String h:headers.keySet()){
-                get.setHeader(h,""+headers.get(h));
+                get.setHeader(h,headers.get(h));
             }
 
             //HttpPost post = new HttpPost(LOGIN_URL);
             client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "Test Browser");
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
-            if(before!=null)
-                before.call(get);
+
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,get,context);
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
-            Map<String,String> rh = Objects.newHashMap();
+            Map<String,String> rh = new HashMap<String,String>();
             for(Header h:resp.getAllHeaders()){
                 rh.put(h.getName(),h.getValue());
             }
             try {
                 return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
         }finally {
             get.releaseConnection();
@@ -163,12 +157,11 @@ public class TestHttpClient {
      * @param u
      * @param data
      * @param headers
-     * @param before
      * @return
      */
-    public HttpResponseBean postForm(String u, Map<String,Object> data, Map<String,Object> headers, Closure<HttpPost,Object> before){
+    public HttpResponseBean postForm(String u, Map<String,Object> data, Map<String,String> headers){
         if(headers==null)
-            headers = Objects.newHashMap();
+            headers = new HashMap<String,String>();
 
         HttpPost post = new HttpPost(getURL(u,null));
         try{
@@ -177,10 +170,10 @@ public class TestHttpClient {
                 post.setHeader(h,""+headers.get(h));
             }
             //HttpPost post = new HttpPost(LOGIN_URL);
-            List<BasicNameValuePair> params = Objects.newArrayList();
+            List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
             if(data!=null){
                 for(String h:data.keySet()){
-                    params.add(new BasicNameValuePair(h,Objects.get(String.class, data, h)));
+                    params.add(new BasicNameValuePair(h,(String)data.get(h)));
                 }
             }
             UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(params, Charset.forName("UTF-8"));
@@ -188,22 +181,21 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "Test Browser");
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
-            if(before!=null)
-                before.call(post);
+
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,post,context);
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
-            Map<String,String> rh = Objects.newHashMap();
+            Map<String,String> rh = new HashMap<String,String>();
             for(Header h:resp.getAllHeaders()){
                 rh.put(h.getName(),h.getValue());
             }
             try {
                 return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
         }finally {
             post.releaseConnection();
@@ -215,17 +207,16 @@ public class TestHttpClient {
      * @param u
      * @param data
      * @param headers
-     * @param before
      * @return
      */
-    public synchronized HttpResponseBean post(String u, InputStream data, Map<String,Object> headers, Closure<HttpPost,Object> before){
+    public synchronized HttpResponseBean post(String u, InputStream data, Map<String,String> headers){
         if(headers==null)
-            headers = Objects.newHashMap();
+            headers = new HashMap<String,String>();
 
         HttpPost post = new HttpPost(getURL(u,null));
         try{
             for(String h:headers.keySet()){
-                post.setHeader(h,""+headers.get(h));
+                post.setHeader(h,headers.get(h));
             }
             HttpEntity request = new InputStreamEntity(data,-1);
             post.setEntity(request);
@@ -233,22 +224,20 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
 
-            if(before!=null)
-                before.call(post);
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,post,context);
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
-            Map<String,String> rh = Objects.newHashMap();
+            Map<String,String> rh = new HashMap<String,String>();
             for(Header h:resp.getAllHeaders()){
                 rh.put(h.getName(),h.getValue());
             }
             try {
                 return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
         }finally {
             post.releaseConnection();
@@ -261,11 +250,10 @@ public class TestHttpClient {
      * @param data
      * @param name
      * @param contentType
-     * @param before
      * @return
      */
-    public HttpResponseBean uploadFile(String u, InputStream data, String name, String contentType, Closure<HttpPost,Object> before){
-        Map<String,Object> headers = Objects.newHashMap();
+    public HttpResponseBean uploadFile(String u, InputStream data, String name, String contentType){
+        Map<String,Object> headers = new HashMap<String,Object>();
 
         HttpPost post = new HttpPost(getURL(u,null));
         try{
@@ -280,45 +268,94 @@ public class TestHttpClient {
             client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "Test Browser");
             client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
             //client.getParams().setParameter(ClientPNames.COOKIE_POLICY, org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY);
-            if(before!=null)
-                before.call(post);
 
             HttpResponse resp = null;
             try {
                 resp = client.execute(host,post,context);
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
-            Map<String,String> rh = Objects.newHashMap();
+            Map<String,String> rh = new HashMap<String,String>();
             for(Header h:resp.getAllHeaders()){
                 rh.put(h.getName(),h.getValue());
             }
             try {
                 return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
             } catch (IOException e) {
-                throw S1SystemError.wrap(e);
+                throw new RuntimeException(e.getMessage(),e);
             }
         }finally {
             post.releaseConnection();
         }
     }
 
+    private String toString(byte [] b, String charset){
+        if(b==null)
+            return null;
+        return toString(new ByteArrayInputStream(b),charset);
+    }
+
+    private String toString(InputStream is, String charset){
+        if(is==null)
+            return null;
+        Scanner s = new Scanner(is, charset).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : null;
+    }
+
+    private Map<String,Object> toWire(Map<String,Object> m){
+        return (Map<String,Object>)objectToWire(m);
+    }
+
+    private Object objectToWire(Object m){
+        if(m instanceof Date){
+            m = "/Date("+((Date) m).getTime()+")/";
+        }else if(m instanceof Map){
+            for(Object k: ((Map) m).keySet()){
+                ((Map) m).put(k,objectToWire(((Map) m).get(k)));
+            }
+        }else if(m instanceof List){
+            int i=0;
+            for(Object o:(List)m){
+                ((List) m).set(i++,objectToWire(o));
+            }
+        }
+        return m;
+    }
+
+    private Map<String,Object> fromWire(Map<String,Object> m){
+        return (Map<String,Object>)objectFromWire(m);
+    }
+
+    private Object objectFromWire(Object m){
+        if(m instanceof String){
+            if(((String) m).matches("^/Date\\([0-9]+\\)/$")){
+                m = ((String) m).replace("/Date(","").replace(")/","");
+                m = new Date(Long.parseLong((String)m));
+            }
+        }else if(m instanceof Map){
+            for(Object k: ((Map) m).keySet()){
+                ((Map) m).put(k,objectFromWire(((Map) m).get(k)));
+            }
+        }else if(m instanceof List){
+            int i=0;
+            for(Object o:(List)m){
+                ((List) m).set(i++,objectFromWire(o));
+            }
+        }
+        return m;
+    }
+
     /**
      *
      * @param u
      * @param data
-     * @param before
      * @return
      */
-    public Map<String,Object> getJSON(String u, Map<String,Object> data, Closure<HttpGet,Object> before){
-        HttpResponseBean resp = get(u, data, Objects.newHashMap(String.class, Object.class), before);
+    public Map<String,Object> getJSON(String u, Map<String,Object> data){
+        HttpResponseBean resp = get(u, data, new HashMap<String, String>());
         Map<String,Object> r = null;
-        try {
-            String s = IOUtils.toString(resp.getData(), "UTF-8");
-            r = Objects.fromWire(JSONFormat.evalJSON(s));
-        } catch (JSONFormatException e) {
-            throw S1SystemError.wrap(e);
-        }
+        String s = toString(resp.getData(), "UTF-8");
+        r = fromWire(evalJSON(s));
         return getResponseData(r);
     }
 
@@ -328,33 +365,40 @@ public class TestHttpClient {
      * @return
      */
     protected Map<String,Object> getResponseData(Map<String,Object> r) {
-        if(Objects.get(Boolean.class,r,"success",false)){
+        boolean success = (""+r.get("success")).equals("true");
+        if(success){
             return (Map<String,Object>)r.get("data");
         }else{
-            String msg = Objects.get(r,"data.message");
-            String cls = Objects.get(r,"data.errorClass");
-            throw new RuntimeException(cls+": "+msg);
+            throw new RuntimeException("Error in response: "+r);
         }
+    }
+
+    private String toJSON(Map<String,Object> m){
+        //JsonBuilder b = new JsonBuilder(m);
+        //return b.toString();
+        return JsonOutput.toJson(m);
+    }
+
+    private Map<String,Object> evalJSON(String json){
+        JsonSlurper s = new JsonSlurper();
+        return (Map<String,Object>)s.parseText(json);
     }
 
     /**
      *
      * @param u
      * @param data
-     * @param before
      * @return
      */
-    public Map<String,Object> postJSON(String u, Map<String,Object> data, Closure<HttpPost,Object> before){
-        Map<String,Object> headers = Objects.newHashMap();
+    public Map<String,Object> postJSON(String u, Map<String,Object> data){
+        Map<String,String> headers = new HashMap<String,String>();
         headers.put("Content-Type","application/json");
         Map<String,Object> r = null;
-        try {
-            HttpResponseBean resp = post(u,new ByteArrayInputStream(JSONFormat.toJSON(Objects.toWire(data)).getBytes("UTF-8")), headers, before);
-            String s = IOUtils.toString(resp.getData(), "UTF-8");
-            r = Objects.fromWire(JSONFormat.evalJSON(s));
-        } catch (Exception e) {
-            throw S1SystemError.wrap(e);
-        }
+        HttpResponseBean resp = post(u,
+                new ByteArrayInputStream(toJSON(toWire(data)).getBytes(Charset.forName("UTF-8"))), headers);
+        String s = toString(resp.getData(), "UTF-8");
+        r = fromWire(evalJSON(s));
+
         return getResponseData(r);
     }
 
@@ -364,18 +408,13 @@ public class TestHttpClient {
      * @param data
      * @param name
      * @param contentType
-     * @param before
      * @return
      */
-    public Map<String,Object> uploadFileForJSON(String u, InputStream data, String name, String contentType, Closure<HttpPost,Object> before){
-        HttpResponseBean resp = uploadFile(u, data, name, contentType, before);
+    public Map<String,Object> uploadFileForJSON(String u, InputStream data, String name, String contentType){
+        HttpResponseBean resp = uploadFile(u, data, name, contentType);
         Map<String,Object> r = null;
-        try {
-            String s = IOUtils.toString(resp.getData(), "UTF-8");
-            r = Objects.fromWire(JSONFormat.evalJSON(s));
-        } catch (Exception e) {
-            throw S1SystemError.wrap(e);
-        }
+        String s = toString(resp.getData(), "UTF-8");
+        r = fromWire(evalJSON(s));
         return getResponseData(r);
     }
 

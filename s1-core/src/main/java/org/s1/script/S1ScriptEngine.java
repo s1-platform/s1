@@ -368,6 +368,8 @@ public class S1ScriptEngine {
                         for(int i=0;i<method.getParameterTypes().length;i++){
                             if(args.size()>i){
                                 args.set(i,Objects.cast(args.get(i),method.getParameterTypes()[i]));
+                            }else{
+                                args.add(null);
                             }
                         }
                         if(LOG.isTraceEnabled()){
@@ -586,4 +588,10 @@ public class S1ScriptEngine {
                 .replaceAll("(\r\n|\n|\n\r)","\\\\n\",\n\"")+"\");";
     }
 
+    public static void main(String[] args) {
+        S1ScriptEngine se = new S1ScriptEngine();
+        //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null).getClass());
+        //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null));
+        System.out.println(se.evalInFunction(Object.class,"return s1.formatNumber(10012.21)",null));
+    }
 }

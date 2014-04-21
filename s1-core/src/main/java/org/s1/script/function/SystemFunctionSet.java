@@ -26,6 +26,10 @@ import org.s1.objects.Objects;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -302,6 +306,26 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      */
     public String formatDate(Date d, String format){
         return Objects.formatDate(d, format);
+    }
+
+    public Double parseNumber(Object n){
+        return Objects.cast(n, Double.class);
+    }
+
+    public String formatNumber(Object n, String groupSeparator,String decimalSeparator, String format){
+        if(Objects.isNullOrEmpty(groupSeparator))
+            groupSeparator=",";
+        if(Objects.isNullOrEmpty(decimalSeparator))
+            decimalSeparator=".";
+        if(Objects.isNullOrEmpty(format))
+            format="###";
+        DecimalFormat df = new DecimalFormat(format);
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+        dfs.setDecimalSeparator(decimalSeparator.charAt(0));
+        dfs.setGroupingSeparator(groupSeparator.charAt(0));
+        dfs.setMonetaryDecimalSeparator(decimalSeparator.charAt(0));
+        df.setDecimalFormatSymbols(dfs);
+        return df.format(Objects.cast(n, BigDecimal.class));
     }
 
     /**

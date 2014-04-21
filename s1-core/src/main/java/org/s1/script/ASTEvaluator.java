@@ -470,17 +470,29 @@ public class ASTEvaluator {
                 else
                     getResult = Objects.cast(l,String.class)+Objects.cast(r,String.class);
             }else if(operator==Token.SUB){
-                if(l instanceof Number && r instanceof Number)
-                    getResult = ((Number)l).doubleValue() - ((Number)r).doubleValue();
+                double l_d = Objects.cast(l,Double.class);
+                double r_d = Objects.cast(r,Double.class);
+                getResult = l_d-r_d;
+                //if(l instanceof Number && r instanceof Number)
+                //    getResult = ((Number)l).doubleValue() - ((Number)r).doubleValue();
             }else if(operator==Token.MOD){
-                if(l instanceof Number && r instanceof Number)
-                    getResult = ((Number)l).doubleValue() % ((Number)r).doubleValue();
+                double l_d = Objects.cast(l,Double.class);
+                double r_d = Objects.cast(r,Double.class);
+                getResult = l_d%r_d;
+                //if(l instanceof Number && r instanceof Number)
+                //    getResult = ((Number)l).doubleValue() % ((Number)r).doubleValue();
             }else if(operator==Token.MUL){
-                if(l instanceof Number && r instanceof Number)
-                    getResult = ((Number)l).doubleValue() * ((Number)r).doubleValue();
+                double l_d = Objects.cast(l,Double.class);
+                double r_d = Objects.cast(r,Double.class);
+                getResult = l_d*r_d;
+                //if(l instanceof Number && r instanceof Number)
+                    //getResult = ((Number)l).doubleValue() * ((Number)r).doubleValue();
             }else if(operator==Token.DIV){
-                if(l instanceof Number && r instanceof Number)
-                    getResult = ((Number)l).doubleValue() / ((Number)r).doubleValue();
+                double l_d = Objects.cast(l,Double.class);
+                double r_d = Objects.cast(r,Double.class);
+                getResult = l_d/r_d;
+                //if(l instanceof Number && r instanceof Number)
+                //    getResult = ((Number)l).doubleValue() / ((Number)r).doubleValue();
             }else if(operator==Token.EQ){
                 getResult = Objects.equals(l,r);
             }else if(operator==Token.NE){

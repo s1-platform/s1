@@ -14,11 +14,10 @@
  *    limitations under the License.
  */
 
-package org.s1.test;
+package org.s1.testing;
 
-import org.s1.misc.Closure;
-import org.s1.objects.Objects;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +30,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class LoadTestUtils {
 
+    public static interface LoadTestProcedure{
+        public void call(int i) throws Exception;
+    }
+
     /**
      * Run load test
      *
@@ -40,9 +43,9 @@ public class LoadTestUtils {
      * @param test
      * @return
      */
-    public static int run(String message, int total, int parallel, Closure<Integer,Object> test) {
+    public static int run(String message, int total, int parallel, LoadTestProcedure test) {
         long start = System.currentTimeMillis();
-        List<ResultBean> results = Objects.newArrayList();
+        List<ResultBean> results = new ArrayList<ResultBean>();
         ExecutorService executor = Executors.newFixedThreadPool(parallel,new ThreadFactory() {
             private AtomicInteger i = new AtomicInteger(-1);
             @Override
@@ -81,7 +84,7 @@ public class LoadTestUtils {
         long avg = 0;
         int success = 0;
         int error = 0;
-        Map<String,Integer> errors = Objects.newHashMap();
+        Map<String,Integer> errors = new HashMap<String, Integer>();
         for (ResultBean r : results) {
             if (r.getElapsed() > max)
                 max = r.getElapsed();
