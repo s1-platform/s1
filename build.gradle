@@ -24,7 +24,8 @@ ext.libs = [
         hazelcast : 'com.hazelcast:hazelcast:3.1.5',
         servlet : 'javax.servlet:javax.servlet-api:3.0.1',
         mongodb : 'org.mongodb:mongo-java-driver:2.11.3',
-        xerces : 'xerces:xercesImpl:2.11.0'
+        xerces : 'xerces:xercesImpl:2.11.0',
+        jcommander : 'com.beust:jcommander:1.35'
 ]
 
 /**
@@ -216,14 +217,73 @@ project(':s1-testing'){
     }
 }
 
+import groovy.text.SimpleTemplateEngine
 /**
  * S1 XSD Utils
  */
 project(':s1-xsd-utils'){
     description 'S1 XSD utils'
+    apply plugin:'application'
+    mainClassName = "org.s1.xsdutils.Main"
+
     dependencies {
         compile libs.xerces
         compile project(':s1-core')
+        compile libs.jcommander
         testCompile project(':s1-testing')
+    }
+
+    //expand template (standard way using `expand` is not applicable because of charset)
+    def expandFile = {path, ctx->
+        def file = new File(path);
+        def text = file.text
+        def engine = new SimpleTemplateEngine()
+        template = engine.createTemplate(text).make(ctx);
+        file.withWriter('UTF-8'){ it << template.toString() }
+    }
+
+    //clean home
+    task cleanHome << {
+        new File("$buildDir/home").deleteDir();
+    }
+
+    //copy home
+    task copyApp(type: Copy) {
+        from ('app'){
+            //exclude('README.*')
+        }
+        from('../'){
+            include('S1-*.txt')
+        }
+        into 'build/app'
+        includeEmptyDirs = true
+    }
+    copyApp.dependsOn cleanHome
+
+    //process templates
+    task processTemplates<<{
+        expandFile("$buildDir/app/README.txt",[project:project]);
+    }
+    processTemplates.dependsOn copyApp
+
+    //distribute zip
+    distZip {
+        into(project.name) {
+            from 'build/app/'
+            include '**/*'
+            into "$project.name-$project.version"
+        }
+    }
+    distZip.dependsOn processTemplates
+
+    //add conf to classpath
+    startScripts {
+        classpath += files('REPLACE_WITH_CONF')
+        doLast {
+            def windowsScriptFile = file getWindowsScript()
+            def unixScriptFile    = file getUnixScript()
+            windowsScriptFile.text = windowsScriptFile.text.replace('%APP_HOME%\\lib\\REPLACE_WITH_CONF', '%APP_HOME%\\conf')
+            unixScriptFile.text  = unixScriptFile.text.replace('$APP_HOME/lib/REPLACE_WITH_CONF', '$APP_HOME/conf')
+        }
     }
 }
