@@ -1,0 +1,222 @@
+/**
+ * Group, version
+ */
+allprojects{
+    group = 'org.s1-platform'
+    version = '2.4.0-SNAPSHOT'
+}
+
+/**
+ * Libraries
+ */
+ext.libs = [
+        testng : 'org.testng:testng:6.8.8',
+        groovy : 'org.codehaus.groovy:groovy-all:2.2.2',
+        tomcat_core : 'org.apache.tomcat.embed:tomcat-embed-core:8.0.5',
+        tomcat_logging : 'org.apache.tomcat.embed:tomcat-embed-logging-log4j:8.0.5',
+        tomcat_jasper : 'org.apache.tomcat.embed:tomcat-embed-jasper:8.0.5',
+        httpclient : 'org.apache.httpcomponents:httpclient:4.2.5',
+        httpmime : 'org.apache.httpcomponents:httpmime:4.2.5',
+        slf4j : 'org.slf4j:slf4j-api:1.7.5',
+        log4j : 'log4j:log4j:1.2.17',
+        slf4j_log4j : 'org.slf4j:slf4j-log4j12:1.7.5',
+        rhino : 'org.mozilla:rhino:1.7R4',
+        hazelcast : 'com.hazelcast:hazelcast:3.1.5',
+        servlet : 'javax.servlet:javax.servlet-api:3.0.1',
+        mongodb : 'org.mongodb:mongo-java-driver:2.11.3',
+        xerces : 'xerces:xercesImpl:2.11.0'
+]
+
+/**
+ * Common compile, build, tasks
+ */
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
+
+    compileJava.sourceCompatibility = 1.7
+    compileJava.targetCompatibility = 1.7
+    compileTestJava.sourceCompatibility = 1.7
+    compileTestJava.targetCompatibility = 1.7
+
+    configurations { providedCompile }
+
+    sourceSets.main.compileClasspath += configurations.providedCompile
+    sourceSets.test.compileClasspath += configurations.providedCompile
+    sourceSets.test.runtimeClasspath += configurations.providedCompile
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        compile libs.slf4j
+        compile libs.log4j
+        runtime libs.slf4j_log4j
+    }
+
+    javadoc{
+        options.encoding = "UTF-8"
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    signing {
+        sign configurations.archives
+    }
+    uploadArchives {
+        doFirst {
+            if(project.version.endsWith('-SNAPSHOT'))
+                throw new Exception("Cannot upload SNAPSHOT version");
+        }
+        repositories {
+            mavenDeployer {
+                configuration = configurations.archives
+
+                beforeDeployment { MavenDeployment deployment ->
+                    signPom(deployment)
+                }
+
+                //~/.gradle/gradle.properties
+                repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: mavenCentralUser, password: mavenCentralPassword)
+                }
+
+                pom.project {
+                    name project.name
+                    packaging 'jar'
+                    description project.description
+
+                    url 'http://s1-platform.org'
+                    inceptionYear '2013'
+
+                    parent {
+                        groupId 'org.sonatype.oss'
+                        artifactId 'oss-parent'
+                        version '7'
+                    }
+
+                    scm {
+                        url 'https://github.com/s1-platform/s1'
+                        connection 'scm:git:ssh://github.com/s1-platform/s1.git'
+                        developerConnection 'scm:git:git+ssh://git@github.com/s1-platform/s1.git'
+                        tag 'HEAD'
+                    }
+
+                    issueManagement {
+                        system 'GitHub Issue Management'
+                        url 'https://github.com/s1-platform/s1/issues'
+                    }
+
+                    ciManagement {
+                        system 'Travis CI'
+                        url 'https://travis-ci.org/s1-platform/s1/'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'p-gregory'
+                            name 'Grigory Pykhov'
+                            email 's.one.platform@gmail.com'
+                            roles {
+                                role 'Owner'
+                                role 'Architect'
+                                role 'Developer'
+                            }
+                            timezone '+4'
+                        }
+                        developer {
+                            id 'ekaterina-p'
+                            name 'Ekaterina Pykhova'
+                            roles {
+                                role 'Developer'
+                            }
+                            timezone '+4'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * S1 Core
+ */
+project(':s1-core'){
+    description 'S1 core'
+    dependencies {
+        compile libs.hazelcast
+        compile libs.rhino
+        providedCompile libs.servlet
+        testCompile project(':s1-testing')
+    }
+}
+
+/**
+ * S1 MongoDB
+ */
+project(':s1-mongodb'){
+    description 'S1 MongoDB'
+    dependencies {
+        compile libs.mongodb
+        compile project(':s1-core')
+        providedCompile libs.servlet
+        testCompile project(':s1-testing')
+    }
+}
+
+/**
+ * S1 Testing
+ */
+project(':s1-testing'){
+    description 'S1 testing utils'
+    dependencies {
+        compile libs.testng
+        compile libs.groovy
+        compile libs.tomcat_core
+        compile libs.tomcat_logging
+        compile libs.tomcat_jasper
+        compile libs.httpclient
+        compile libs.httpmime
+        providedCompile libs.servlet
+    }
+}
+
+/**
+ * S1 XSD Utils
+ */
+project(':s1-xsd-utils'){
+    description 'S1 XSD utils'
+    dependencies {
+        compile libs.xerces
+        compile project(':s1-core')
+        testCompile project(':s1-testing')
+    }
+}
