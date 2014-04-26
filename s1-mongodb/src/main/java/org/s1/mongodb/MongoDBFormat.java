@@ -212,7 +212,7 @@ public class MongoDBFormat {
             }
         }
         if(qn.isNot()){
-            o = new BasicDBObject("$not",o);
+            o = new BasicDBObject("$nor",Objects.newArrayList(o));
         }
         return o;
     }

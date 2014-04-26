@@ -79,7 +79,7 @@ public class S1ScriptFilter implements Filter{
         HttpServletRequest request = (HttpServletRequest)req;
         HttpServletResponse response = (HttpServletResponse)resp;
         String page = request.getRequestURI().substring(request.getContextPath().length());
-        if(page.matches(".*/.+\\.\\w+$")){
+        if(page.matches(".*/.+\\.\\w+$") || page.matches("^/dispatcher/.*$")){
             chain.doFilter(req, resp);
             return;
         }
