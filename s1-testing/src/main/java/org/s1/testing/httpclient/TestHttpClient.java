@@ -16,7 +16,6 @@
 
 package org.s1.testing.httpclient;
 
-import groovy.json.JsonBuilder;
 import groovy.json.JsonOutput;
 import groovy.json.JsonSlurper;
 import org.apache.http.*;

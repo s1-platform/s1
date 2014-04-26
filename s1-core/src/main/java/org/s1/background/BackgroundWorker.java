@@ -17,12 +17,15 @@
 package org.s1.background;
 
 import org.s1.cluster.ClusterLifecycleAction;
+import org.s1.lifecycle.LifecycleAction;
 import org.s1.lifecycle.LifecycleListener;
 import org.s1.objects.Objects;
+import org.s1.options.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,7 +78,7 @@ public abstract class BackgroundWorker extends Thread {
                 if(!run)
                     break;
             }
-            if(LifecycleListener.isStarted(ClusterLifecycleAction.class)){
+            if(LifecycleAction.isStarted(ClusterLifecycleAction.class)){
                 try {
                     MDC.put("id", "");
                     process();
@@ -122,5 +125,95 @@ public abstract class BackgroundWorker extends Thread {
             }
         }
         LOG.info(""+name+" stopped in "+(System.currentTimeMillis()-t)+" ms.");
+    }
+
+    private static List<BackgroundWorker> workers = Objects.newArrayList();
+
+    /**
+     *
+     * @param cls
+     * @return
+     */
+    public static boolean isStarted(Class<? extends BackgroundWorker> cls){
+        synchronized (workers){
+            boolean b = false;
+            for(BackgroundWorker a:workers){
+                if(a.getClass()==cls){
+                    b = true;
+                    break;
+                }
+            }
+            return b;
+        }
+    }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public static boolean isStarted(String name){
+        synchronized (workers){
+            boolean b = false;
+            for(BackgroundWorker a:workers){
+                if(a.getName().equals(name)){
+                    b = true;
+                    break;
+                }
+            }
+            return b;
+        }
+    }
+
+    public static void startAll(){
+        synchronized (workers){
+            workers.clear();
+        }
+
+        List<Map<String,Object>> l = Options.getStorage().getSystem("backgroundWorkers");
+        List<BackgroundWorker> lst = Objects.newArrayList();
+        if(l!=null){
+            int i=0;
+            for(Map<String,Object> m : l){
+                String cls = Objects.get(m,"class");
+                String name = Objects.get(m,"name","BackgroundWorker#"+i);
+                Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
+                i++;
+                BackgroundWorker w = null;
+                try{
+                    w = (BackgroundWorker)Class.forName(cls).newInstance();
+                    w.init(name,cfg);
+                }catch (Throwable e){
+                    LOG.warn("Cannot initialize worker "+name+" ("+cls+")");
+                }
+                if(w!=null){
+                    lst.add(w);
+                    try{
+                        w.start();
+                    }catch (Throwable e){
+                        LOG.warn("Worker #"+i+" failed to start, "+e.getClass().getName()+": "+e.getMessage(),e);
+                    }
+                }
+            }
+        }
+        synchronized (workers){
+            workers.addAll(lst);
+        }
+        LOG.info("Background started");
+    }
+
+    public static void stopAll(){
+        List<BackgroundWorker> l = Objects.newArrayList();
+        synchronized (workers){
+            l.addAll(workers);
+        }
+        for(BackgroundWorker w:l){
+            w.doShutdown();
+            w.interrupt();
+        }
+        synchronized (workers){
+            workers.clear();
+        }
+        LOG.info("Background stopped");
     }
 }

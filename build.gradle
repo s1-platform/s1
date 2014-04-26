@@ -9,6 +9,10 @@ allprojects{
 /**
  * Libraries
  */
+ext {
+    port= 9999
+    stopPort= 9998
+}
 ext.libs = [
         testng : 'org.testng:testng:6.8.8',
         groovy : 'org.codehaus.groovy:groovy-all:2.2.2',
@@ -17,6 +21,7 @@ ext.libs = [
         tomcat_jasper : 'org.apache.tomcat.embed:tomcat-embed-jasper:8.0.5',
         httpclient : 'org.apache.httpcomponents:httpclient:4.2.5',
         httpmime : 'org.apache.httpcomponents:httpmime:4.2.5',
+        commons_io : 'commons-io:commons-io:2.4',
         slf4j : 'org.slf4j:slf4j-api:1.7.5',
         log4j : 'log4j:log4j:1.2.17',
         slf4j_log4j : 'org.slf4j:slf4j-log4j12:1.7.5',
@@ -26,6 +31,37 @@ ext.libs = [
         mongodb : 'org.mongodb:mongo-java-driver:2.11.3',
         xerces : 'xerces:xercesImpl:2.11.0',
         jcommander : 'com.beust:jcommander:1.35'
+]
+ext.servers = [
+        core : [
+                classpath : [],
+                webapp : "${projectDir}/test_webapp",
+                options : "classpath:/options"
+        ],
+        core_mongodb : [
+                classpath : [],
+                webapp : "${projectDir}/test_webapp",
+                options : "classpath:/options"
+        ]
+]
+ext.integrationTests = [
+
+]
+ext.serverTests = [
+        core : [
+                classpath : [
+
+                ],
+                options : "classpath:/options",
+                server : "core"
+        ],
+        mongodb : [
+                classpath : [
+                        ':s1-mongodb:compile',':s1-mongodb:testCompile'
+                ],
+                options : "classpath:/options",
+                server : "core_mongodb"
+        ]
 ]
 
 /**
@@ -174,17 +210,123 @@ subprojects {
     }
 }
 
+import org.apache.tools.ant.taskdefs.condition.Os
 /**
  * S1 Core
  */
 project(':s1-core'){
     description 'S1 core'
+
     dependencies {
         compile libs.hazelcast
         compile libs.rhino
         providedCompile libs.servlet
         testCompile project(':s1-testing')
     }
+
+    task tomcatRun(type: JavaExec, dependsOn: compileJava) {
+        main = "org.s1.testing.tomcat.TomcatMain"
+        args = ["start", "localhost", port, "/$project.name", "$projectDir/src/test/resources/webapp", stopPort, 'shutdown' ]
+        classpath = configurations.testCompile
+        classpath += files("$buildDir/classes/main")
+        classpath += files("$buildDir/classes/test")
+        classpath += files("$projectDir/src/main/resources")
+        classpath += configurations.compile
+        classpath += configurations.runtime
+        classpath += files("$projectDir/src/test/resources")
+        systemProperties([
+                "s1.ConfigHome": "${projectDir}/src/test/resources/options",
+                "fileEncoding": "UTF-8",
+                "file.encoding": "UTF-8"
+        ])
+        /*main = "org.eclipse.jetty.runner.Runner"
+        args = ["--path", "/$project.name", "--port", port, "--stop-port", stopPort, "--stop-key", 'jetty', "$projectDir/src/main/webapp"]
+        classpath = configurations.jettyRun
+        classpath += files("$buildDir/classes/main")
+        classpath += files("$projectDir/src/main/resources")
+        classpath += configurations.compile
+        classpath += configurations.runtime
+        classpath += files("$projectDir/src/test/resources")
+        systemProperties([
+                "s1.ConfigHome": "${projectDir}/../ugi48-options",
+                "fileEncoding": "UTF-8",
+                "file.encoding": "UTF-8",
+                "jetty.home": "${projectDir}/jetty-home"
+        ])*/
+    }
+
+    task tomcatStop(type: JavaExec) {
+        main = "org.s1.testing.tomcat.TomcatMain"
+        //args = ["--stop-port", 9998, "--stop-key",'jetty', '--stop']
+        args = ['stop',"localhost",stopPort,"shutdown"]
+        classpath = configurations.testCompile
+        /*main = "org.eclipse.jetty.start.Main"
+        //args = ["--stop-port", 9998, "--stop-key",'jetty', '--stop']
+        args = ['--stop']
+        classpath = configurations.jettyStop
+        systemProperties([
+                "STOP.PORT": stopPort,
+                "STOP.KEY": "jetty"
+        ])*/
+    }
+
+    task startServer(type:ExecWait) {
+        if (Os.isFamily(Os.FAMILY_WINDOWS))
+            command 'cmd /c gradlew.bat tomcatRun'
+        else if(Os.isFamily(Os.FAMILY_UNIX))
+            command './gradlew jettyRun'
+        ready = ["TestAppServer: Server started"]
+        directory "$projectDir/.."
+
+        doLast {
+            println("### SERVER STARTED")
+        }
+    }
+
+    task stopServer(type:Exec) {
+        workingDir '..'
+        if (Os.isFamily(Os.FAMILY_WINDOWS))
+            commandLine 'cmd', '/c', 'gradlew.bat','tomcatStop'
+        else if(Os.isFamily(Os.FAMILY_UNIX))
+            commandLine './gradlew','tomcatStop'
+
+        doLast {
+            println("### SERVER STOPPED")
+        }
+    }
+
+    test {
+        useTestNG()
+
+        //s1 options home
+        //systemProperty 's1.ConfigHome', "${projectDir}/src/test/resources/options"
+
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = true
+
+        // set heap size for the test JVM(s)
+        minHeapSize = "128m"
+        maxHeapSize = "512m"
+
+        // set JVM arguments for the test JVM(s)
+        jvmArgs '-XX:MaxPermSize=256m'
+
+        // listen to events in the test execution lifecycle
+        beforeTest { descriptor ->
+            logger.lifecycle("Running test: " + descriptor)
+        }
+
+        beforeSuite {
+            startServer.execute();
+            //project(':eds-ws').jettyRun.execute()
+        }
+
+        afterSuite {
+            stopServer.execute();
+            //project(':eds-ws').jettyStop.execute()
+        }
+    }
+    test.dependsOn cleanTest
 }
 
 /**
@@ -284,6 +426,38 @@ project(':s1-xsd-utils'){
             def unixScriptFile    = file getUnixScript()
             windowsScriptFile.text = windowsScriptFile.text.replace('%APP_HOME%\\lib\\REPLACE_WITH_CONF', '%APP_HOME%\\conf')
             unixScriptFile.text  = unixScriptFile.text.replace('$APP_HOME/lib/REPLACE_WITH_CONF', '$APP_HOME/conf')
+        }
+    }
+}
+
+/*--------------------------------------------------*/
+/* CUSTOM TASKS */
+/*--------------------------------------------------*/
+
+class ExecWait extends DefaultTask {
+    String command
+    List<String> ready
+    String directory
+
+    @TaskAction
+    def spawnProcess() {
+
+        ProcessBuilder builder = new ProcessBuilder(command.split(' '))
+        builder.redirectErrorStream(true)
+        builder.directory(new File(directory))
+        Process process = builder.start()
+
+        InputStream stdout = process.getInputStream()
+        BufferedReader reader = new BufferedReader(new
+                InputStreamReader(stdout))
+
+        def line
+        while ((line = reader.readLine()) != null) {
+            println line
+            if (ready.find{return line.contains(it)}) {
+                println "$command is ready"
+                break;
+            }
         }
     }
 }

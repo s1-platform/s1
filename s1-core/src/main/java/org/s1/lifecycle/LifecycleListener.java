@@ -36,102 +36,14 @@ import java.util.Map;
  */
 public class LifecycleListener implements ServletContextListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LifecycleListener.class);
-
-    private static final List<LifecycleAction> actions = Objects.newArrayList();
-
-    /**
-     *
-     * @param cls
-     * @return
-     */
-    public static boolean isStarted(Class<? extends LifecycleAction> cls){
-        synchronized (actions){
-            boolean b = false;
-            for(LifecycleAction a:actions){
-                if(a.getClass()==cls){
-                    b = true;
-                    break;
-                }
-            }
-            return b;
-        }
-    }
-
-    /**
-     *
-     * @param name
-     * @return
-     */
-    public static boolean isStarted(String name){
-        synchronized (actions){
-            boolean b = false;
-            for(LifecycleAction a:actions){
-                if(a.getName().equals(name)){
-                    b = true;
-                    break;
-                }
-            }
-            return b;
-        }
-    }
-
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        synchronized (actions){
-            actions.clear();
-        }
-
-        List<Map<String,Object>> l = Options.getStorage().getSystem("lifecycleActions");
-        List<LifecycleAction> lst = Objects.newArrayList();
-        if(l!=null){
-            int i=0;
-            for(Map<String,Object> m : l){
-                String cls = Objects.get(m,"class");
-                String name = Objects.get(m,"name","LifecycleAction#"+i);
-                Map<String,Object> cfg = Objects.get(m,"config",Objects.newHashMap(String.class,Object.class));
-                i++;
-                LifecycleAction w = null;
-                try{
-                    w = (LifecycleAction)Class.forName(cls).newInstance();
-                    w.init(name,cfg);
-                }catch (Throwable e){
-                    LOG.warn("Cannot initialize action "+name+" ("+cls+")");
-                }
-                if(w!=null){
-                    lst.add(w);
-                    try{
-                        w.start();
-                    }catch (Throwable e){
-                        LOG.warn("Action #"+i+" failed to start, "+e.getClass().getName()+": "+e.getMessage(),e);
-                    }
-                }
-            }
-        }
-        synchronized (actions){
-            actions.addAll(lst);
-        }
-        LOG.info("S1 started");
+        LifecycleAction.startAll();
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce){
-        List<LifecycleAction> l = Objects.newArrayList();
-        synchronized (actions){
-            l.addAll(actions);
-        }
-        for(int i=l.size()-1;i>=0;i--){
-            try{
-                l.get(i).stop();
-            }catch (Throwable e){
-                LOG.warn("Action #"+i+" failed to stop, "+e.getClass().getName()+": "+e.getMessage(),e);
-            }
-        }
-        synchronized (actions){
-            actions.clear();
-        }
-        //stop
-        LOG.info("S1 stopped");
+        LifecycleAction.stopAll();
     }
 
 }

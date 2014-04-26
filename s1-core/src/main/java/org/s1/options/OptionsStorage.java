@@ -21,6 +21,7 @@ import org.s1.format.json.JSONFormatException;
 import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
 import org.s1.misc.IOUtils;
+import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +43,9 @@ import java.util.Map;
  * Default options storage implementation
  */
 public class OptionsStorage {
+    static {
+        Init.init();
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(OptionsStorage.class);
 
@@ -229,8 +232,17 @@ public class OptionsStorage {
      * @return
      */
     public InputStream openConfig(String name) {
-        String configPath = configHome + File.separator + name;
-        File file = new File(configPath);
+        String configPath = configHome + "/" + name;
+        if(!configPath.matches("^[a-z]+://.+$"))
+            configPath = "file:/"+configPath;
+        try {
+            URLConnection c = new URL(configPath).openConnection();
+            return c.getInputStream();
+        } catch (IOException e) {
+            LOG.debug("Config " + name + " ("+configPath+") not found",e);
+            return null;
+        }
+        /*File file = new File(configPath);
         InputStream is = null;
         if (file.exists() && file.isFile()) {
             try {
@@ -239,7 +251,7 @@ public class OptionsStorage {
                 LOG.debug("Config " + name + " not found");
             }
         }
-        return is;
+        return is;*/
     }
 
     /**
