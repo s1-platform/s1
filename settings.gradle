@@ -7,5 +7,7 @@ include 's1-tomcat-embedded'
 include 's1-xsd-utils'
 
 include 'test-local/core'
+include 'test-local/mongodb'
 
 include 'test-server/core'
+include 'test-server/mongodb'

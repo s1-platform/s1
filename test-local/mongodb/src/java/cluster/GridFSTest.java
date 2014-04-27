@@ -21,8 +21,10 @@ import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.Closure;
 import org.s1.misc.IOUtils;
 import org.s1.table.errors.NotFoundException;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.ClusterTest;
+import org.s1.testing.LoadTestUtils;
+import org.s1.testing.HttpServerTest;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,15 +35,16 @@ import java.io.OutputStream;
  * Date: 23.01.14
  * Time: 12:16
  */
-public class GridFSTest extends ServerTest {
+public class GridFSTest extends ClusterTest {
 
+    @Test
     public void testFile(){
 
         int p = 10;
         title("File storage write-read-remove, parallel "+p);
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input) {
+            public void call(int input)  throws Exception {
 
                 FileStorage.FileWriteBean w = null;
                 try{
@@ -90,7 +93,6 @@ public class GridFSTest extends ServerTest {
 
                 assertTrue(b);
 
-                return null;
             }
         }));
 

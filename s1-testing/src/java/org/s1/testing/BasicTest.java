@@ -20,8 +20,8 @@ public abstract class BasicTest {
     protected static final Properties properties = new Properties();
     static {
         try {
-            properties.load( BasicTest.class.getResourceAsStream("/s1test.properties"));
-        } catch (IOException e) {
+            //properties.load( BasicTest.class.getResourceAsStream("/s1test.properties"));
+        } catch (Throwable e) {
             System.err.println("Cannot load /s1test.properties: "+e.getMessage());
         }
     }

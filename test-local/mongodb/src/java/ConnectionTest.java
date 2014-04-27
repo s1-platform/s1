@@ -18,8 +18,9 @@ import com.mongodb.DB;
 import org.s1.misc.Closure;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.options.Options;
-import org.s1.test.BasicTest;
-import org.s1.test.LoadTestUtils;
+import org.s1.testing.BasicTest;
+import org.s1.testing.LoadTestUtils;
+import org.testng.annotations.Test;
 
 /**
  * s1v2
@@ -29,48 +30,48 @@ import org.s1.test.LoadTestUtils;
  */
 public class ConnectionTest extends BasicTest {
 
+    @Test
     public void testDefault(){
         int p=10;
         title("Default, parallel: "+p);
         final String n = Options.getStorage().get("MongoDB","connections.default.name");
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input) {
+            public void call(int input)  throws Exception {
                 DB db = MongoDBConnectionHelper.getConnection(null);
                 assertEquals(n,db.getName());
                 db.getCollectionNames();
                 if(input==0)
                     trace(db.getCollectionNames());
-                return null;
             }
         }));
     }
 
+    @Test
     public void testAnother(){
         int p=10;
         title("Another instance, parallel: "+p);
         final String n = Options.getStorage().get("MongoDB","connections.test.name");
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input) {
+            public void call(int input)  throws Exception {
                 DB db = MongoDBConnectionHelper.getConnection("test");
                 assertEquals(n,db.getName());
                 db.getCollectionNames();
                 if(input==0)
                     trace(db.getCollectionNames());
-                return null;
             }
         }));
     }
 
+    @Test
     public void testError(){
         int p=10;
         title("Error, parallel: "+p);
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input) {
+            public void call(int input)  throws Exception {
                 MongoDBConnectionHelper.getConnection("test_not_found");
-                return null;
             }
         }));
     }

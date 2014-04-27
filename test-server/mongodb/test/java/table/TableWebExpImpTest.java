@@ -17,15 +17,17 @@
 package table;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import org.s1.S1SystemError;
-import org.s1.misc.Closure;
 import org.s1.misc.IOUtils;
 import org.s1.mongodb.MongoDBConnectionHelper;
+import org.s1.mongodb.MongoDBFormat;
 import org.s1.objects.Objects;
-import org.s1.options.Options;
 import org.s1.table.Table;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.HttpServerTest;
+import org.s1.testing.LoadTestUtils;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.*;
 import java.util.List;
@@ -37,17 +39,17 @@ import java.util.Map;
  * Date: 21.02.14
  * Time: 10:57
  */
-public class TableWebExpImpTest extends ServerTest {
+public class TableWebExpImpTest extends HttpServerTest {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeMethod
+    protected void clear() throws Exception {
         Table t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
     }
 
+    @Test
     public void testExpImp() {
         final int p = 10;
         final int c = 10;
@@ -55,11 +57,13 @@ public class TableWebExpImpTest extends ServerTest {
         //add
         Table t = new TestTable1();
         try{
+            DBCollection coll = MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase()).getCollection(t.getCollectionId().getCollection());
             for(int i=0;i<c;i++){
-                t.add("add", Objects.newHashMap(String.class, Object.class,
+                coll.insert(MongoDBFormat.fromMap(Objects.newHashMap(String.class, Object.class,
+                        "id", "" + i,
                         "a", "test_" + i,
                         "b", i
-                ));
+                )));
             }
         }catch (Exception e){
             throw S1SystemError.wrap(e);
@@ -69,9 +73,9 @@ public class TableWebExpImpTest extends ServerTest {
         dir.mkdirs();
 
         //export
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input)  {
+            public void call(int input)  throws Exception {
                 Map<String, Object> m = null;
 
                 //add
@@ -84,7 +88,7 @@ public class TableWebExpImpTest extends ServerTest {
                                 "field","b",
                                 "operation","equals",
                                 "value",1
-                    ))),null);
+                    ))));
                 assertNotNull(m.get("id"));
 
                 //download
@@ -92,12 +96,11 @@ public class TableWebExpImpTest extends ServerTest {
                     FileOutputStream fos = new FileOutputStream(new File(dir.getAbsolutePath()+"/exp_"+input));
                     fos.write(client().get(getContext() + "/dispatcher/Upload.download", Objects.newHashMap(String.class, Object.class,
                             "collection", "test1",
-                            "id", m.get("id")), null, null).getData());
+                            "id", m.get("id")), null).getData());
                     fos.close();
                 }catch (Exception e){
                     throw S1SystemError.wrap(e);
                 }
-                return null;
             }
         }));
 
@@ -113,9 +116,9 @@ public class TableWebExpImpTest extends ServerTest {
         }
 
         //import new
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input)  {
+            public void call(int input)  throws Exception {
                 Map<String,Object> m = null;
                 //upload
                 String id = "";
@@ -125,7 +128,7 @@ public class TableWebExpImpTest extends ServerTest {
                     IOUtils.copy(fis,bos);
                     m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?collection=test2", new ByteArrayInputStream(bos.toByteArray()),
                             "export.zip",
-                            "application/zip",null);
+                            "application/zip");
                     id = Objects.get(m,"id");
                     assertNotNull(id);
                     fis.close();
@@ -137,7 +140,7 @@ public class TableWebExpImpTest extends ServerTest {
                 m = client().postJSON(getContext()+"/dispatcher/TableExpImp.viewData",Objects.newHashMap(String.class,Object.class,
                         "collection","test2",
                         "type","default",
-                        "id",id),null);
+                        "id",id));
                 List<Map<String,Object>> l = Objects.get(m,"list");
                 //assertNotNull(Objects.get(m,"schema"));
                 assertEquals(1L,Objects.get(m,"count"));
@@ -150,12 +153,11 @@ public class TableWebExpImpTest extends ServerTest {
                         "table","table1",
                         "collection","test2",
                         "type","default",
-                        "id",id),null);
+                        "id",id));
                 l = Objects.get(m,"list");
                 assertEquals(1,l.size());
                 assertTrue(Objects.get(Boolean.class,l.get(0),"success"));
 
-                return null;
             }
         }));
 

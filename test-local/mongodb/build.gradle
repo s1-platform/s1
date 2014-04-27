@@ -14,8 +14,12 @@
  *    limitations under the License.
  */
 
-description 'S1 core server test'
+/**
+ * Group, version
+ */
+
+description 'S1 mongodb test'
 
 dependencies {
-
+    compile project(':s1-mongodb')
 }

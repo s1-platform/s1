@@ -15,14 +15,14 @@ package log;/*
  */
 
 import com.mongodb.DBCollection;
-import org.s1.log.Loggers;
-import org.s1.misc.Closure;
 import org.s1.mongodb.log.MongoDBLogStorage;
 import org.s1.objects.Objects;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
-import org.s1.test.TestHttpClient;
-import org.s1.weboperation.WebOperation;
+import org.s1.testing.HttpServerTest;
+import org.s1.testing.LoadTestUtils;
+import org.s1.testing.httpclient.TestHttpClient;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -33,43 +33,64 @@ import java.util.Map;
  * Date: 13.03.14
  * Time: 17:13
  */
-public class LogStorageTest extends ServerTest {
+public class LogStorageTest extends HttpServerTest {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeMethod
+    protected void clear() throws Exception {
         DBCollection coll = MongoDBLogStorage.getCollection();
         coll.drop();
         trace("log4j collection cleared");
-        Loggers.setLogLevel(WebOperation.class.getName(), "DEBUG");
+        TestHttpClient client = client();
+        //authenticate
+        client.postJSON(getContext() + "/dispatcher/User.login", Objects.newHashMap(
+                String.class, Object.class,
+                "name", "root",
+                "password", "root"
+        ));
+        //set log level
+        client.postJSON(getContext() + "/dispatcher/Monitor.setLogLevel", Objects.newSOHashMap(
+                "nodeId", "node-1",
+                "level", "DEBUG"
+        ));
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        Loggers.setLogLevel(WebOperation.class.getName(),"INFO");
+    @AfterMethod
+    protected void setLogLevelBack(){
+        TestHttpClient client = client();
+        //authenticate
+        client.postJSON(getContext() + "/dispatcher/User.login", Objects.newHashMap(
+                String.class, Object.class,
+                "name", "root",
+                "password", "root"
+        ));
+        //set log level
+        client.postJSON(getContext() + "/dispatcher/Monitor.setLogLevel", Objects.newSOHashMap(
+                "nodeId", "node-1",
+                "level", "INFO"
+        ));
     }
 
+    @Test
     public void testLog(){
         int p = 10;
         title("Log, parallel: " + p);
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input) {
+            public void call(int input)  throws Exception {
                 TestHttpClient client = client();
                 //authenticate
                 client.postJSON(getContext() + "/dispatcher/User.login", Objects.newHashMap(
                         String.class, Object.class,
                         "name", "root",
                         "password", "root"
-                ), null);
+                ));
 
                 //get
                 Map<String, Object> m = client.postJSON(getContext() + "/dispatcher/Monitor.listNodeLogs", Objects.newHashMap(
                         String.class, Object.class,
                         "nodeId", "node-1"
                         //,"search",Objects.newHashMap("name","")
-                ), null);
+                ));
 
                 assertTrue(Objects.get(Long.class, m, "count") > 0);
                 assertTrue(Objects.get(List.class, m, "list").size() > 0);
@@ -77,7 +98,6 @@ public class LogStorageTest extends ServerTest {
                 if (input == 0)
                     trace(Objects.get(m, "list[0]"));
 
-                return null;
             }
         }));
     }

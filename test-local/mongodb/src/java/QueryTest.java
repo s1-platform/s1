@@ -26,8 +26,11 @@ import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.objects.Objects;
 import org.s1.table.errors.MoreThanOneFoundException;
 import org.s1.table.errors.NotFoundException;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.ClusterTest;
+import org.s1.testing.LoadTestUtils;
+import org.s1.testing.HttpServerTest;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.util.Date;
 import java.util.List;
@@ -39,13 +42,12 @@ import java.util.Map;
  * Date: 14.02.14
  * Time: 13:21
  */
-public class QueryTest extends ServerTest {
+public class QueryTest extends ClusterTest {
 
     private static final String COLL = "coll_query";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    protected void prepareDB() throws Exception {
         DB db = MongoDBConnectionHelper.getConnection(null);
         DBCollection coll = db.getCollection(COLL);
         coll.drop();
@@ -73,12 +75,13 @@ public class QueryTest extends ServerTest {
         trace("data inserted");
     }
 
+    @Test
     public void testGet(){
         int p=10;
         title("Get, parallel:"+p);
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
 
                 Map<String,Object> m = null;
                 try {
@@ -114,18 +117,17 @@ public class QueryTest extends ServerTest {
                     b = true;
                 }
                 assertTrue(b);
-
-                return null;
             }
         }));
     }
 
+    @Test
     public void testList(){
         int p=10;
         title("List, parallel:"+p);
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
                 List<Map<String,Object>> res = Objects.newArrayList();
                 long c = MongoDBQueryHelper.list(res,new CollectionId(null,COLL),new BasicDBObject(
                         "index",Objects.newHashMap("$lte",50)),
@@ -134,7 +136,6 @@ public class QueryTest extends ServerTest {
                 assertEquals(51L,c);
                 assertEquals(10,res.size());
                 assertEquals(50,res.get(0).get("index"));
-                return null;
             }
         }));
     }
@@ -142,9 +143,9 @@ public class QueryTest extends ServerTest {
     /*public void testFullText(){
         int p=10;
         title("Full-text, parallel:"+p);
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
                 List<Map<String,Object>> res = Objects.newArrayList();
                 long c = MongoDBQueryHelper.fullTextSearch(res, new CollectionId(null,COLL), "test red", new BasicDBObject(
                         "index", Objects.newHashMap("$lte", 50)),
@@ -153,7 +154,6 @@ public class QueryTest extends ServerTest {
                 assertEquals(10,res.size());
                 if(input==0)
                     trace(res);
-                return null;
             }
         }));
     }*/

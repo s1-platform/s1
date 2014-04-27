@@ -25,8 +25,10 @@ import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.mongodb.cluster.MongoDBDDS;
 import org.s1.objects.Objects;
 import org.s1.table.errors.NotFoundException;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.ClusterTest;
+import org.s1.testing.LoadTestUtils;
+import org.s1.testing.HttpServerTest;
+import org.testng.annotations.Test;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,16 +40,17 @@ import java.util.concurrent.TimeoutException;
  * Date: 14.02.14
  * Time: 13:21
  */
-public class WriteTest extends ServerTest {
+public class WriteTest extends ClusterTest {
 
     private static final String COLL = "coll1";
 
+    @Test
     public void testAll(){
         int p=10;
         title("Add set remove, parallel: "+p);
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
                 String id = "id_"+input;
                 MongoDBDDS.add(new Id(null, COLL, id), Objects.newHashMap(String.class, Object.class,
                         "title", "test_" + input
@@ -96,8 +99,6 @@ public class WriteTest extends ServerTest {
                 }
 
                 assertTrue(b);
-
-                return null;
             }
         }));
     }

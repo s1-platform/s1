@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <%=include('/WEB-INF/layouts/head1')%>
+
+    <script src="https://rawgithub.com/defunkt/jquery-pjax/master/jquery.pjax.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $(document).on('click', 'a[data-pjax]', function(event) {
+                var container = $(this).closest('[data-pjax-container]')
+                $.pjax.click(event, {container: container})
+            });
+            $(document).on('pjax:send', function(e) {
+                var id = e.target.id;
+                $('#'+id+'_loading').show()
+            })
+            $(document).on('pjax:complete', function(e) {
+                var id = e.target.id;
+                $('#'+id+'_loading').hide()
+            })
+        });
+    </script>
+
+    <title><%=args.title%></title>
+</head>
+<body>
+
+<div class="container">
+
+    <div><%=s1.formatDate(s1.now(),"HH:mm:ss.SSS")%></div>
+    <div id="main_loading" style="display:none;">LOADING...</div>
+    <div id="main" data-pjax-container>
+        <%=args.layout_content%>
+    </div>
+
+</div>
+
+
+</body>
+</html>

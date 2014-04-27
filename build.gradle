@@ -57,6 +57,14 @@ subprojects {
                 srcDir 'src/resources'
             }
         }
+        test {
+            java {
+                srcDir 'test/java'
+            }
+            resources {
+                srcDir 'test/resources'
+            }
+        }
     }
 
     //provided-compile configuration
@@ -82,10 +90,41 @@ subprojects {
  * Local tests common configuration
  */
 configure(subprojects.findAll {it.name.startsWith('test-local')}) {
+
     dependencies {
         compile project(':s1-testing')
         compile project(':s1-core')
     }
+    testClassesDir=sourceSets.main.output.classesDir
+    test{
+        useTestNG()
+
+        classpath = configurations.compile
+        classpath += configurations.runtime
+        classpath += files("$buildDir/classes/main")
+        classpath += files("$buildDir/resources/main")
+
+        //s1 options home
+        systemProperty 's1.ConfigHome', "classpath:/config"
+
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = true
+
+        // set heap size for the test JVM(s)
+        minHeapSize = "128m"
+        maxHeapSize = "512m"
+
+        // set JVM arguments for the test JVM(s)
+        jvmArgs '-XX:MaxPermSize=256m'
+
+        // listen to events in the test execution lifecycle
+        beforeTest { descriptor ->
+            logger.lifecycle("Running test: " + descriptor)
+        }
+    }
+    test.dependsOn classes
+    test.dependsOn testClasses
+    test.dependsOn cleanTest
 }
 
 /**
@@ -101,17 +140,6 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
         compile project(':s1-core')
         providedCompile libs.servlet
         tomcat project(':s1-tomcat-embedded')
-    }
-
-    sourceSets {
-        test {
-            java {
-                srcDir 'test/java'
-            }
-            resources {
-                srcDir 'test/resources'
-            }
-        }
     }
 
     task tomcatRun(type: JavaExec) {
@@ -155,6 +183,10 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
 
         classpath = configurations.testCompile
         classpath += configurations.testRuntime
+        classpath += configurations.compile
+        classpath += configurations.runtime
+        classpath += files("$buildDir/classes/main")
+        classpath += files("$buildDir/resources/main")
         classpath += files("$buildDir/classes/test")
         classpath += files("$buildDir/resources/test")
 
@@ -181,16 +213,15 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
 
         beforeSuite {
             tomcatStart.execute();
-            //Thread.sleep(5000);
-            //project(':eds-ws').jettyRun.execute()
         }
 
         afterSuite {
             tomcatStop.execute();
-            //project(':eds-ws').jettyStop.execute()
         }
 
     }
+    test.dependsOn classes
+    test.dependsOn testClasses
     test.dependsOn cleanTest
 }
 
@@ -316,9 +347,13 @@ configure(subprojects.findAll {it.name.startsWith('s1-')}) {
     }
 }
 
-/*--------------------------------------------------*/
-/* CUSTOM TASKS */
-/*--------------------------------------------------*/
+/**
+ * Test all
+ */
+
+/**
+ * Exec some process and wait until it starts
+ */
 class ExecWait extends DefaultTask {
     String command
     String ready

@@ -24,8 +24,10 @@ import org.s1.mongodb.MongoDBFormat;
 import org.s1.objects.Objects;
 import org.s1.table.AggregationBean;
 import org.s1.table.CountGroupBean;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.ClusterTest;
+import org.s1.testing.LoadTestUtils;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.util.Date;
 import java.util.List;
@@ -36,13 +38,12 @@ import java.util.List;
  * Date: 14.02.14
  * Time: 15:13
  */
-public class AggregationTest extends ServerTest{
+public class AggregationTest extends ClusterTest{
 
     private static final String COLL = "coll_aggr";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    protected void prepareDB() throws Exception {
         DB db = MongoDBConnectionHelper.getConnection(null);
         DBCollection coll = db.getCollection(COLL);
         coll.drop();
@@ -64,12 +65,13 @@ public class AggregationTest extends ServerTest{
         trace("data inserted");
     }
 
+    @Test
     public void testAggregate(){
         int p=10;
         title("Aggregate, parallel:"+p);
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
                 AggregationBean r = MongoDBAggregationHelper.aggregate(new CollectionId(null,COLL),"str",null);
                 if(input==0)
                     trace(r);
@@ -138,17 +140,17 @@ public class AggregationTest extends ServerTest{
                 if(input==0)
                     trace(r);
                 assertEquals(100L,r.getCount());
-                return null;
             }
         }));
     }
 
+    @Test
     public void testCountGroup(){
         int p=10;
         title("Count group, parallel:"+p);
-        assertEquals(p, LoadTestUtils.run("test",p,p,new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(Integer input)  {
+            public void call(int input)  throws Exception {
 
                 List<CountGroupBean> l = MongoDBAggregationHelper.countGroup(new CollectionId(null,COLL),"str",null);
                 if(input==0)
@@ -199,8 +201,6 @@ public class AggregationTest extends ServerTest{
                 if(input==0)
                     trace(l);
                 assertTrue(l.size() >= 1);
-
-                return null;
             }
         }));
     }

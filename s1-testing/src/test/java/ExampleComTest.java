@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 /**
  * @author Grigory Pykhov
  */
-public class ExmapleComTest extends HttpServerTest{
+public class ExampleComTest extends HttpServerTest{
 
     @Override
     protected String getHost() {

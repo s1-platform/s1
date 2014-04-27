@@ -35,8 +35,12 @@ import org.s1.table.errors.NotFoundException;
 import org.s1.table.format.FieldQueryNode;
 import org.s1.table.format.Query;
 import org.s1.table.format.Sort;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.ClusterTest;
+import org.s1.testing.LoadTestUtils;
+import org.s1.testing.HttpServerTest;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -47,27 +51,26 @@ import java.util.Map;
  * Date: 21.02.14
  * Time: 10:57
  */
-public class TableTest extends ServerTest {
+public class TableTest extends ClusterTest {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeMethod
+    protected void clear() throws Exception {
         Table t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
     }
 
-
+    @Test
     public void testUnique() {
         final int p = 10;
         title("Unique, parallel: " + p);
 
         final Table t = new TestTable1();
         //add, set
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                     Session.start("s_" + input);
 
@@ -90,7 +93,6 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
 
@@ -104,6 +106,7 @@ public class TableTest extends ServerTest {
         }
     }
 
+    @Test
     public void testComplex() {
         final int p = 10;
         title("Complex, parallel: " + p);
@@ -112,9 +115,9 @@ public class TableTest extends ServerTest {
         final Map<Integer, String> ids = Objects.newHashMap();
 
         //add, set
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                     Session.start("s_" + input);
 
@@ -156,14 +159,13 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
 
         //list, log
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                     Session.start("s_" + input);
 
@@ -210,7 +212,7 @@ public class TableTest extends ServerTest {
                             avg = avg/p;
                             assertEquals(avg,ab.getAvg());
                             assertTrue((Integer) ab.getSum() >= p-1);
-                            assertEquals(p,ab.getCount());
+                            assertEquals((long)p,ab.getCount());
 
                             //count group
                             List<CountGroupBean> lc = t.countGroup("b", null);
@@ -227,14 +229,13 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
 
         //remove,
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                 Session.start("s_" + input);
 
@@ -262,11 +263,11 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
     }
 
+    @Test
     public void testExpImport() {
         final int p = 10;
         final int c = 10;
@@ -274,9 +275,9 @@ public class TableTest extends ServerTest {
         final Table t = new TestTable1();
 
         //import new
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                 Session.start("s_" + input);
 
@@ -300,7 +301,6 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
 
@@ -314,9 +314,9 @@ public class TableTest extends ServerTest {
         }
 
         //import - update existing
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input) {
+            public void call(int input)  throws Exception {
                 try {
                 Session.start("s_" + input);
 
@@ -330,7 +330,6 @@ public class TableTest extends ServerTest {
                 } finally {
                     Session.end("s_" + input);
                 }
-                return null;
             }
         }));
 
@@ -343,6 +342,7 @@ public class TableTest extends ServerTest {
         }
     }
 
+    @Test
     public void testScript() {
         final int p = 10;
         final int c = 10;

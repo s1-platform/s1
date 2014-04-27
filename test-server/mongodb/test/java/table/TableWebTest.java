@@ -18,14 +18,13 @@ package table;
 
 import com.mongodb.BasicDBObject;
 import org.s1.S1SystemError;
-import org.s1.cluster.Session;
-import org.s1.misc.Closure;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.objects.Objects;
-import org.s1.options.Options;
 import org.s1.table.Table;
-import org.s1.test.LoadTestUtils;
-import org.s1.test.ServerTest;
+import org.s1.testing.HttpServerTest;
+import org.s1.testing.LoadTestUtils;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -36,17 +35,17 @@ import java.util.Map;
  * Date: 21.02.14
  * Time: 10:57
  */
-public class TableWebTest extends ServerTest {
+public class TableWebTest extends HttpServerTest {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeMethod
+    protected void clear() throws Exception {
         Table t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
     }
 
+    @Test
     public void testComplex() {
         final int p = 10;
         title("Complex, parallel: " + p);
@@ -54,9 +53,9 @@ public class TableWebTest extends ServerTest {
         final Map<Integer, String> ids = Objects.newHashMap();
 
         //add, set
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input)  {
+            public void call(int input)  throws Exception {
                         try {
                             String id = null;
                             Map<String, Object> m = null;
@@ -66,7 +65,7 @@ public class TableWebTest extends ServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.add",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "action","add",
-                                    "data",Objects.newHashMap("a","a_"+input,"b",-1)),null);
+                                    "data",Objects.newHashMap("a","a_"+input,"b",-1)));
 
                             id = Objects.get(m, "id");
                             ids.put(input, id);
@@ -79,7 +78,7 @@ public class TableWebTest extends ServerTest {
                                     "table","table1",
                                     "action","setB",
                                     "id",id,
-                                    "data",Objects.newHashMap("b1",input)),null);
+                                    "data",Objects.newHashMap("b1",input)));
 
                             assertEquals(id, Objects.get(m, "id"));
                             assertEquals("a_" + input, Objects.get(m, "a"));
@@ -88,7 +87,7 @@ public class TableWebTest extends ServerTest {
                             //get
                             m = client().postJSON(getContext()+"/dispatcher/Table.get",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
-                                    "id",id),null);
+                                    "id",id));
 
                             assertEquals(id, Objects.get(m, "id"));
                             assertEquals("a_" + input, Objects.get(m, "a"));
@@ -98,14 +97,13 @@ public class TableWebTest extends ServerTest {
                             throw S1SystemError.wrap(e);
                         }
 
-                return null;
             }
         }));
 
         //list, log
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input)  {
+            public void call(int input)  throws Exception {
                         try {
                             String id = ids.get(input);
                             Map<String, Object> m = null;
@@ -118,7 +116,7 @@ public class TableWebTest extends ServerTest {
                                     "table","table1",
                                     "skip",0,"max",10,
                                     "search",Objects.newHashMap("node",Objects.newHashMap("field","a","operation","equals","value","a_"+input))
-                                    ),null);
+                                    ));
                             l = Objects.get(m,"list");
                             c = Objects.get(m,"count");
 
@@ -132,7 +130,7 @@ public class TableWebTest extends ServerTest {
                                     "table","table1",
                                     "skip",0,"max",10,
                                     "sort",Objects.newHashMap("name","a","desc",false)
-                            ),null);
+                            ));
                             l = Objects.get(m,"list");
                             c = Objects.get(m,"count");
                             assertEquals((long) p, c);
@@ -156,7 +154,7 @@ public class TableWebTest extends ServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.aggregate",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "field","b"
-                            ),null);
+                            ));
                             assertEquals(0,Objects.get(Integer.class,m,"min").intValue());
                             assertEquals(p-1,Objects.get(Integer.class,m,"max").intValue());
                             double avg = 0;
@@ -172,14 +170,14 @@ public class TableWebTest extends ServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "field","b"
-                            ),null);
+                            ));
                             assertTrue(Objects.get(List.class,m,"list").size()>0);
                             if(input==0)
                                 trace(Objects.get(m,"list"));
                             m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "field","a"
-                            ),null);
+                            ));
                             assertTrue(Objects.get(List.class,m,"list").size()>0);
                             if(input==0)
                                 trace(Objects.get(m,"list"));
@@ -188,14 +186,13 @@ public class TableWebTest extends ServerTest {
                         } catch (Throwable e) {
                             throw S1SystemError.wrap(e);
                         }
-                return null;
             }
         }));
 
         //remove
-        assertEquals(p, LoadTestUtils.run("test", p, p, new Closure<Integer, Object>() {
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
-            public Object call(final Integer input)  {
+            public void call(int input)  throws Exception {
                         try {
                             String id = ids.get(input);
                             Map<String, Object> m = null;
@@ -206,7 +203,7 @@ public class TableWebTest extends ServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.remove",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "action","remove",
-                                    "id",id),null);
+                                    "id",id));
 
                             assertEquals(id, Objects.get(m, "id"));
                             assertEquals("a_" + input, Objects.get(m, "a"));
@@ -216,7 +213,7 @@ public class TableWebTest extends ServerTest {
                                 m = client().postJSON(getContext() + "/dispatcher/Table.get", Objects.newHashMap(String.class, Object.class,
                                         "table","table1",
                                         "id", id
-                                ), null);
+                                ));
                             }catch (RuntimeException e){
                                 b = true;
                             }
@@ -225,8 +222,6 @@ public class TableWebTest extends ServerTest {
                         } catch (Throwable e) {
                             throw S1SystemError.wrap(e);
                         }
-
-                return null;
             }
         }));
     }
