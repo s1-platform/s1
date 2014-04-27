@@ -32,45 +32,12 @@ ext.libs = [
         xerces : 'xerces:xercesImpl:2.11.0',
         jcommander : 'com.beust:jcommander:1.35'
 ]
-ext.servers = [
-        core : [
-                classpath : [],
-                webapp : "${projectDir}/test_webapp",
-                options : "classpath:/options"
-        ],
-        core_mongodb : [
-                classpath : [],
-                webapp : "${projectDir}/test_webapp",
-                options : "classpath:/options"
-        ]
-]
-ext.integrationTests = [
-
-]
-ext.serverTests = [
-        core : [
-                classpath : [
-
-                ],
-                options : "classpath:/options",
-                server : "core"
-        ],
-        mongodb : [
-                classpath : [
-                        ':s1-mongodb:compile',':s1-mongodb:testCompile'
-                ],
-                options : "classpath:/options",
-                server : "core_mongodb"
-        ]
-]
 
 /**
  * Common compile, build, tasks
  */
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'signing'
 
     compileJava.options.encoding = 'UTF-8'
     compileTestJava.options.encoding = 'UTF-8'
@@ -80,25 +47,164 @@ subprojects {
     compileTestJava.sourceCompatibility = 1.7
     compileTestJava.targetCompatibility = 1.7
 
+    //main
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/java'
+            }
+            resources {
+                srcDir 'src/resources'
+            }
+        }
+    }
+
+    //provided-compile configuration
     configurations { providedCompile }
 
     sourceSets.main.compileClasspath += configurations.providedCompile
     sourceSets.test.compileClasspath += configurations.providedCompile
     sourceSets.test.runtimeClasspath += configurations.providedCompile
 
+    //maven repos
     repositories {
         mavenLocal()
         mavenCentral()
     }
 
+    //javadoc
+    javadoc{
+        options.encoding = "UTF-8"
+    }
+}
+
+/**
+ * Local tests common configuration
+ */
+configure(subprojects.findAll {it.name.startsWith('test-local')}) {
+    dependencies {
+        compile project(':s1-testing')
+        compile project(':s1-core')
+    }
+}
+
+/**
+ * Server tests common configuration
+ */
+import org.apache.tools.ant.taskdefs.condition.Os
+
+configure(subprojects.findAll {it.name.startsWith('test-server')}) {
+    configurations { tomcat }
+
+    dependencies {
+        testCompile project(':s1-testing')
+        compile project(':s1-core')
+        providedCompile libs.servlet
+        tomcat project(':s1-tomcat-embedded')
+    }
+
+    sourceSets {
+        test {
+            java {
+                srcDir 'test/java'
+            }
+            resources {
+                srcDir 'test/resources'
+            }
+        }
+    }
+
+    task tomcatRun(type: JavaExec) {
+        main = "org.s1.tomcat.TomcatMain"
+        args = ["start", "localhost", port, "/$project.name", "$projectDir/webapp", stopPort, 'shutdown' ]
+        classpath = configurations.tomcat
+        classpath += configurations.compile
+        classpath += configurations.runtime
+        classpath += files("$buildDir/classes/main")
+        classpath += files("$buildDir/resources/main")
+        systemProperties([
+                "s1.ConfigHome": "${projectDir}/config",
+                "file.encoding": "UTF-8"
+        ])
+    }
+    rootProject.subprojects.each{
+        tomcatRun.dependsOn(tasks.getByPath(":${it.name}:classes"))
+    }
+
+    task tomcatStop(type: JavaExec) {
+        main = "org.s1.tomcat.TomcatMain"
+        args = ['stop',"localhost",stopPort,"shutdown"]
+        classpath = configurations.tomcat
+    }
+
+    task tomcatStart(type:ExecWait) {
+        if (Os.isFamily(Os.FAMILY_WINDOWS))
+            command "cmd /c gradlew.bat --no-color --no-daemon -q :${project.name}:tomcatRun"
+        else if(Os.isFamily(Os.FAMILY_UNIX))
+            command "./gradlew --no-color --no-daemon -q :${project.name}:tomcatRun"
+        ready = "TestAppServer: Server started"
+        directory "${projectDir}/../.."
+
+        doLast {
+            println("### SERVER STARTED")
+        }
+    }
+
+    test {
+        useTestNG()
+
+        classpath = configurations.testCompile
+        classpath += configurations.testRuntime
+        classpath += files("$buildDir/classes/test")
+        classpath += files("$buildDir/resources/test")
+
+        //s1 options home
+        systemProperty 's1.ConfigHome', "classpath:/config"
+        systemProperty 's1test.http.host', "localhost"
+        systemProperty 's1test.http.port', "${port}"
+        systemProperty 's1test.http.context', "/${project.name}"
+
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = true
+
+        // set heap size for the test JVM(s)
+        minHeapSize = "128m"
+        maxHeapSize = "512m"
+
+        // set JVM arguments for the test JVM(s)
+        jvmArgs '-XX:MaxPermSize=256m'
+
+        // listen to events in the test execution lifecycle
+        beforeTest { descriptor ->
+            logger.lifecycle("Running test: " + descriptor)
+        }
+
+        beforeSuite {
+            tomcatStart.execute();
+            //Thread.sleep(5000);
+            //project(':eds-ws').jettyRun.execute()
+        }
+
+        afterSuite {
+            tomcatStop.execute();
+            //project(':eds-ws').jettyStop.execute()
+        }
+
+    }
+    test.dependsOn cleanTest
+}
+
+/**
+ * Maven modules common configuration
+ */
+configure(subprojects.findAll {it.name.startsWith('s1-')}) {
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
     dependencies {
         compile libs.slf4j
         compile libs.log4j
         runtime libs.slf4j_log4j
-    }
-
-    javadoc{
-        options.encoding = "UTF-8"
     }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
@@ -210,233 +316,12 @@ subprojects {
     }
 }
 
-import org.apache.tools.ant.taskdefs.condition.Os
-/**
- * S1 Core
- */
-project(':s1-core'){
-    description 'S1 core'
-
-    dependencies {
-        compile libs.hazelcast
-        compile libs.rhino
-        providedCompile libs.servlet
-        testCompile project(':s1-testing')
-    }
-
-    task tomcatRun(type: JavaExec, dependsOn: compileJava) {
-        main = "org.s1.testing.tomcat.TomcatMain"
-        args = ["start", "localhost", port, "/$project.name", "$projectDir/src/test/resources/webapp", stopPort, 'shutdown' ]
-        classpath = configurations.testCompile
-        classpath += files("$buildDir/classes/main")
-        classpath += files("$buildDir/classes/test")
-        classpath += files("$projectDir/src/main/resources")
-        classpath += configurations.compile
-        classpath += configurations.runtime
-        classpath += files("$projectDir/src/test/resources")
-        systemProperties([
-                "s1.ConfigHome": "${projectDir}/src/test/resources/options",
-                "fileEncoding": "UTF-8",
-                "file.encoding": "UTF-8"
-        ])
-        /*main = "org.eclipse.jetty.runner.Runner"
-        args = ["--path", "/$project.name", "--port", port, "--stop-port", stopPort, "--stop-key", 'jetty', "$projectDir/src/main/webapp"]
-        classpath = configurations.jettyRun
-        classpath += files("$buildDir/classes/main")
-        classpath += files("$projectDir/src/main/resources")
-        classpath += configurations.compile
-        classpath += configurations.runtime
-        classpath += files("$projectDir/src/test/resources")
-        systemProperties([
-                "s1.ConfigHome": "${projectDir}/../ugi48-options",
-                "fileEncoding": "UTF-8",
-                "file.encoding": "UTF-8",
-                "jetty.home": "${projectDir}/jetty-home"
-        ])*/
-    }
-
-    task tomcatStop(type: JavaExec) {
-        main = "org.s1.testing.tomcat.TomcatMain"
-        //args = ["--stop-port", 9998, "--stop-key",'jetty', '--stop']
-        args = ['stop',"localhost",stopPort,"shutdown"]
-        classpath = configurations.testCompile
-        /*main = "org.eclipse.jetty.start.Main"
-        //args = ["--stop-port", 9998, "--stop-key",'jetty', '--stop']
-        args = ['--stop']
-        classpath = configurations.jettyStop
-        systemProperties([
-                "STOP.PORT": stopPort,
-                "STOP.KEY": "jetty"
-        ])*/
-    }
-
-    task startServer(type:ExecWait) {
-        if (Os.isFamily(Os.FAMILY_WINDOWS))
-            command 'cmd /c gradlew.bat tomcatRun'
-        else if(Os.isFamily(Os.FAMILY_UNIX))
-            command './gradlew jettyRun'
-        ready = ["TestAppServer: Server started"]
-        directory "$projectDir/.."
-
-        doLast {
-            println("### SERVER STARTED")
-        }
-    }
-
-    task stopServer(type:Exec) {
-        workingDir '..'
-        if (Os.isFamily(Os.FAMILY_WINDOWS))
-            commandLine 'cmd', '/c', 'gradlew.bat','tomcatStop'
-        else if(Os.isFamily(Os.FAMILY_UNIX))
-            commandLine './gradlew','tomcatStop'
-
-        doLast {
-            println("### SERVER STOPPED")
-        }
-    }
-
-    test {
-        useTestNG()
-
-        //s1 options home
-        //systemProperty 's1.ConfigHome', "${projectDir}/src/test/resources/options"
-
-        // show standard out and standard error of the test JVM(s) on the console
-        testLogging.showStandardStreams = true
-
-        // set heap size for the test JVM(s)
-        minHeapSize = "128m"
-        maxHeapSize = "512m"
-
-        // set JVM arguments for the test JVM(s)
-        jvmArgs '-XX:MaxPermSize=256m'
-
-        // listen to events in the test execution lifecycle
-        beforeTest { descriptor ->
-            logger.lifecycle("Running test: " + descriptor)
-        }
-
-        beforeSuite {
-            startServer.execute();
-            //project(':eds-ws').jettyRun.execute()
-        }
-
-        afterSuite {
-            stopServer.execute();
-            //project(':eds-ws').jettyStop.execute()
-        }
-    }
-    test.dependsOn cleanTest
-}
-
-/**
- * S1 MongoDB
- */
-project(':s1-mongodb'){
-    description 'S1 MongoDB'
-    dependencies {
-        compile libs.mongodb
-        compile project(':s1-core')
-        providedCompile libs.servlet
-        testCompile project(':s1-testing')
-    }
-}
-
-/**
- * S1 Testing
- */
-project(':s1-testing'){
-    description 'S1 testing utils'
-    dependencies {
-        compile libs.testng
-        compile libs.groovy
-        compile libs.tomcat_core
-        compile libs.tomcat_logging
-        compile libs.tomcat_jasper
-        compile libs.httpclient
-        compile libs.httpmime
-        providedCompile libs.servlet
-    }
-}
-
-import groovy.text.SimpleTemplateEngine
-/**
- * S1 XSD Utils
- */
-project(':s1-xsd-utils'){
-    description 'S1 XSD utils'
-    apply plugin:'application'
-    mainClassName = "org.s1.xsdutils.Main"
-
-    dependencies {
-        compile libs.xerces
-        compile project(':s1-core')
-        compile libs.jcommander
-        testCompile project(':s1-testing')
-    }
-
-    //expand template (standard way using `expand` is not applicable because of charset)
-    def expandFile = {path, ctx->
-        def file = new File(path);
-        def text = file.text
-        def engine = new SimpleTemplateEngine()
-        template = engine.createTemplate(text).make(ctx);
-        file.withWriter('UTF-8'){ it << template.toString() }
-    }
-
-    //clean home
-    task cleanHome << {
-        new File("$buildDir/home").deleteDir();
-    }
-
-    //copy home
-    task copyApp(type: Copy) {
-        from ('app'){
-            //exclude('README.*')
-        }
-        from('../'){
-            include('S1-*.txt')
-        }
-        into 'build/app'
-        includeEmptyDirs = true
-    }
-    copyApp.dependsOn cleanHome
-
-    //process templates
-    task processTemplates<<{
-        expandFile("$buildDir/app/README.txt",[project:project]);
-    }
-    processTemplates.dependsOn copyApp
-
-    //distribute zip
-    distZip {
-        into(project.name) {
-            from 'build/app/'
-            include '**/*'
-            into "$project.name-$project.version"
-        }
-    }
-    distZip.dependsOn processTemplates
-
-    //add conf to classpath
-    startScripts {
-        classpath += files('REPLACE_WITH_CONF')
-        doLast {
-            def windowsScriptFile = file getWindowsScript()
-            def unixScriptFile    = file getUnixScript()
-            windowsScriptFile.text = windowsScriptFile.text.replace('%APP_HOME%\\lib\\REPLACE_WITH_CONF', '%APP_HOME%\\conf')
-            unixScriptFile.text  = unixScriptFile.text.replace('$APP_HOME/lib/REPLACE_WITH_CONF', '$APP_HOME/conf')
-        }
-    }
-}
-
 /*--------------------------------------------------*/
 /* CUSTOM TASKS */
 /*--------------------------------------------------*/
-
 class ExecWait extends DefaultTask {
     String command
-    List<String> ready
+    String ready
     String directory
 
     @TaskAction
@@ -454,10 +339,21 @@ class ExecWait extends DefaultTask {
         def line
         while ((line = reader.readLine()) != null) {
             println line
-            if (ready.find{return line.contains(it)}) {
+            if (line.contains(ready)) {
                 println "$command is ready"
                 break;
             }
         }
+        stdout.close();
+        System.setOut(new PrintStream(new OutputStream() {
+            public void write(int b) {
+                //DO NOTHING
+            }
+        }));
+        System.setErr(new PrintStream(new OutputStream() {
+            public void write(int b) {
+                //DO NOTHING
+            }
+        }));
     }
 }

@@ -3,4 +3,9 @@ rootProject.name = 's1'
 include 's1-core'
 include 's1-mongodb'
 include 's1-testing'
+include 's1-tomcat-embedded'
 include 's1-xsd-utils'
+
+include 'test-local/core'
+
+include 'test-server/core'
