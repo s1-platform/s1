@@ -152,7 +152,7 @@ public class SOAPHelper {
 
             if(LOG.isTraceEnabled()){
                 LOG.trace("Sending soap to endpoint succeed\n" +
-                        "                        Endpoint: "+endpoint+"\n" +
+                        "                Endpoint: "+endpoint+"\n" +
                         "                SOAP: \n"+(data!=null?SOAPHelper.toString(data):null)+"\n" +
                         "                SOAP Response: \n"+(soapResponse!=null?SOAPHelper.toString(soapResponse):null));
             }else if(LOG.isDebugEnabled()){
@@ -164,11 +164,11 @@ public class SOAPHelper {
         } catch (SOAPException e) {
             if(LOG.isTraceEnabled()){
                 LOG.trace("Sending soap to endpoint error: "+e.getClass().getName()+": "+e.getMessage()+"\n" +
-                        "                        Endpoint: "+endpoint+"\n" +
-                        "                SOAP: \\n${data?SOAPHelper.toString(data):null}",e);
+                        "                Endpoint: "+endpoint+"\n" +
+                        "                SOAP: \n"+(data!=null?SOAPHelper.toString(data):null)+"",e);
             }else if(LOG.isDebugEnabled()){
                 LOG.debug("Sending soap to endpoint error: "+e.getClass().getName()+": "+e.getMessage()+"\n" +
-                        "                        Endpoint: "+endpoint,e);
+                        "                Endpoint: "+endpoint,e);
             }
             throw e;
         } finally {
