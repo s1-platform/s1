@@ -17,7 +17,9 @@
 package org.s1.testing;
 
 import org.s1.lifecycle.LifecycleAction;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 
 /**
@@ -25,15 +27,15 @@ import org.testng.annotations.BeforeTest;
  */
 public abstract class ClusterTest extends BasicTest{
 
-    @BeforeTest
-    public void beforeTest() {
-        super.beforeTest();
+    @BeforeClass
+    public void startCluster() {
+        setEnv();
         //start cluster
         LifecycleAction.startAll();
     }
 
-    @AfterTest
-    public void afterTest(){
+    @AfterClass
+    public void stopCluster(){
         //stop cluster
         LifecycleAction.stopAll();
     }

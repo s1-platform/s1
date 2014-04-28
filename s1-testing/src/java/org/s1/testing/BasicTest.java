@@ -27,7 +27,7 @@ public abstract class BasicTest {
     }
 
     @BeforeTest
-    public void beforeTest(){
+    public void setEnv(){
         String s = System.getProperty("s1.ConfigHome");
         if(s==null || s.isEmpty())
             s = "classpath:/config";
@@ -72,17 +72,18 @@ public abstract class BasicTest {
     }
 
     protected void title(Object t){
-        System.out.print("****");
+        String s = "****";
         for(int i=0;i<t.toString().length();i++){
-            System.out.print("*");
+            s+=("*");
         }
-        System.out.print("****\n");
-        System.out.println("*** "+t+" ***");
-        System.out.print("****");
+        s+=("****\n");
+        s+=("*** "+t+" ***\n");
+        s+=("****");
         for(int i=0;i<t.toString().length();i++){
-            System.out.print("*");
+            s+=("*");
         }
-        System.out.print("****\n");
+        s+=("****\n");
+        System.out.print(s);
     }
 
     protected void assertEquals(Object expected, Object found){

@@ -46,7 +46,6 @@ public class DDSCluster {
 
     private static String nodeId;
     private static volatile String status = "stopped";
-    private static volatile boolean initialized = false;
     private static boolean shutdownOnError = true;
 
     private static QueueWorker queueWorker;
@@ -64,7 +63,7 @@ public class DDSCluster {
 
     protected static long getNextId(){
         synchronized (DDSCluster.class){
-            if(status.equals("stopped") || !initialized)
+            if(status.equals("stopped"))
                 throw new S1SystemError("Cluster node is stopped");
         }
         return idGen.incrementAndGet();
@@ -105,7 +104,7 @@ public class DDSCluster {
         int fileThreads = Options.getStorage().getSystem("cluster.fileThreads", 10);
         String fileAddress = Options.getStorage().getSystem("cluster.fileAddress");
         fileExchange = new FileExchange(nodeId,fileThreads,fileAddress);
-        initialized = true;
+
     }
 
     /**
@@ -114,8 +113,7 @@ public class DDSCluster {
     public static synchronized void start() {
         if(status.equals("started"))
             return;
-        if(!initialized)
-            init();
+        init();
 
         long t = System.currentTimeMillis();
 
@@ -156,7 +154,7 @@ public class DDSCluster {
      * Synchronously stop current node
      */
     public static synchronized void stop(){
-        if(status.equals("stopped") || !initialized)
+        if(status.equals("stopped"))
             return;
         long t = System.currentTimeMillis();
 
@@ -181,7 +179,7 @@ public class DDSCluster {
             Transactions.addOperation(e);
         }else{
             synchronized (DDSCluster.class){
-                if(status.equals("stopped") || !initialized)
+                if(status.equals("stopped"))
                     throw new S1SystemError("Cluster node is stopped");
             }
             long id = getNextId();

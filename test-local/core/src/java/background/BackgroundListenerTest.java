@@ -1,10 +1,9 @@
 package background;
 
 import org.s1.background.BackgroundWorker;
+import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.testing.ClusterTest;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 /**
  * s1v2
@@ -15,12 +14,12 @@ import org.testng.annotations.Test;
 public class BackgroundListenerTest extends ClusterTest {
 
     @BeforeClass
-    public void before(){
+    public void startBG(){
         BackgroundWorker.startAll();
     }
 
     @AfterClass
-    public void after(){
+    public void stopBG(){
         BackgroundWorker.stopAll();
     }
 

@@ -95,10 +95,10 @@ configure(subprojects.findAll {it.name.startsWith('test-local')}) {
         compile project(':s1-testing')
         compile project(':s1-core')
     }
-    testClassesDir=sourceSets.main.output.classesDir
     test{
         useTestNG()
 
+        testClassesDir=sourceSets.main.output.classesDir
         classpath = configurations.compile
         classpath += configurations.runtime
         classpath += files("$buildDir/classes/main")
