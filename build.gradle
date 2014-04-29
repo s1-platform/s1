@@ -154,6 +154,9 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
                 "s1.ConfigHome": "${projectDir}/config",
                 "file.encoding": "UTF-8"
         ])
+        doFirst{
+            println "-----------------------------------------------------------------------${projectDir}/config"
+        }
     }
     rootProject.subprojects.each{
         tomcatRun.dependsOn(tasks.getByPath(":${it.name}:classes"))
@@ -167,9 +170,9 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
 
     task tomcatStart(type:ExecWait) {
         if (Os.isFamily(Os.FAMILY_WINDOWS))
-            command "cmd /c gradlew.bat --no-color --no-daemon -q :${project.name}:tomcatRun"
+            command "cmd /c gradlew.bat --no-color --no-daemon :${project.name}:tomcatRun"
         else if(Os.isFamily(Os.FAMILY_UNIX))
-            command "./gradlew --no-color --no-daemon -q :${project.name}:tomcatRun"
+            command "./gradlew --no-color --no-daemon :${project.name}:tomcatRun"
         ready = "TestAppServer: Server started"
         directory "${projectDir}/../.."
 

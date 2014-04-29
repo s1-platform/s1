@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +100,7 @@ public class DispatcherServlet extends HttpServlet {
         if(!cache.containsKey(name)){
             WebOperation wo = null;
 
-            Map<String,Object> cls = Objects.find((List<Map<String,Object>>)Options.getStorage().getSystem(List.class,"webOperations"),new Closure<Map<String, Object>, Boolean>() {
+            Map<String,Object> cls = Objects.find((List<Map<String,Object>>)Options.getStorage().getSystem(List.class,"webOperations", new ArrayList()),new Closure<Map<String, Object>, Boolean>() {
                 @Override
                 public Boolean call(Map<String, Object> input) {
                     return name.equals(Objects.get(input, "name"));
