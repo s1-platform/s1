@@ -133,8 +133,8 @@ public class TestHttpClient {
     public HttpResponseBean get(String u, Map<String,Object> data, Map<String,String> headers){
         if(headers==null)
             headers = new HashMap<String,String>();
-
-        HttpGet get = new HttpGet(getURL(u,data));
+        u = getURL(u,data);
+        HttpGet get = new HttpGet(u);
         try{
             for(String h:headers.keySet()){
                 get.setHeader(h,headers.get(h));
@@ -156,7 +156,9 @@ public class TestHttpClient {
                 rh.put(h.getName(),h.getValue());
             }
             try {
-                return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                HttpResponseBean r = new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                printIfError(u,r);
+                return r;
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(),e);
             }
@@ -176,7 +178,8 @@ public class TestHttpClient {
         if(headers==null)
             headers = new HashMap<String,String>();
 
-        HttpPost post = new HttpPost(getURL(u,null));
+        u = getURL(u,null);
+        HttpPost post = new HttpPost(u);
         try{
             headers.put("Content-Type","application/x-www-form-urlencoded");
             for(String h:headers.keySet()){
@@ -206,7 +209,9 @@ public class TestHttpClient {
                 rh.put(h.getName(),h.getValue());
             }
             try {
-                return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                HttpResponseBean r = new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                printIfError(u,r);
+                return r;
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(),e);
             }
@@ -226,7 +231,8 @@ public class TestHttpClient {
         if(headers==null)
             headers = new HashMap<String,String>();
 
-        HttpPost post = new HttpPost(getURL(u,null));
+        u = getURL(u,null);
+        HttpPost post = new HttpPost(u);
         try{
             for(String h:headers.keySet()){
                 post.setHeader(h,headers.get(h));
@@ -248,7 +254,9 @@ public class TestHttpClient {
                 rh.put(h.getName(),h.getValue());
             }
             try {
-                return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                HttpResponseBean r = new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                printIfError(u,r);
+                return r;
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(),e);
             }
@@ -268,7 +276,8 @@ public class TestHttpClient {
     public HttpResponseBean uploadFile(String u, InputStream data, String name, String contentType){
         Map<String,Object> headers = new HashMap<String,Object>();
 
-        HttpPost post = new HttpPost(getURL(u,null));
+        u = getURL(u,null);
+        HttpPost post = new HttpPost(u);
         try{
             MultipartEntity request = new MultipartEntity();
             ContentBody body = new InputStreamBody(data,contentType,name);
@@ -293,7 +302,9 @@ public class TestHttpClient {
                 rh.put(h.getName(),h.getValue());
             }
             try {
-                return new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                HttpResponseBean r = new HttpResponseBean(resp.getStatusLine().getStatusCode(),rh,EntityUtils.toByteArray(resp.getEntity()));
+                printIfError(u,r);
+                return r;
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(),e);
             }
