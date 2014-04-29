@@ -49,7 +49,8 @@ public class Options {
             }
             if(storage==null)
                 storage = new OptionsStorage();
-            LOG.info("OptionsStorage: ("+cls+") initialized");
+            if(LOG!=null)
+                LOG.info("OptionsStorage: ("+cls+") initialized");
         }
         return storage;
     }
@@ -81,7 +82,7 @@ public class Options {
             } catch (Exception e) {
             }
         }
-        if(LOG.isDebugEnabled())
+        if(LOG!=null && LOG.isDebugEnabled())
             LOG.debug("Read parameter "+name+": "+r);
         return r;
     }

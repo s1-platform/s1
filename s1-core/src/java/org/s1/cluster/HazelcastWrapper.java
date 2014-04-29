@@ -76,7 +76,8 @@ public class HazelcastWrapper {
                 InputStream is = null;
                 try{
                     is = Options.getStorage().openConfig(DEFAULT_FILENAME);
-                    cfg = new XmlConfigBuilder(is).build();
+                    if(is!=null)
+                        cfg = new XmlConfigBuilder(is).build();
                 }finally {
                     IOUtils.closeQuietly(is);
                 }

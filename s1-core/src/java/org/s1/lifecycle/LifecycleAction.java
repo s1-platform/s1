@@ -18,6 +18,7 @@ package org.s1.lifecycle;
 
 import org.s1.objects.Objects;
 import org.s1.options.Options;
+import org.s1.script.S1ScriptEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,6 +161,10 @@ public abstract class LifecycleAction {
         synchronized (actions){
             actions.clear();
         }
+
+        //stop s1 script
+        S1ScriptEngine.stopAll();
+
         //stop
         LOG.info("S1 stopped");
     }

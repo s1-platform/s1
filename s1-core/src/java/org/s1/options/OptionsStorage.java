@@ -238,7 +238,7 @@ public class OptionsStorage {
         try {
             URLConnection c = new URL(configPath).openConnection();
             return c.getInputStream();
-        } catch (IOException e) {
+        } catch (Throwable e) {
             LOG.debug("Config " + name + " ("+configPath+") not found",e);
             return null;
         }

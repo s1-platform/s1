@@ -54,18 +54,36 @@ public class S1ScriptEngine {
     private static final Logger LOG = LoggerFactory.getLogger(S1ScriptEngine.class);
 
     public static final String OPTIONS_KEY = "scriptEngine";
-    private static final ExecutorService service;
+    private static ExecutorService service;
     private static final ThreadLocal<Boolean> isInside = new ThreadLocal<Boolean>();
 
     static{
-        int ps = Options.getStorage().getSystem(Integer.class,OPTIONS_KEY+".threadCount",500);
-        service = Executors.newFixedThreadPool(ps,new ThreadFactory() {
-            private AtomicInteger i = new AtomicInteger(-1);
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "S1ScriptEngineThread-"+i.incrementAndGet());
+
+    }
+
+    private static ExecutorService getService(){
+        if(service==null){
+            synchronized (S1ScriptEngine.class){
+                if(service==null){
+                    int ps = Options.getStorage().getSystem(Integer.class,OPTIONS_KEY+".threadCount",500);
+                    service = Executors.newFixedThreadPool(ps,new ThreadFactory() {
+                        private AtomicInteger i = new AtomicInteger(-1);
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            return new Thread(r, "S1ScriptEngineThread-"+i.incrementAndGet());
+                        }
+                    });
+                }
             }
-        });
+        }
+        return service;
+    }
+
+    public static void stopAll(){
+        service.shutdown();
+        while (!service.isTerminated()) {
+        }
+        service = null;
     }
 
     private List<Map<String,Object>> functions = Objects.newArrayList();
@@ -238,7 +256,7 @@ public class S1ScriptEngine {
         if(isInside.get() == null || !isInside.get()) {
             if (sb != null) {
                 //run script
-                f = service.submit(new Callable<Object>() {
+                f = getService().submit(new Callable<Object>() {
                     @Override
                     public Object call() throws Exception {
                         String id = null;
@@ -256,7 +274,7 @@ public class S1ScriptEngine {
                 });
             } else {
                 //run script
-                f = service.submit(new Callable<Object>() {
+                f = getService().submit(new Callable<Object>() {
                     @Override
                     public Object call() throws Exception {
                         try {
