@@ -22,7 +22,7 @@ public class AuthWebTest extends HttpServerTest {
     @Test
     public void testLoginLogout(){
         int p = 10;
-        title("Root login, logout, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

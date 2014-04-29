@@ -20,7 +20,7 @@ public class FileUtilsTest extends BasicTest {
     @Test
     public void testString(){
         int p = 10;
-        title("FileUtils string file, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

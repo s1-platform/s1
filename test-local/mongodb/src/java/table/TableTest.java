@@ -64,7 +64,6 @@ public class TableTest extends ClusterTest {
     @Test
     public void testUnique() {
         final int p = 10;
-        title("Unique, parallel: " + p);
 
         final Table t = new TestTable1();
         //add, set
@@ -109,7 +108,6 @@ public class TableTest extends ClusterTest {
     @Test
     public void testComplex() {
         final int p = 10;
-        title("Complex, parallel: " + p);
         final Table t = new TestTable1();
 
         final Map<Integer, String> ids = Objects.newHashMap();
@@ -271,7 +269,6 @@ public class TableTest extends ClusterTest {
     public void testExpImport() {
         final int p = 10;
         final int c = 10;
-        title("Export/import, parallel: " + p);
         final Table t = new TestTable1();
 
         //import new
@@ -346,7 +343,6 @@ public class TableTest extends ClusterTest {
     public void testScript() {
         final int p = 10;
         final int c = 10;
-        title("Script, parallel: " + p);
         final Table t = new TestTable1();
 
         try {

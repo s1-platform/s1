@@ -37,7 +37,7 @@ public class PagesTest extends HttpServerTest {
         client().get(getContext() + "/pages/page1", null, null);
         client().get(getContext() + "/pages/page2", null, null);
         int p = 10;
-        title("Test pages, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

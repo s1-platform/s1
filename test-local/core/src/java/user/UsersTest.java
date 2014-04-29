@@ -34,7 +34,7 @@ public class UsersTest extends BasicTest {
     @Test
     public void testGet(){
         int p = 10;
-        title("Get user, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {

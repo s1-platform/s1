@@ -47,7 +47,7 @@ public class LoadTestThread implements Runnable {
             closure.call(index);
             //END TEST
         } catch (Throwable e) {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
             success = false;
             error = e;
         } finally {

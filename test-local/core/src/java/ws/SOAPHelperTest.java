@@ -29,7 +29,7 @@ public class SOAPHelperTest extends BasicTest {
     @Test
     public void testString(){
         int p = 10;
-        title("Auth root, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -66,7 +66,7 @@ public class SOAPHelperTest extends BasicTest {
     @Test
     public void testFile(){
         int p = 10;
-        title("Auth root, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -110,7 +110,7 @@ public class SOAPHelperTest extends BasicTest {
     @Test
     public void testValidate(){
         int p = 1;
-        title("Validate, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -173,7 +173,7 @@ public class SOAPHelperTest extends BasicTest {
     @Test
     public void testChange(){
         int p = 10;
-        title("Send, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

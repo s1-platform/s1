@@ -47,7 +47,7 @@ public class WriteTest extends ClusterTest {
     @Test
     public void testAll(){
         int p=10;
-        title("Add set remove, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {

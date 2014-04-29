@@ -22,7 +22,7 @@ public class LockTest extends BasicTest {
     @Test
     public void testLock(){
         int p = 10;
-        title("Lock, parallel "+p);
+        
         final StringBuffer buf = new StringBuffer();
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -44,7 +44,7 @@ public class LockTest extends BasicTest {
     @Test
     public void testNestedLock(){
         int p = 10;
-        title("Nested Lock, parallel "+p);
+        
         final Map<String,Integer> m = Objects.newHashMap("a",0);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -85,7 +85,7 @@ public class LockTest extends BasicTest {
     public void testMultiLock(){
         HazelcastWrapper.getInstance();
         int p = 100;
-        title("Multi Lock, parallel "+p);
+        
         final ConcurrentHashMap<String,Object> cm = new ConcurrentHashMap<String, Object>();
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -128,7 +128,7 @@ public class LockTest extends BasicTest {
         final int c = 5;
         final int sum = 100;
         final int pay = 2;
-        title("Multi Lock game, parallel "+p);
+        
         final Map<String,Integer> cm = Objects.newHashMap();
         for(int i=0;i<c;i++){
             cm.put("acc_"+i,sum);

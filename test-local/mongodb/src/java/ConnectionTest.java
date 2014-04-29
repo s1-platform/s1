@@ -33,7 +33,7 @@ public class ConnectionTest extends BasicTest {
     @Test
     public void testDefault(){
         int p=10;
-        title("Default, parallel: "+p);
+
         final String n = Options.getStorage().get("MongoDB","connections.default.name");
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -50,7 +50,7 @@ public class ConnectionTest extends BasicTest {
     @Test
     public void testAnother(){
         int p=10;
-        title("Another instance, parallel: "+p);
+
         final String n = Options.getStorage().get("MongoDB","connections.test.name");
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -67,7 +67,7 @@ public class ConnectionTest extends BasicTest {
     @Test
     public void testError(){
         int p=10;
-        title("Error, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {

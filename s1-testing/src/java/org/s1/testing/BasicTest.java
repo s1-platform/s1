@@ -1,13 +1,10 @@
 package org.s1.testing;
 
 import org.testng.Assert;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -22,11 +19,21 @@ public abstract class BasicTest {
         try {
             //properties.load( BasicTest.class.getResourceAsStream("/s1test.properties"));
         } catch (Throwable e) {
-            System.err.println("Cannot load /s1test.properties: "+e.getMessage());
+            System.out.println("Cannot load /s1test.properties: "+e.getMessage());
         }
     }
 
-    @BeforeTest
+    @BeforeMethod
+    public void beforeMethod(Method method){
+        methodTitle("BEGIN: " + method.getDeclaringClass().getName() + "#" + method.getName());
+    }
+
+    @AfterMethod
+    public void afterMethod(Method method){
+        methodTitle("END: " + method.getDeclaringClass().getName() + "#" + method.getName());
+    }
+
+    @BeforeClass
     public void setEnv(){
         String s = System.getProperty("s1.ConfigHome");
         if(s==null || s.isEmpty())
@@ -71,7 +78,7 @@ public abstract class BasicTest {
         System.out.println("\t> " + (t == null ? "" : "(" + t.getClass() + ")") + " " + t);
     }
 
-    protected void title(Object t){
+    private void methodTitle(Object t){
         String s = "****";
         for(int i=0;i<t.toString().length();i++){
             s+=("*");

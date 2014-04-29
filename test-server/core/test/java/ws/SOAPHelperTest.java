@@ -34,7 +34,7 @@ public class SOAPHelperTest extends HttpServerTest {
     @Test
     public void testSend(){
         int p = 10;
-        title("Send, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -67,7 +67,7 @@ public class SOAPHelperTest extends HttpServerTest {
     @Test
     public void testSendSoapAction(){
         int p = 10;
-        title("Send with action, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

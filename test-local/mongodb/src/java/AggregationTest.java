@@ -68,7 +68,7 @@ public class AggregationTest extends ClusterTest{
     @Test
     public void testAggregate(){
         int p=10;
-        title("Aggregate, parallel:"+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {
@@ -147,7 +147,7 @@ public class AggregationTest extends ClusterTest{
     @Test
     public void testCountGroup(){
         int p=10;
-        title("Count group, parallel:"+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {

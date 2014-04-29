@@ -21,7 +21,7 @@ public class MonitorWebTest extends HttpServerTest {
     @Test
     public void testMonitor(){
         int p = 10;
-        title("Monitor, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

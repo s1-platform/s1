@@ -73,7 +73,6 @@ public class LogStorageTest extends HttpServerTest {
     @Test
     public void testLog(){
         int p = 10;
-        title("Log, parallel: " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {

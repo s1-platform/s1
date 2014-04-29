@@ -18,7 +18,7 @@ public class Base64Test extends BasicTest {
     @Test
     public void test1(){
         int p = 10;
-        title("Base64 encode/decode, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -39,7 +39,7 @@ public class Base64Test extends BasicTest {
     @Test
     public void test2(){
         int p = 1;
-        title("Base64 decode, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

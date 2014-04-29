@@ -54,7 +54,7 @@ public class NumberSequenceTest extends ClusterTest {
     @Test
     public void testSequence(){
         int p = 10;
-        title("Number sequence, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -69,7 +69,7 @@ public class NumberSequenceTest extends ClusterTest {
     @Test
     public void testTransactionSequence(){
         int p = 10;
-        title("Number sequence in transaction, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

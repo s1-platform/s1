@@ -22,7 +22,7 @@ public class OptionsTest extends BasicTest {
     @Test 
 	public void testGetParameter(){
         int p = 10;
-        title("Get parameter, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {
@@ -46,7 +46,7 @@ public class OptionsTest extends BasicTest {
     @Test 
 	public void testGetMap(){
         int p = 1;
-        title("Get map, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {
@@ -71,7 +71,7 @@ public class OptionsTest extends BasicTest {
     @Test 
 	public void testFormat(){
         int p = 10;
-        title("Format, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {
@@ -97,7 +97,7 @@ public class OptionsTest extends BasicTest {
     @Test 
 	public void testParse(){
         int p = 10;
-        title("Get parameter, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {
@@ -177,7 +177,7 @@ public class OptionsTest extends BasicTest {
     @Test
 	public void testReadConfig(){
         int p = 10;
-        title("Read config, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception {

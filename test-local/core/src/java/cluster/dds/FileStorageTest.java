@@ -44,7 +44,7 @@ public class FileStorageTest extends ClusterTest {
         FileUtils.deleteDir(new File(Options.getStorage().getSystem(String.class, "fileStorage.home")));
 
         int p = 10;
-        title("File storage write-read-remove, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception  {

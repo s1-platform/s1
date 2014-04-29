@@ -112,9 +112,7 @@ public class LoadTestUtils {
         msg += ("total time min: \t\t" + min + "ms" + "\n");
         msg += ("total time max: \t\t" + max + "ms" + "\n");
         msg += ("total time avg: \t\t" + avg + "ms" + "\n");
-        System.err.println(msg);
-
-        System.err.println("ACTIVE THREADS_______________________"+Thread.activeCount());
+        System.out.println(msg);
 
         return success;
     }

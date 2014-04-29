@@ -87,6 +87,15 @@ public class TestHttpClient {
         return host;
     }
 
+    private void printIfError(String url, HttpResponseBean r){
+        if(!(""+r.getStatus()).startsWith("2")){
+            System.out.println("Http status ("+url+"): "+r.getStatus()+"\n" +
+                    "Response:\n"+
+                    new String (r.getData(),Charset.forName("UTF-8"))
+            );
+        }
+    }
+
     /**
      *
      * @param u

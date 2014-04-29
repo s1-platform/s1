@@ -53,7 +53,6 @@ public class TableWebExpImpTest extends HttpServerTest {
     public void testExpImp() {
         final int p = 10;
         final int c = 10;
-        title("Export import, parallel: " + p);
         //add
         Table t = new TestTable1();
         try{

@@ -48,7 +48,6 @@ public class TableWebTest extends HttpServerTest {
     @Test
     public void testComplex() {
         final int p = 10;
-        title("Complex, parallel: " + p);
 
         final Map<Integer, String> ids = Objects.newHashMap();
 

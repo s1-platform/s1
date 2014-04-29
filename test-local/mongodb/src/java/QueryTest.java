@@ -78,7 +78,7 @@ public class QueryTest extends ClusterTest {
     @Test
     public void testGet(){
         int p=10;
-        title("Get, parallel:"+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {
@@ -124,7 +124,7 @@ public class QueryTest extends ClusterTest {
     @Test
     public void testList(){
         int p=10;
-        title("List, parallel:"+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {
@@ -142,7 +142,7 @@ public class QueryTest extends ClusterTest {
 
     /*public void testFullText(){
         int p=10;
-        title("Full-text, parallel:"+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {

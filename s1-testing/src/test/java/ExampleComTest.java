@@ -24,7 +24,6 @@ public class ExampleComTest extends HttpServerTest{
 
     @Test()
     public void test1(){
-        title("example.com");
         TestHttpClient.HttpResponseBean b = client().get("/", null, null);
         Assert.assertEquals(b.getStatus(),200);
         trace(b.getHeaders());

@@ -22,7 +22,7 @@ public class IOUtilsTest extends BasicTest {
     @Test
     public void testToString(){
         int p = 10;
-        title("IOUtils.toString, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -37,7 +37,7 @@ public class IOUtilsTest extends BasicTest {
     @Test
     public void testCopy(){
         int p = 10;
-        title("IOUtils.copy, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -60,7 +60,7 @@ public class IOUtilsTest extends BasicTest {
     @Test
     public void testCopySkip(){
         int p = 10;
-        title("IOUtils.copy, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

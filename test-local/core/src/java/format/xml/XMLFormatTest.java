@@ -24,7 +24,6 @@ public class XMLFormatTest extends BasicTest {
     @Test
     public void testString() {
         int p = 10;
-        title("String, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -45,7 +44,6 @@ public class XMLFormatTest extends BasicTest {
     @Test
     public void testGet() {
         int p = 1;
-        title("Get, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -82,7 +80,6 @@ public class XMLFormatTest extends BasicTest {
     @Test
     public void testValidate() {
         int p = 1;
-        title("String, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -148,7 +145,6 @@ public class XMLFormatTest extends BasicTest {
     @Test
     public void testToJSON() {
         int p = 10;
-        title("To JSON, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -188,7 +184,6 @@ public class XMLFormatTest extends BasicTest {
     @Test
     public void testToJSONWithLists() {
         int p = 10;
-        title("XML to JSON with Lists, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

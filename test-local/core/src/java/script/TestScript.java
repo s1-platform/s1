@@ -59,7 +59,7 @@ public class TestScript extends BasicTest{
                     }
                 }
         );
-        title("Cases test, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -85,7 +85,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testTemplate(){
         int p=10;
-        title("Template test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -111,7 +111,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testCustomPrintTemplate(){
         int p=10;
-        title("Template custom print test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -199,7 +199,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testTemplateError(){
         int p=10;
-        title("Template error test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         boolean b = false;
         try{
@@ -231,7 +231,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testEvalInFunction(){
         int p=10;
-        title("Eval in function, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -247,7 +247,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testTimeLimit(){
         int p=1;
-        title("Time limit test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setTimeLimit(2000);
         final AtomicLong al = new AtomicLong();
@@ -305,7 +305,7 @@ public class TestScript extends BasicTest{
     @Test
     public void testSizeLimit(){
         int p=10;
-        title("Size limit test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setSizeLimit(10);
 
@@ -332,7 +332,7 @@ public class TestScript extends BasicTest{
     public void testMemoryLimit(){
         int t = Thread.activeCount();
         int p=10;
-        title("Memory limit test, parallel: "+p);
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         scriptEngine.setMemoryLimit(1000);
 
@@ -381,7 +381,7 @@ public class TestScript extends BasicTest{
 
     @Test
     public void testSyntaxError(){
-        title("Syntax error");
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         boolean b = false;
         try{
@@ -396,7 +396,7 @@ public class TestScript extends BasicTest{
 
     @Test
     public void testOptionsFunctions(){
-        title("Options functions");
+
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
         assertTrue(Objects.equals(5,scriptEngine.eval("test.sum(2,3);",null)));
 

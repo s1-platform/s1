@@ -42,7 +42,7 @@ public class UploadTest extends HttpServerTest {
     @Test
     public void testUploadDownload(){
         int p = 10;
-        title("Upload download, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

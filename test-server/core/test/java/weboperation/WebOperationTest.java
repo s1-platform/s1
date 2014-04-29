@@ -21,7 +21,7 @@ public class WebOperationTest extends HttpServerTest {
     @Test
     public void testGetEcho(){
         int p = 10;
-        title("Echo test, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -43,7 +43,7 @@ public class WebOperationTest extends HttpServerTest {
     @Test
     public void testPostEcho(){
         int p = 10;
-        title("Echo test post, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -65,7 +65,7 @@ public class WebOperationTest extends HttpServerTest {
     @Test
     public void testProcessClassMethods(){
         int p = 10;
-        title("Process class methods, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {

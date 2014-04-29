@@ -10,7 +10,6 @@ public class SimpleUnitTest extends BasicTest{
 
     @Test()
     public void test1(){
-        title("test1");
         //trace(getProjectHome());
         Assert.assertEquals("a","a");
     }

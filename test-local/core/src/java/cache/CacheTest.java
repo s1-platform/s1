@@ -23,7 +23,6 @@ public class CacheTest extends BasicTest {
         int size = 100;
         final Cache c = new Cache(size);
         final AtomicInteger i = new AtomicInteger(0);
-        title("Put if not found, parallel "+p);
         assertEquals(p * 1000, LoadTestUtils.run("test", p * 1000, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -111,7 +110,6 @@ public class CacheTest extends BasicTest {
         int p = 1000;
         int size = 100;
         final Cache c = new Cache(size);
-        title("Nested, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -162,7 +160,7 @@ public class CacheTest extends BasicTest {
 
     @Test
     public void testWeight(){
-        title("Weight");
+
         final Cache c = new Cache(2);
         c.get("test1",new Closure<String, String>() {
             @Override
@@ -203,7 +201,7 @@ public class CacheTest extends BasicTest {
     }
 
     public void testTimeout(){
-        title("Weight");
+
         TimeUnit tu = TimeUnit.SECONDS;
         long timeout = 1;
         final Cache c = new Cache(1,timeout, tu);
@@ -249,7 +247,6 @@ public class CacheTest extends BasicTest {
         int size = 100;
         final Cache c = new Cache(size);
         final AtomicInteger i = new AtomicInteger(0);
-        title("Invalidate, parallel "+p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

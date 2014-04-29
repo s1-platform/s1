@@ -26,7 +26,7 @@ public class ClasspathHandlerTest extends BasicTest {
     @Test
     public void test1(){
         int p = 1;
-        title("Read classpath://, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

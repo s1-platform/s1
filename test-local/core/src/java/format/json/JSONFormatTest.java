@@ -21,7 +21,6 @@ public class JSONFormatTest extends BasicTest {
     @Test
     public void testEvalJSON() {
         int p = 10;
-        title("Eval JSON, parallel " + p);
         assertEquals(p, LoadTestUtils.run("parsing", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -54,7 +53,6 @@ public class JSONFormatTest extends BasicTest {
     @Test
     public void testEvalJSONFromFile() {
         int p = 10;
-        title("Eval JSON from file, parallel " + p);
         assertEquals(p, LoadTestUtils.run("parsing", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -77,7 +75,6 @@ public class JSONFormatTest extends BasicTest {
     @Test
     public void testToJSON() {
         int p = 10;
-        title("To JSON, parallel " + p);
         final String json1 = "{\"a1\":1.0,\"a2\":1.2,\"b1\":true,\"s\":\"ccc\",\"b\":{\"c\":[1,2,3]}}";
         final Map<String, Object> m;
         try {
@@ -103,7 +100,7 @@ public class JSONFormatTest extends BasicTest {
 
     @Test
     public void testNewLine() {
-        title("New line");
+
         final Map<String, Object> m = Objects.newHashMap("a","asd\n\t>aaa");
         Map<String, Object> m2 = null;
         try {

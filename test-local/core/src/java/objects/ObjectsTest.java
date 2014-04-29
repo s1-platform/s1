@@ -27,7 +27,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testNewHashMap(){
         int p = 10;
-        title("New HashMap, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -54,7 +54,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testNewArrayList(){
         int p = 10;
-        title("New array list, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -73,7 +73,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testFind(){
         int p = 10;
-        title("Find, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -115,7 +115,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testFindAll(){
         int p = 10;
-        title("Find all, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -159,7 +159,6 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testCast() {
         int p = 10;
-        title("Cast, parallel " + p);
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -190,7 +189,6 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testCopy() {
         int p = 10;
-        title("Deep Copy, parallel " + p);
         final Map<String, Object> m = Objects.newHashMap();
         m.put("a", 123);
         m.put("b", "345");
@@ -217,7 +215,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testIsNullOrEmpty(){
         int p = 10;
-        title("Null or empty, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -236,7 +234,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testEquals(){
         int p = 1;
-        title("Equals, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -268,7 +266,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testSet(){
         int p = 10;
-        title("Set, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -289,7 +287,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testGet(){
         int p = 10;
-        title("Get, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -307,7 +305,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testMerge(){
         int p = 10;
-        title("Merge, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -339,7 +337,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testDiff(){
         int p = 10;
-        title("Diff, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -400,7 +398,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testIterate(){
         int p = 10;
-        title("Iterate, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -445,7 +443,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testWire(){
         int p = 10;
-        title("Wire, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -474,7 +472,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testParseFormatDate(){
         int p = 10;
-        title("Parse/format date, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -494,7 +492,7 @@ public class ObjectsTest extends BasicTest {
     @Test 
 	public void testAssert(){
         int p = 10;
-        title("Assert, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

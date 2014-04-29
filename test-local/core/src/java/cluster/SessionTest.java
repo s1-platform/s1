@@ -18,7 +18,7 @@ public class SessionTest extends BasicTest {
     @Test
     public void testSession(){
         int p = 10;
-        title("Session, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {
@@ -48,7 +48,7 @@ public class SessionTest extends BasicTest {
     @Test
     public void testClear(){
         int p = 10;
-        title("Clear, parallel "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int index) throws Exception  {

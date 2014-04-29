@@ -27,7 +27,7 @@ public class SOAPOperationTest extends HttpServerTest {
     @Test
     public void testResources(){
         int p = 10;
-        title("WS1 resources, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -55,7 +55,7 @@ public class SOAPOperationTest extends HttpServerTest {
     @Test
     public void testFile(){
         int p = 10;
-        title("WS1, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
@@ -104,7 +104,7 @@ public class SOAPOperationTest extends HttpServerTest {
     @Test
     public void testFault(){
         int p = 10;
-        title("Fault, parallel: "+p);
+
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
