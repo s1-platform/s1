@@ -80,8 +80,10 @@ public class S1ScriptEngine {
     }
 
     public static void stopAll(){
-        service.shutdown();
-        while (!service.isTerminated()) {
+        if(service!=null) {
+            service.shutdown();
+            while (!service.isTerminated()) {
+            }
         }
         service = null;
     }

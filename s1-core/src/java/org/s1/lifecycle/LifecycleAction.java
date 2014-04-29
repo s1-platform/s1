@@ -16,6 +16,8 @@
 
 package org.s1.lifecycle;
 
+import org.s1.cluster.Locks;
+import org.s1.cluster.Session;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.s1.script.S1ScriptEngine;
@@ -164,6 +166,9 @@ public abstract class LifecycleAction {
 
         //stop s1 script
         S1ScriptEngine.stopAll();
+
+        Session.destroy();
+        Locks.destroy();
 
         //stop
         LOG.info("S1 stopped");

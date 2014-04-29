@@ -47,6 +47,10 @@ public class Session {
     private static IMap<String,SessionBean> sessionMap;
     private static long TTL = 0;
 
+    public static void destroy(){
+        sessionMap = null;
+    }
+
     /**
      *
      * @return

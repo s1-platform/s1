@@ -36,10 +36,37 @@ import java.util.concurrent.TimeoutException;
  */
 public class Locks {
 
-    private static IMap<String,Long> locks = HazelcastWrapper.getInstance().getMap("s1.locks");
-    private static ILock lock = HazelcastWrapper.getInstance().getLock("s1.locks");
+    private static IMap<String,Long> locks = null;
+    private static ILock lock = null;
     private static ThreadLocal<List<String>> localLocks = new ThreadLocal<List<String>>();
     private static Map<String,List<String>> runningLocks = new ConcurrentHashMap<String, List<String>>();
+
+    private static IMap<String,Long> getLocks(){
+        if(locks==null){
+            synchronized (Locks.class){
+                if(locks==null){
+                    locks = HazelcastWrapper.getInstance().getMap("s1.locks");
+                }
+            }
+        }
+        return locks;
+    }
+
+    private static ILock getLock(){
+        if(lock==null){
+            synchronized (Locks.class){
+                if(lock==null){
+                    lock = HazelcastWrapper.getInstance().getLock("s1.locks");
+                }
+            }
+        }
+        return lock;
+    }
+
+    public static void destroy(){
+        locks = null;
+        lock = null;
+    }
 
     /**
      *
@@ -99,12 +126,12 @@ public class Locks {
             boolean b = false;
             /* BEGIN: lock to check */
             try{
-                boolean lb = lock.tryLock(timeout,tu);
+                boolean lb = getLock().tryLock(timeout,tu);
                 if(!lb)
                     throw new TimeoutException("Timeout waiting lock");
 
                 for(String new_lock:lockIds){
-                    for(String existing_lock:locks.keySet()){
+                    for(String existing_lock:getLocks().keySet()){
                         if(new_lock.startsWith(existing_lock) ||
                                 existing_lock.startsWith(new_lock)){
                             if(!localLocks.get().contains(existing_lock)){
@@ -120,10 +147,10 @@ public class Locks {
                     //set locks
                     runningLocks.put(id,Objects.newArrayList(String.class));
                     for(String new_lock:lockIds){
-                        if(locks.containsKey(new_lock)){
+                        if(getLocks().containsKey(new_lock)){
 
                         }else{
-                            locks.put(new_lock,System.currentTimeMillis());
+                            getLocks().put(new_lock,System.currentTimeMillis());
                             localLocks.get().add(new_lock);
                             runningLocks.get(id).add(new_lock);
                         }
@@ -133,7 +160,7 @@ public class Locks {
                 throw S1SystemError.wrap(e);
             } finally {
                 try{
-                    lock.unlock();
+                    getLock().unlock();
                 }catch (Throwable e){}
             }
             /* END: lock to check */
@@ -164,7 +191,7 @@ public class Locks {
             return;
         if(runningLocks.containsKey(id)) {
             for (String new_lock : runningLocks.get(id)) {
-                locks.remove(new_lock);
+                getLocks().remove(new_lock);
                 localLocks.get().remove(new_lock);
             }
         }
