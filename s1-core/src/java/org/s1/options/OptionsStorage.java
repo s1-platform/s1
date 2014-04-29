@@ -232,26 +232,26 @@ public class OptionsStorage {
      * @return
      */
     public InputStream openConfig(String name) {
-        String configPath = configHome + "/" + name;
-        if(!configPath.matches("^[a-z]+:/.+$"))
-            configPath = "file:/"+configPath;
-        try {
-            URLConnection c = new URL(configPath).openConnection();
-            return c.getInputStream();
-        } catch (Throwable e) {
-            LOG.debug("Config " + name + " ("+configPath+") not found",e);
-            return null;
-        }
-        /*File file = new File(configPath);
         InputStream is = null;
-        if (file.exists() && file.isFile()) {
+        String configPath = configHome + "/" + name;
+        if(!configPath.matches("^[a-z]+:/.+$")) {
+            File file = new File(configPath);
+            if (file.exists() && file.isFile()) {
+                try {
+                    is = new FileInputStream(file);
+                } catch (FileNotFoundException e) {
+                    LOG.debug("Config " + name + " (" + configPath + ") not found");
+                }
+            }
+        }else {
             try {
-                is = new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                LOG.debug("Config " + name + " not found");
+                URLConnection c = new URL(configPath).openConnection();
+                is = c.getInputStream();
+            } catch (Throwable e) {
+                LOG.debug("Config " + name + " (" + configPath + ") not found", e);
             }
         }
-        return is;*/
+        return is;
     }
 
     /**

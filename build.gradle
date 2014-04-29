@@ -154,9 +154,6 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
                 "s1.ConfigHome": "${projectDir}/config",
                 "file.encoding": "UTF-8"
         ])
-        doFirst{
-            println "-----------------------------------------------------------------------${projectDir}/config"
-        }
     }
     rootProject.subprojects.each{
         tomcatRun.dependsOn(tasks.getByPath(":${it.name}:classes"))
