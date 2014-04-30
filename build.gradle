@@ -3,7 +3,7 @@
  */
 allprojects{
     group = 'org.s1-platform'
-    version = '2.4.0-SNAPSHOT'
+    version = '2.4.0'
 }
 
 /**
@@ -254,10 +254,11 @@ configure(subprojects.findAll {it.name.startsWith('s1-')}) {
     }
 
     //sign only if mavenCentralUser/mavenCentralPassword present
-    if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword')) {
-        signing {
-            sign configurations.archives
+    signing {
+        required{
+            !project.version.endsWith('-SNAPSHOT') && gradle.taskGraph.hasTask("uploadArchives")
         }
+        sign configurations.archives
     }
     uploadArchives {
         doFirst {
@@ -268,16 +269,15 @@ configure(subprojects.findAll {it.name.startsWith('s1-')}) {
             mavenDeployer {
                 configuration = configurations.archives
 
-                //sign only if mavenCentralUser/mavenCentralPassword present
-                if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword')) {
-                    beforeDeployment { MavenDeployment deployment ->
+                beforeDeployment { MavenDeployment deployment ->
                         signPom(deployment)
-                    }
                 }
 
                 //~/.gradle/gradle.properties
-                repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    if(hasProperty('mavenCentralUser') && hasProperty('mavenCentralPassword'))
+                repository(url:
+                        "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                ) {
+                    if(project.hasProperty('mavenCentralUser') && project.hasProperty('mavenCentralPassword'))
                         authentication(userName: mavenCentralUser, password: mavenCentralPassword)
                 }
 
