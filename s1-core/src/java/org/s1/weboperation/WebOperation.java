@@ -223,7 +223,9 @@ public abstract class WebOperation<I, O> {
         }
         if (id == null) {
             id = UUID.randomUUID().toString();
-            resp.addCookie(new Cookie(COOKIE, id));
+            Cookie cookie = new Cookie(COOKIE, id);
+            cookie.setPath("/");
+            resp.addCookie(cookie);
         }
         return id;
     }
