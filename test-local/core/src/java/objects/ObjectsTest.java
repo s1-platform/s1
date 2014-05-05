@@ -520,4 +520,23 @@ public class ObjectsTest extends BasicTest {
             }
         }));
     }
+
+    @Test
+    public void testAsList() {
+        int p = 10;
+
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
+            @Override
+            public void call(int index) throws Exception  {
+                assertTrue(Objects.asList(null).size()==0);
+                assertTrue(Objects.asList(null,true).size()==1);
+                assertTrue(Objects.asList(1).size()==1);
+                assertTrue(Objects.asList(1).get(0)==1);
+                assertTrue(Objects.asList(Objects.newArrayList(1)).size()==1);
+                assertTrue(Objects.asList(Objects.newArrayList(1,2)).size()==2);
+                assertTrue(Objects.equals(Objects.asList(Objects.newArrayList(1)).get(0),1));
+
+            }
+        }));
+    }
 }

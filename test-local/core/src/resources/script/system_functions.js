@@ -62,3 +62,12 @@ assert("remove",s1.length(arr)==5)
 //user
 assert("whoAmI",s1.whoAmI().id=='anonymous');
 assert("inRole",!s1.inRole('test'));
+
+//asList
+assert("asList#0",s1.length(s1.asList(null))==0);
+assert("asList#1",s1.length(s1.asList(null,true))==1);
+assert("asList#2",s1.length(s1.asList(1))==1);
+assert("asList#3",s1.asList(1)[0]==1);
+assert("asList#4",s1.length(s1.asList([1]))==1);
+assert("asList#5",s1.length(s1.asList([1,2]))==2);
+assert("asList#6",s1.asList([1])[0]==1);

@@ -383,7 +383,7 @@ public class XMLFormat {
     /**
      *
      * @param xml
-     * @param xsd
+     * @param listsPath
      * @return
      */
     public static Map<String,Object> toMap(Document xml, List<String> listsPath){
@@ -393,7 +393,7 @@ public class XMLFormat {
     /**
      *
      * @param xml
-     * @param xsd
+     * @param listsPath
      * @return
      */
     public static Map<String,Object> toMap(Element xml, List<String> listsPath){

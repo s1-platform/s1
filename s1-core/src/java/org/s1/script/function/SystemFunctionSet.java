@@ -232,6 +232,12 @@ public class SystemFunctionSet extends ScriptFunctionSet {
         return JSONFormat.evalJSON(json);
     }
 
+    public List asList(Object o, Boolean evenIfNull) throws JSONFormatException {
+        if(evenIfNull==null)
+            return Objects.asList(o);
+        return Objects.asList(o,evenIfNull);
+    }
+
     /**
      *
      * @param o list|string

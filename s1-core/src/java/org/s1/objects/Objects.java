@@ -177,6 +177,33 @@ public class Objects {
     }
 
     /**
+     *
+     * @param obj
+     * @param <T>
+     * @return
+     */
+    public static <T> List<T> asList(T obj) {
+        return asList(obj,false);
+    }
+
+    /**
+     *
+     * @param obj
+     * @param evenIfNull
+     * @param <T>
+     * @return
+     */
+    public static <T> List<T> asList(T obj, boolean evenIfNull) {
+        if(obj==null && !evenIfNull){
+            return Objects.newArrayList();
+        }else if(obj instanceof List){
+            return (List<T>)obj;
+        }else{
+            return Objects.newArrayList(obj);
+        }
+    }
+
+    /**
      * Copy object deeply
      *
      * @param orig
