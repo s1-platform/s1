@@ -37,7 +37,7 @@ public class OptionsTest extends BasicTest {
                 assertEquals(123, Options.getStorage().getSystem(Integer.class, "l[0].i").intValue());
                 assertEquals(true, Options.getStorage().getSystem("l[0].b"));
                 assertEquals("asdf", Options.getStorage().getSystem("l[1]"));
-
+                assertEquals("${b.a}", Options.getStorage().getSystem("esc"));
                 
             }
         }));

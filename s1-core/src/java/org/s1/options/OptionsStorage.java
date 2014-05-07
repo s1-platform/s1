@@ -38,6 +38,8 @@ import java.net.URLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Default options storage implementation
@@ -159,7 +161,8 @@ public class OptionsStorage {
         String cfgText = readConfigToString(name+".cfg");
         if(!Objects.isNullOrEmpty(cfgText)){
             try {
-                r = parseToMap(cfgText);
+                Map<String,Object> prop = getProperties(cfgText);
+                r = parseToMapWithProperties(cfgText,prop);
             } catch (Exception e) {
                 if(LOG.isDebugEnabled())
                     LOG.debug("Cannot parse properties: "+e.getMessage());
@@ -174,6 +177,36 @@ public class OptionsStorage {
     }
 
     public final String TYPE_NS = "http://s1-platform.org/config/types/";
+
+    /**
+     *
+     * @param config
+     * @return
+     * @throws XMLFormatException
+     * @throws JSONFormatException
+     */
+    public Map<String,Object> getProperties(String config) throws XMLFormatException, JSONFormatException {
+        Map<String,Object> m = parseToMap(config);
+        m = Objects.get(m,"properties",Objects.newSOHashMap());
+        return m;
+    }
+
+    /**
+     *
+     * @param config
+     * @return
+     * @throws JSONFormatException
+     * @throws XMLFormatException
+     */
+    public Map<String,Object> parseToMapWithProperties(String config, Map<String,Object> prop) throws JSONFormatException, XMLFormatException{
+        Matcher m = Pattern.compile("\\$\\{([A-Za-z0-9\\._]+)\\}").matcher(config);
+        while (m.find()) {
+            String text = m.group(1);
+            config = config.replace("${"+text+"}",Objects.get(prop,text,""));
+        }
+        config = config.replaceAll("\\$\\\\\\{","\\${");
+        return parseToMap(config);
+    }
 
     /**
      *
