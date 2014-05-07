@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import java.util.Properties;
 
 /**
  * Options
@@ -70,18 +71,39 @@ public class Options {
      */
     static String getParameter(String name){
         String r = null;
-        //then try system property
-        if(!Objects.isNullOrEmpty(System.getProperty("s1."+name)))
-            r = System.getProperty("s1."+name);
+
         //then try jndi
         if(r==null){
             try {
                 Context initCtx = new InitialContext();
                 Context envCtx = (Context) initCtx.lookup("java:comp/env");
                 r = (String) envCtx.lookup("s1."+name);
-            } catch (Exception e) {
+            } catch (Throwable e) {
             }
         }
+
+        //then try system property
+        if(r==null) {
+            if (!Objects.isNullOrEmpty(System.getProperty("s1." + name)))
+                r = System.getProperty("s1." + name);
+        }
+
+        //then try env property
+        if(r==null){
+            if(!Objects.isNullOrEmpty(System.getenv("s1." + name)))
+                r = System.getenv("s1." + name);
+        }
+
+        //then try local
+        if(r==null){
+            try {
+                Properties p = new Properties();
+                p.load(Options.class.getResourceAsStream("/s1.properties"));
+                r = p.getProperty(name);
+            } catch (Throwable e) {
+            }
+        }
+
         if(LOG!=null && LOG.isDebugEnabled())
             LOG.debug("Read parameter "+name+": "+r);
         return r;
