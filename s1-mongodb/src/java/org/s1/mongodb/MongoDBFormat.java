@@ -47,11 +47,10 @@ public class MongoDBFormat {
         if(obj==null)
             return null;
         Map<String,Object> m = obj.toMap();
-        m.remove("_id");
-        /*if(m.get("_id")!=null){
-            m.put("id",m.get("_id").toString());
-            m.remove("_id");
+        /*if(m.get("_id")!=null) {
+            m.put("_id", m.get("_id").toString());
         }*/
+        m.remove("_id");
 
         m = Objects.iterate(m, new Closure<ObjectIterator.IterateBean, Object>() {
             @Override
@@ -121,9 +120,12 @@ public class MongoDBFormat {
             }
         });
         DBObject obj = new BasicDBObject(m);
-        /*if(m.get("id")!=null){
-            obj.put("_id",parseId(""+m.get("id")));
-            obj.removeField("id");
+        //try to convert to ObjectId
+        /*if(m.get("_id")!=null) {
+            try {
+                m.put("_id", new ObjectId(""+m.get("_id")));
+            } catch (Throwable e) {
+            }
         }*/
         return obj;
     }
