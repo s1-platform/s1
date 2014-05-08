@@ -23,6 +23,7 @@ import org.s1.misc.Closure;
 import org.s1.objects.ObjectDiff;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
+import org.s1.objects.Ranges;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 
@@ -448,6 +449,18 @@ public class SystemFunctionSet extends ScriptFunctionSet {
         String id = Session.getSessionBean().getUserId();
         UserBean ub = Users.getUser(id);
         return Users.isUserInRole(ub,role);
+    }
+
+    public List<Long> getLongRange(Long min, Long max, Integer groups){
+        return Ranges.getLongRange(Objects.cast(min,Long.class),Objects.cast(max,Long.class),groups);
+    }
+
+    public List<Date> getDateRange(Date min, Date max, Integer groups){
+        return Ranges.getDateRange(Objects.cast(min,Date.class),Objects.cast(max,Date.class),groups);
+    }
+
+    public List<Double> getDoubleRange(Double min, Double max, Integer groups){
+        return Ranges.getDoubleRange(Objects.cast(min,Double.class),Objects.cast(max,Double.class),groups);
     }
     
 }

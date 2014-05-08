@@ -128,12 +128,11 @@ public class QueryTest extends ClusterTest {
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {
-                List<Map<String,Object>> res = Objects.newArrayList();
-                long c = MongoDBQueryHelper.list(res,new CollectionId(null,COLL),new BasicDBObject(
+                List<Map<String,Object>> res = MongoDBQueryHelper.list(new CollectionId(null,COLL),new BasicDBObject(
                         "index",Objects.newHashMap("$lte",50)),
                         new BasicDBObject("index",-1),
                         new BasicDBObject("str2",0),0,10);
-                assertEquals(51L,c);
+                //assertEquals(51L,c);
                 assertEquals(10,res.size());
                 assertEquals(50,res.get(0).get("index"));
             }

@@ -149,37 +149,7 @@ public class TableWebTest extends HttpServerTest {
                             assertEquals(1, l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));*/
 
-                            //aggregate
-                            m = client().postJSON(getContext()+"/dispatcher/Table.aggregate",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "field","b"
-                            ));
-                            assertEquals(0,Objects.get(Integer.class,m,"min").intValue());
-                            assertEquals(p-1,Objects.get(Integer.class,m,"max").intValue());
-                            double avg = 0;
-                            for(int i=0;i<p;i++){
-                                avg+=i;
-                            }
-                            avg = avg/p;
-                            assertEquals(avg,Objects.get(Double.class,m,"avg").doubleValue());
-                            assertTrue(Objects.get(Long.class,m,"sum").longValue() >= p-1);
-                            assertEquals(p,Objects.get(Integer.class,m,"count").intValue());
 
-                            //count group
-                            m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "field","b"
-                            ));
-                            assertTrue(Objects.get(List.class,m,"list").size()>0);
-                            if(input==0)
-                                trace(Objects.get(m,"list"));
-                            m = client().postJSON(getContext()+"/dispatcher/Table.countGroup",Objects.newHashMap(String.class,Object.class,
-                                    "table","table1",
-                                    "field","a"
-                            ));
-                            assertTrue(Objects.get(List.class,m,"list").size()>0);
-                            if(input==0)
-                                trace(Objects.get(m,"list"));
 
 
                         } catch (Throwable e) {

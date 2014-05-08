@@ -27,7 +27,6 @@ import org.s1.script.S1ScriptEngine;
 import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
 import org.s1.table.AggregationBean;
-import org.s1.table.CountGroupBean;
 import org.s1.table.ImportResultBean;
 import org.s1.table.Table;
 import org.s1.table.errors.AlreadyExistsException;
@@ -198,27 +197,7 @@ public class TableTest extends ClusterTest {
                             assertEquals("a_0", Objects.get(l.get(0), "a"));*/
 
                             //aggregate
-                            AggregationBean ab = t.aggregate("b", null);
-                            assertEquals(0,ab.getMin());
-                            assertEquals(p-1,ab.getMax());
-                            double avg = 0;
-                            for(int i=0;i<p;i++){
-                                avg+=i;
-                            }
-                            if(input==0)
-                                trace(ab);
-                            avg = avg/p;
-                            assertEquals(avg,ab.getAvg());
-                            assertTrue((Integer) ab.getSum() >= p-1);
-                            assertEquals((long)p,ab.getCount());
 
-                            //count group
-                            List<CountGroupBean> lc = t.countGroup("b", null);
-                            if(input==0)
-                                trace(lc);
-                            lc = t.countGroup("a",null);
-                            if(input==0)
-                                trace(lc);
 
 
                         } catch (Throwable e) {

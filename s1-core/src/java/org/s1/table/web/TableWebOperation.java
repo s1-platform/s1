@@ -27,6 +27,7 @@ import org.s1.weboperation.WebOperationMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -86,21 +87,19 @@ public class TableWebOperation extends MapWebOperation{
     }
 
     @WebOperationMethod
-    public Map<String,Object> countGroup(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String field = Objects.get(params,"field");
-        List<CountGroupBean> l = getTable(params).countGroup(field,getQuery(params));
-        List<Map<String,Object>> r = Objects.newArrayList();
-        for(CountGroupBean c:l){
-            r.add(c.toMap());
-        }
-        return Objects.newHashMap("list", r);
+    public Map<String,Object> listOnly(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        Map<String,Object> ctx = Objects.get(params,"context");
+        int skip = Objects.get(Integer.class,params,"skip");
+        int max = Objects.get(Integer.class,params,"max");
+
+        List<Map<String,Object>> l = getTable(params).list(getQuery(params), getSort(params), getFieldsMask(params), skip, max, ctx);
+        return Objects.newHashMap("list",l);
     }
 
     @WebOperationMethod
-    public Map<String,Object> aggregate(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String field = Objects.get(params,"field");
-        AggregationBean a = getTable(params).aggregate(field,getQuery(params));
-        return a.toMap();
+    public Map<String,Object> count(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
+        long c = getTable(params).count(getQuery(params));
+        return Objects.newHashMap("count",c);
     }
 
     @WebOperationMethod

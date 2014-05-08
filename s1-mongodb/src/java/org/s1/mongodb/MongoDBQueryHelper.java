@@ -117,7 +117,6 @@ public class MongoDBQueryHelper {
 
     /**
      *
-     * @param res
      * @param c
      * @param search
      * @param sort
@@ -126,28 +125,11 @@ public class MongoDBQueryHelper {
      * @param max
      * @return
      */
-    public static long list(List<Map<String, Object>> res, CollectionId c,
+    public static List<Map<String, Object>> list(CollectionId c,
                             Map<String,Object> search, Map<String,Object> sort,
                             Map<String,Object> fields, int skip, int max) {
-        return list(res, c,search,sort,fields,skip,max,null);
-    }
-
-    /**
-     *
-     * @param res
-     * @param c
-     * @param search
-     * @param sort
-     * @param fields
-     * @param skip
-     * @param max
-     * @param prepareCursor
-     * @return
-     */
-    public static long list(List<Map<String, Object>> res, CollectionId c,
-                            Map<String,Object> search, Map<String,Object> sort,
-                            Map<String,Object> fields, int skip, int max, Closure<DBCursor,DBCursor> prepareCursor) {
-        DBCollection coll = MongoDBConnectionHelper.getConnection(c.getDatabase()).getCollection(c.getCollection());
+        List<Map<String, Object>> res = Objects.newArrayList();
+        DBCollection coll = MongoDBConnectionHelper.getCollection(c);
 
         if (search == null)
             search = Objects.newHashMap();
@@ -162,10 +144,6 @@ public class MongoDBQueryHelper {
             cur = cur.sort(MongoDBFormat.fromMap(sort));
         }
 
-        if(prepareCursor!=null){
-            cur = prepareCursor.call(cur);
-        }
-
         while (cur.hasNext()) {
             DBObject obj = cur.next();
 
@@ -174,14 +152,11 @@ public class MongoDBQueryHelper {
             res.add(m);
         }
 
-        long cnt = cur.getCollection().count(cur.getQuery());
-
         if(LOG.isDebugEnabled())
             LOG.debug("MongoDB list result ("+c+", search:"+search+", sort:"+sort+", fields:"+fields+", max:"+max+", skip:"+skip +
-                    "\n\t>count: "+cnt +
                     "\n\t> "+res);
 
-        return cnt;
+        return res;
     }
 
     /**

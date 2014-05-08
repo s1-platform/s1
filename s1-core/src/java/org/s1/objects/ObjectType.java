@@ -81,49 +81,51 @@ public class ObjectType {
                 obj = "";
             obj = obj.toString();
         } else if (type == BigInteger.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             obj = new BigInteger("" + obj);
         } else if (type == BigDecimal.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             obj = new BigDecimal("" + obj);
         } else if (type == Integer.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Integer){
 
             }else
                 obj = new BigDecimal(""+obj).intValue();
         } else if (type == Long.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Long){
 
             }else
                 obj = new BigDecimal(""+obj).longValue();
         } else if (type == Float.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Float){
 
             }else
                 obj = new BigDecimal(""+obj).floatValue();
         } else if (type == Double.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Double){
 
             }else
                 obj = new BigDecimal(""+obj).doubleValue();
         } else if (type == Boolean.class) {
-            if (obj == null)
+            if (obj == null || (""+obj).isEmpty())
                 obj = "false";
             if(obj instanceof Number){
                 obj = ((Number) obj).intValue()!=0;
             }else
                 obj = Boolean.parseBoolean("" + obj);
         } else if (type == Date.class) {
+            if((""+obj).isEmpty())
+                obj = null;
             if (obj != null) {
                 if (obj instanceof String) {
                     obj = new Date(Long.parseLong("" + obj));

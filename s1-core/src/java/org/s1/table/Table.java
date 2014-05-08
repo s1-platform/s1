@@ -24,6 +24,7 @@ import org.s1.cluster.dds.beans.StorageId;
 import org.s1.misc.Closure;
 import org.s1.objects.BadDataException;
 import org.s1.objects.Objects;
+import org.s1.objects.Ranges;
 import org.s1.table.errors.*;
 import org.s1.table.format.*;
 import org.s1.user.AccessDeniedException;
@@ -169,6 +170,41 @@ public abstract class Table {
 
     }
 
+    public long count(Query search) throws AccessDeniedException {
+        checkAccess();
+        if (search == null)
+            search = new Query();
+        prepareSearch(search);
+
+        long count = getTableStorage().collectionCount(search);
+        return count;
+    }
+
+    public List<Map<String, Object>> list(Query search, Sort sort, FieldsMask fields,
+                     int skip, int max, Map<String, Object> ctx) throws AccessDeniedException {
+        if (ctx == null)
+            ctx = Objects.newHashMap();
+        checkAccess();
+        if (search == null)
+            search = new Query();
+        prepareSearch(search);
+
+        if (sort == null)
+            sort = new Sort();
+        prepareSort(sort);
+
+        List<Map<String, Object>> result = getTableStorage().collectionList(search, sort, fields, skip, max);
+        for (Map<String, Object> m : result) {
+            try {
+                enrichRecord(m, true, ctx);
+            } catch (Throwable e) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Error enrich: " + e.getMessage());
+            }
+        }
+        return result;
+    }
+
     public long list(List<Map<String, Object>> result,
                      Query search, Sort sort, FieldsMask fields,
                      int skip, int max, Map<String, Object> ctx) throws AccessDeniedException {
@@ -183,7 +219,8 @@ public abstract class Table {
             sort = new Sort();
         prepareSort(sort);
 
-        long count = getTableStorage().collectionList(result, search, sort, fields, skip, max);
+        result.addAll(getTableStorage().collectionList(search, sort, fields, skip, max));
+        long count = getTableStorage().collectionCount(search);
         for (Map<String, Object> m : result) {
             try {
                 enrichRecord(m, true, ctx);
@@ -224,20 +261,8 @@ public abstract class Table {
         return list(result, search, sort, fields, skip, max, null);
     }
 
-    public AggregationBean aggregate(String field, Query search) throws AccessDeniedException {
-        checkAccess();
-        if (search == null)
-            search = new Query();
-        prepareSearch(search);
-        return getTableStorage().collectionAggregate(field, search);
-    }
-
-    public List<CountGroupBean> countGroup(String field, Query search) throws AccessDeniedException {
-        checkAccess();
-        if (search == null)
-            search = new Query();
-        prepareSearch(search);
-        return getTableStorage().collectionCountGroup(field, search);
+    public List<Map<String, Object>> list(Query search, Sort sort, FieldsMask fields, int skip, int max) throws AccessDeniedException {
+        return list(search, sort, fields, skip, max, null);
     }
 
     /*==========================================

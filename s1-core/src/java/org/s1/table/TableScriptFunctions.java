@@ -84,43 +84,29 @@ public class TableScriptFunctions extends ScriptFunctionSet {
         return getTable(table).list(list, q, s, f, skip, max, ctx);
     }
 
-    /**
-     *
-     * @param table
-     * @param field
-     * @param search
-     * @return
-     * @throws AccessDeniedException
-     */
-    public Map<String,Object> aggregate(String table, String field, Map<String,Object> search) throws AccessDeniedException {
+    public List<Map<String,Object>> listOnly(String table, Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fieldMask, Integer skip, Integer max, Map<String,Object> ctx) throws AccessDeniedException {
         Query q = new Query();
         if(search!=null){
             q.fromMap(search);
         }
-        return getTable(table).aggregate(field, q).toMap();
+        Sort s = new Sort();
+        if(sort!=null){
+            s.fromMap(sort);
+        }
+        FieldsMask f = new FieldsMask();
+        if(fieldMask!=null){
+            f.fromMap(fieldMask);
+        }
+        return getTable(table).list(q, s, f, skip, max, ctx);
     }
 
-    /**
-     *
-     * @param table
-     * @param field
-     * @param search
-     * @return
-     * @throws AccessDeniedException
-     */
-    public List<Map<String,Object>> countGroup(String table, String field, Map<String,Object> search) throws AccessDeniedException {
+    public long count(String table, Map<String,Object> search) throws AccessDeniedException {
         Query q = new Query();
         if(search!=null){
             q.fromMap(search);
         }
-        List<Map<String,Object>> l = Objects.newArrayList();
-        List<CountGroupBean> lc = getTable(table).countGroup(field, q);
-        for(CountGroupBean c:lc){
-            l.add(c.toMap());
-        }
-        return l;
+        return getTable(table).count(q);
     }
-
 
     public Map<String,Object> add(String table, String action, Map<String,Object> data) throws AlreadyExistsException, AccessDeniedException, ActionBusinessException, BadDataException {
         return getTable(table).add(action, data);

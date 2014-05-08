@@ -17,11 +17,9 @@
 package org.s1.mongodb.table;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import org.s1.cluster.dds.DistributedDataSource;
 import org.s1.cluster.dds.beans.Id;
-import org.s1.mongodb.MongoDBAggregationHelper;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.mongodb.MongoDBFormat;
 import org.s1.mongodb.MongoDBQueryHelper;
@@ -135,14 +133,19 @@ public class MongoDBTableStorage extends TableStorage{
     }
 
     @Override
-    public long collectionList(List<Map<String, Object>> result,
-                                  Query search, Sort sort, FieldsMask fields, int skip, int max) {
+    public long collectionCount(Query search) {
+        return MongoDBConnectionHelper.getCollection(getTable().getCollectionId()).count(MongoDBFormat.fromMap(MongoDBFormat.formatSearch(search)));
+    }
+
+    @Override
+    public List<Map<String, Object>> collectionList(Query search, Sort sort, FieldsMask fields, int skip, int max) {
+
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
         /*String fullTextQuery = Objects.get(search.getCustom(),"$text");
         if(search.getCustom()!=null)
             search.getCustom().remove("$text");*/
         //if(Objects.isNullOrEmpty(fullTextQuery)){
-            return MongoDBQueryHelper.list(result,getTable().getCollectionId(),
+            return MongoDBQueryHelper.list(getTable().getCollectionId(),
                     MongoDBFormat.formatSearch(search),
                     MongoDBFormat.formatSort(sort),
                     MongoDBFormat.formatFieldsMask(fields),skip,max);
@@ -156,19 +159,7 @@ public class MongoDBTableStorage extends TableStorage{
     @Override
     public Map<String, Object> collectionGet(Query search) throws NotFoundException, MoreThanOneFoundException {
         search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBQueryHelper.get(getTable().getCollectionId(),MongoDBFormat.formatSearch(search));
-    }
-
-    @Override
-    public AggregationBean collectionAggregate(String field, Query search) {
-        search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBAggregationHelper.aggregate(getTable().getCollectionId(),field,MongoDBFormat.formatSearch(search));
-    }
-
-    @Override
-    public List<CountGroupBean> collectionCountGroup(String field, Query search) {
-        search.setCustom(MongoDBFormat.escapeInjections(search.getCustom()));
-        return MongoDBAggregationHelper.countGroup(getTable().getCollectionId(), field, MongoDBFormat.formatSearch(search));
+        return MongoDBQueryHelper.get(getTable().getCollectionId(), MongoDBFormat.formatSearch(search));
     }
 
     @Override

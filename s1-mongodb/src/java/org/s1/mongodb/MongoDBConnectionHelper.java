@@ -18,6 +18,7 @@ package org.s1.mongodb;
 
 import com.mongodb.*;
 import org.s1.S1SystemError;
+import org.s1.cluster.dds.beans.CollectionId;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;
@@ -108,5 +109,9 @@ public class MongoDBConnectionHelper {
             initialize(instance);
         }
         return connections.get(instance);
+    }
+
+    public static DBCollection getCollection(CollectionId id) {
+        return getConnection(id.getDatabase()).getCollection(id.getCollection());
     }
 }

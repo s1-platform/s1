@@ -52,16 +52,12 @@ public abstract class TableStorage {
 
     public abstract void collectionRemove(String id);
 
-
-    public abstract long collectionList(List<Map<String, Object>> result,
-                                           Query search, Sort sort, FieldsMask fields,
+    public abstract List<Map<String, Object>> collectionList(Query search, Sort sort, FieldsMask fields,
                                            int skip, int max);
 
     public abstract Map<String, Object> collectionGet(Query search) throws NotFoundException, MoreThanOneFoundException;
 
-    public abstract AggregationBean collectionAggregate(String field, Query search);
-
-    public abstract List<CountGroupBean> collectionCountGroup(String field, Query search);
+    public abstract long collectionCount(Query search);
 
     public abstract void collectionIndex(String name, IndexBean ind);
 

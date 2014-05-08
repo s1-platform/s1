@@ -71,3 +71,10 @@ assert("asList#3",s1.asList(1)[0]==1);
 assert("asList#4",s1.length(s1.asList([1]))==1);
 assert("asList#5",s1.length(s1.asList([1,2]))==2);
 assert("asList#6",s1.asList([1])[0]==1);
+
+//range
+assert("range#1",s1.length(s1.getLongRange(1,10,10))==10);
+print(s1.length(s1.getDoubleRange(0,12,10)))
+assert("range#2",s1.length(s1.getDoubleRange(0,12,10))==11);
+print(s1.length(s1.getDateRange(s1.parseDate('2010-12-12','yyyy-MM-dd'),s1.parseDate('2010-12-13','yyyy-MM-dd'),10)))
+assert("range#3",s1.length(s1.getDateRange(s1.parseDate('2010-12-12','yyyy-MM-dd'),s1.parseDate('2010-12-13','yyyy-MM-dd'),10))==10);
