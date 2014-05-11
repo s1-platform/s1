@@ -77,4 +77,4 @@ assert("range#1",s1.length(s1.getLongRange(1,10,10))==10);
 print(s1.length(s1.getDoubleRange(0,12,10)))
 assert("range#2",s1.length(s1.getDoubleRange(0,12,10))==11);
 print(s1.length(s1.getDateRange(s1.parseDate('2010-12-12','yyyy-MM-dd'),s1.parseDate('2010-12-13','yyyy-MM-dd'),10)))
-assert("range#3",s1.length(s1.getDateRange(s1.parseDate('2010-12-12','yyyy-MM-dd'),s1.parseDate('2010-12-13','yyyy-MM-dd'),10))==10);
+assert("range#3",s1.length(s1.getDateRange(s1.parseDate('2010-12-12','yyyy-MM-dd'),s1.parseDate('2010-12-13','yyyy-MM-dd'),10))<=11);

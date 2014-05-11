@@ -14,26 +14,20 @@
  *    limitations under the License.
  */
 
-package org.s1.weboperation;
+package org.s1.objects;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * WebOperation method not found
+ * Web operation method
  */
-public class MethodNotFoundException extends Exception {
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MapMethod {
 
-    public MethodNotFoundException() {
-        super();
-    }
+    public String[] names() default {};
 
-    public MethodNotFoundException(String message) {
-        super(message);
-    }
-
-    public MethodNotFoundException(String message, Throwable cause) {
-        super(message,cause);
-    }
-
-    public MethodNotFoundException(Throwable cause) {
-        super(cause);
-    }
 }

@@ -20,10 +20,7 @@ import org.s1.cluster.Session;
 import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.Closure;
-import org.s1.objects.ObjectDiff;
-import org.s1.objects.ObjectIterator;
-import org.s1.objects.Objects;
-import org.s1.objects.Ranges;
+import org.s1.objects.*;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 
@@ -46,6 +43,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param o
      * @return
      */
+    @MapMethod
     public int length(Object o){
         if(o instanceof List){
             return ((List) o).size();
@@ -64,6 +62,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param end
      * @return
      */
+    @MapMethod
     public String substring(String s, Integer start, Integer end){
         return s.substring(start,end);
     }
@@ -74,6 +73,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param pos
      * @return
      */
+    @MapMethod
     public String charAt(String s, Integer pos){
         return ""+s.charAt(pos);
     }
@@ -83,6 +83,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param s
      * @return
      */
+    @MapMethod
     public String toUpperCase(String s){
         return s.toUpperCase();
     }
@@ -92,6 +93,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param s
      * @return
      */
+    @MapMethod
     public String toLowerCase(String s){
         return s.toLowerCase();
     }
@@ -102,6 +104,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param a
      * @return
      */
+    @MapMethod
     public boolean startsWith(String s, String a){
         return s.startsWith(a);
     }
@@ -112,6 +115,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param a
      * @return
      */
+    @MapMethod
     public boolean endsWith(String s, String a){
         return s.endsWith(a);
     }
@@ -123,6 +127,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param b replace with
      * @return
      */
+    @MapMethod
     public String replace(String s, String a, String b){
         return s.replace(a, b);
     }
@@ -134,6 +139,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param b replace with
      * @return
      */
+    @MapMethod
     public String replaceAll(String s, String a, String b){
         return s.replaceAll(a, b);
     }
@@ -145,6 +151,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param b replace with
      * @return
      */
+    @MapMethod
     public String replaceFirst(String s, String a, String b){
         return s.replaceFirst(a, b);
     }
@@ -155,6 +162,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param a regex
      * @return
      */
+    @MapMethod
     public List<String> split(String s, String a){
         return Objects.newArrayList(s.split(a));
     }
@@ -165,6 +173,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param a regex
      * @return
      */
+    @MapMethod
     public boolean matches(String s, String a){
         return s.matches(a);
     }
@@ -175,6 +184,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param args
      * @return
      */
+    @MapMethod
     public Map<String,Object> merge(List<Map<String,Object>> args){
         return Objects.merge(args);
     }
@@ -186,6 +196,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param nw
      * @return
      */
+    @MapMethod
     public List<Map<String,Object>> diff(Map<String,Object> old, Map<String,Object> nw){
         List<ObjectDiff.DiffBean> l = Objects.diff(old,nw);
         List<Map<String,Object>> list = Objects.newArrayList();
@@ -204,6 +215,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param f function(path,value,name){...}
      * @return
      */
+    @MapMethod
     public Map<String,Object> iterate(Map<String,Object> o, final ScriptFunction f){
         return Objects.iterate(o,new Closure<ObjectIterator.IterateBean, Object>() {
             @Override
@@ -217,22 +229,27 @@ public class SystemFunctionSet extends ScriptFunctionSet {
         });
     }
 
+    @MapMethod
     public Map<String,Object> toWire(Map<String,Object> o){
         return Objects.toWire(o);
     }
 
+    @MapMethod
     public Map<String,Object> fromWire(Map<String,Object> o){
         return Objects.fromWire(o);
     }
 
+    @MapMethod
     public String toJSON(Map<String,Object> o){
         return JSONFormat.toJSON(o);
     }
 
+    @MapMethod
     public Map<String,Object> evalJSON(String json) throws JSONFormatException {
         return JSONFormat.evalJSON(json);
     }
 
+    @MapMethod
     public List asList(Object o, Boolean evenIfNull) throws JSONFormatException {
         if(evenIfNull==null)
             return Objects.asList(o);
@@ -245,6 +262,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param e
      * @return
      */
+    @MapMethod
     public boolean contains(Object o, Object e){
         if(o instanceof String){
             return ((String) o).contains(Objects.cast(e, String.class));
@@ -260,6 +278,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param e
      * @return
      */
+    @MapMethod
     public int indexOf(Object o, Object e){
         if(o instanceof String){
             return ((String) o).indexOf(Objects.cast(e,String.class));
@@ -275,6 +294,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param e
      * @return
      */
+    @MapMethod
     public int lastIndexOf(Object o, Object e){
         if(o instanceof String){
             return ((String) o).lastIndexOf(Objects.cast(e, String.class));
@@ -289,6 +309,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      *
      * @return
      */
+    @MapMethod
     public Date now(){
         return new Date();
     }
@@ -300,6 +321,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param format
      * @return
      */
+    @MapMethod
     public Date parseDate(String d, String format){
         return Objects.parseDate(d,format);
     }
@@ -311,14 +333,17 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param format
      * @return
      */
+    @MapMethod
     public String formatDate(Date d, String format){
         return Objects.formatDate(d, format);
     }
 
+    @MapMethod
     public Double parseNumber(Object n){
         return Objects.cast(n, Double.class);
     }
 
+    @MapMethod
     public String formatNumber(Object n, String groupSeparator,String decimalSeparator, String format){
         if(Objects.isNullOrEmpty(groupSeparator))
             groupSeparator=",";
@@ -339,6 +364,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      *
      * @param o
      */
+    @MapMethod
     public void clear(Object o){
         if(o instanceof Map){
             ((Map) o).clear();
@@ -353,6 +379,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param m
      * @param m2
      */
+    @MapMethod
     public void putAll(Map<String,Object> m, Map<String,Object> m2){
         m.putAll(m2);
     }
@@ -363,6 +390,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param m
      * @return
      */
+    @MapMethod
     public List<String> keys(Map<String,Object> m){
         List<String> l = Objects.newArrayList();
         for(String k:m.keySet()){
@@ -377,6 +405,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param m
      * @return
      */
+    @MapMethod
     public List<Object> values(Map<String,Object> m){
         List<Object> l = Objects.newArrayList();
         for(Object k:m.values()){
@@ -390,6 +419,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param l
      * @param o
      */
+    @MapMethod
     public void add(List<Object> l, Object o){
         getContext().getMemoryHeap().take(o);
         l.add(o);
@@ -400,11 +430,13 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param l
      * @param o
      */
+    @MapMethod
     public void addAll(List<Object> l, List<Object> o){
         getContext().getMemoryHeap().take(o);
         l.addAll(o);
     }
 
+    @MapMethod
     public void remove(List<Object> l, Integer i){
         l.remove(i.intValue());
     }
@@ -416,6 +448,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param def
      * @return
      */
+    @MapMethod
     public Object get(Map<String,Object> m, String path, Object def){
         return Objects.get(m,path,def);
     }
@@ -426,6 +459,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      * @param path
      * @param val
      */
+    @MapMethod
     public void set(Map<String,Object> m, String path, Object val){
         getContext().getMemoryHeap().take(path);
         getContext().getMemoryHeap().take(val);
@@ -436,6 +470,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      *
      * @return
      */
+    @MapMethod
     public Map<String,Object> whoAmI() {
         String id = Session.getSessionBean().getUserId();
         return Users.getUser(id);
@@ -445,20 +480,24 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      *
      * @return
      */
+    @MapMethod
     public boolean inRole(String role) {
         String id = Session.getSessionBean().getUserId();
         UserBean ub = Users.getUser(id);
         return Users.isUserInRole(ub,role);
     }
 
+    @MapMethod
     public List<Long> getLongRange(Long min, Long max, Integer groups){
         return Ranges.getLongRange(Objects.cast(min,Long.class),Objects.cast(max,Long.class),groups);
     }
 
+    @MapMethod
     public List<Date> getDateRange(Date min, Date max, Integer groups){
         return Ranges.getDateRange(Objects.cast(min,Date.class),Objects.cast(max,Date.class),groups);
     }
 
+    @MapMethod
     public List<Double> getDoubleRange(Double min, Double max, Integer groups){
         return Ranges.getDoubleRange(Objects.cast(min,Double.class),Objects.cast(max,Double.class),groups);
     }

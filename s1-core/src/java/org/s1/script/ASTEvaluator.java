@@ -25,6 +25,7 @@ import org.s1.script.errors.LoopBreakException;
 import org.s1.script.errors.LoopContinueException;
 import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
+import org.s1.script.function.ScriptFunctionSet;
 
 import java.util.Iterator;
 import java.util.List;
@@ -253,10 +254,13 @@ public class ASTEvaluator {
             getResult = ctx.get(((Name) node).getIdentifier());
         }else if(node instanceof PropertyGet){
             Object obj = get(((PropertyGet) node).getTarget(),ctx);
-            if(!(obj instanceof Map)){
+            if(obj instanceof ScriptFunctionSet){
+                getResult = ((ScriptFunctionSet) obj).getFunction(((PropertyGet) node).getProperty().getIdentifier());
+            }else if(obj instanceof Map){
+                getResult = ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
+            }else{
                 throwScriptError("Object is not instance of Map",node);
             }
-            getResult = ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
         }else if(node instanceof ElementGet){
             Object obj = get(((ElementGet) node).getTarget(),ctx);
 
@@ -268,10 +272,16 @@ public class ASTEvaluator {
                 if(((List) obj).size()>((Number) o).intValue())
                     getResult = ((List) obj).get(((Number) o).intValue());
             }else{
+                if(obj instanceof ScriptFunctionSet){
+                    getResult = ((ScriptFunctionSet) obj).getFunction(""+o);
+                }else if(obj instanceof Map){
+                    getResult = ((Map) obj).get(o);
+                }else{
+                    throwScriptError("Object is not instance of Map",node);
+                }
                 if(!(obj instanceof Map)){
                     throwScriptError("Object is not instance of Map",node);
                 }
-                getResult = ((Map) obj).get(o);
             }
         }else if(node instanceof KeywordLiteral){
             if(((KeywordLiteral) node).isBooleanLiteral()){

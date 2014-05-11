@@ -239,19 +239,25 @@ public class S1ScriptEngine {
         for(final Map<String,Object> f:functions){
             String clName = Objects.get(f,"class");
             String ns = Objects.get(f,"namespace","");
-            if(ns.length()>0 && !ns.endsWith("."))
-                ns+=".";
+            Map<String,Object> set_cfg = Objects.get(f,"config",Objects.newSOHashMap());
             Class<? extends ScriptFunctionSet> cls = null;
             try {
                 cls = (Class<? extends ScriptFunctionSet>)Class.forName(clName);
-                addFunctions(ns, ctx, cls);
+                ScriptFunctionSet set = cls.newInstance();
+                set.setConfig(set_cfg);
+                set.setContext(new Context(getMemoryLimit()));
+                Objects.set(ctx.getVariables(),ns,set);
             } catch (Throwable e) {
                 LOG.warn("Class "+cls+" cannot be initialized as ScriptFunctions: "+e.getMessage(),e);
             }
         }
 
         //system functions
-        addFunctions(SYSTEM_FUNCTION_NS+".", ctx, SystemFunctionSet.class);
+        ScriptFunctionSet set = new SystemFunctionSet();
+        //set.setConfig(set_cfg);
+        set.setContext(new Context(getMemoryLimit()));
+        Objects.set(ctx.getVariables(),SYSTEM_FUNCTION_NS,set);
+
         final Session.SessionBean sb = Session.getSessionBean();
 
         Future<Object> f = null;
@@ -365,46 +371,6 @@ public class S1ScriptEngine {
      * System functions namespace
      */
     public static final String SYSTEM_FUNCTION_NS = "s1";
-
-    /**
-     *
-     * @param ns
-     * @param c
-     * @param cls
-     */
-    private void addFunctions(final String ns, Context c, final Class<? extends ScriptFunctionSet> cls){
-        for(final Method method:cls.getDeclaredMethods()){
-            if(!Modifier.isPublic(method.getModifiers())){
-                continue;
-            }
-            if(LOG.isTraceEnabled()){
-                LOG.trace(ns + method.getName() + " -> " + cls.getName() + "#" + method.getName());
-            }
-            Objects.set(c.getVariables(), ns+method.getName(), new ScriptFunction(new Context(getMemoryLimit()), Objects.newArrayList(String.class)) {
-                @Override
-                public Object call() throws ScriptException {
-                    List args = getContext().get("arguments");
-                    try {
-                        for(int i=0;i<method.getParameterTypes().length;i++){
-                            if(args.size()>i){
-                                args.set(i,Objects.cast(args.get(i),method.getParameterTypes()[i]));
-                            }else{
-                                args.add(null);
-                            }
-                        }
-                        if(LOG.isTraceEnabled()){
-                            LOG.trace(ns+method.getName()+"("+args+")");
-                        }
-                        ScriptFunctionSet sf = cls.newInstance();
-                        sf.setContext(getContext());
-                        return method.invoke(sf, args.toArray());
-                    } catch (Throwable e) {
-                        throw new ScriptException(ns+method.getName()+": "+e.getMessage(), e);
-                    }
-                }
-            });
-        }
-    }
 
     public void invalidateCache(String name){
         astCache.invalidate(name);
@@ -613,5 +579,7 @@ public class S1ScriptEngine {
         //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null).getClass());
         //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null));
         System.out.println(se.evalInFunction(Object.class,"return s1.formatNumber(10012.21)",null));
+
+        stopAll();
     }
 }

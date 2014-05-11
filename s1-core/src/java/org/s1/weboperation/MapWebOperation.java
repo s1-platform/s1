@@ -20,6 +20,7 @@ import org.s1.S1SystemError;
 import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.IOUtils;
+import org.s1.objects.MethodNotFoundException;
 import org.s1.objects.Objects;
 import org.slf4j.MDC;
 

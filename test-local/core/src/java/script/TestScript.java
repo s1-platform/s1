@@ -42,7 +42,7 @@ public class TestScript extends BasicTest{
                         else
                             b = !Objects.isNullOrEmpty(o);
                         if(!b)
-                            throw new ScriptException(getContext().getVariables().get("message"));
+                            throw new ScriptException("Assertion failed: " +getContext().getVariables().get("message"));
                         return null;
                     }
                 },

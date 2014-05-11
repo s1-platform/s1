@@ -17,9 +17,8 @@
 package org.s1.weboperation;
 
 import org.s1.cluster.Session;
-import org.s1.misc.Closure;
+import org.s1.objects.MethodNotFoundException;
 import org.s1.objects.Objects;
-import org.s1.script.ASTEvaluator;
 import org.s1.script.S1ScriptEngine;
 import org.s1.user.AccessDeniedException;
 import org.slf4j.Logger;
@@ -286,7 +285,7 @@ public abstract class WebOperation<I, O> {
      * Throws method not found
      *
      * @param method
-     * @throws MethodNotFoundException
+     * @throws org.s1.objects.MethodNotFoundException
      */
     public static void throwMethodNotFound(String method) throws MethodNotFoundException {
         throw new MethodNotFoundException("Method " + method + " not found");

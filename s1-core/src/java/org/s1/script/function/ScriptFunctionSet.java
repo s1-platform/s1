@@ -16,7 +16,13 @@
 
 package org.s1.script.function;
 
+import org.s1.objects.MapMethodWrapper;
+import org.s1.objects.Objects;
 import org.s1.script.Context;
+import org.s1.script.errors.ScriptException;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for script functions
@@ -24,6 +30,15 @@ import org.s1.script.Context;
 public abstract class ScriptFunctionSet {
 
     private Context context;
+    private Map<String,Object> config;
+
+    public Map<String, Object> getConfig() {
+        return config;
+    }
+
+    public void setConfig(Map<String, Object> config) {
+        this.config = config;
+    }
 
     /**
      * Get function context
@@ -36,5 +51,23 @@ public abstract class ScriptFunctionSet {
 
     public void setContext(Context context) {
         this.context = context;
+    }
+
+    public Object callFunction(String method, List<Object> args) throws Exception{
+        return MapMethodWrapper.findAndInvoke(this,method,args);
+    }
+
+    public ScriptFunction getFunction(final String name){
+        return new ScriptFunction(getContext(), Objects.newArrayList(String.class)) {
+            @Override
+            public Object call() throws ScriptException {
+                List<Object> args = getContext().get("arguments");
+                try {
+                    return callFunction(name,args);
+                } catch (Exception e) {
+                    throw new ScriptException(e.getMessage(),e);
+                }
+            }
+        };
     }
 }

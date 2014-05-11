@@ -19,6 +19,7 @@ package org.s1.objects;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Type utils
@@ -88,35 +89,35 @@ public class ObjectType {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             obj = new BigDecimal("" + obj);
-        } else if (type == Integer.class) {
+        } else if (type == Integer.class || type == int.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Integer){
 
             }else
                 obj = new BigDecimal(""+obj).intValue();
-        } else if (type == Long.class) {
+        } else if (type == Long.class || type==long.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Long){
 
             }else
                 obj = new BigDecimal(""+obj).longValue();
-        } else if (type == Float.class) {
+        } else if (type == Float.class || type==float.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Float){
 
             }else
                 obj = new BigDecimal(""+obj).floatValue();
-        } else if (type == Double.class) {
+        } else if (type == Double.class || type==double.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Double){
 
             }else
                 obj = new BigDecimal(""+obj).doubleValue();
-        } else if (type == Boolean.class) {
+        } else if (type == Boolean.class || type==boolean.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "false";
             if(obj instanceof Number){
@@ -132,6 +133,10 @@ public class ObjectType {
                 } else if (obj instanceof Long) {
                     obj = new Date((Long) obj);
                 }
+            }
+        } else if(type.isEnum()){
+            if(obj != null && obj instanceof String){
+                obj = Enum.valueOf((Class<? extends Enum>)type,((String) obj).toUpperCase());
             }
         }
 
