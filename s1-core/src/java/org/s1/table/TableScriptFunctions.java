@@ -17,6 +17,7 @@
 package org.s1.table;
 
 import org.s1.objects.BadDataException;
+import org.s1.objects.MapMethodWrapper;
 import org.s1.objects.Objects;
 import org.s1.script.function.ScriptFunctionSet;
 import org.s1.table.errors.*;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * API for S1 scripting
+ *
  */
 public class TableScriptFunctions extends ScriptFunctionSet {
 
@@ -42,99 +43,11 @@ public class TableScriptFunctions extends ScriptFunctionSet {
         return Tables.get(table);
     }
 
-    /**
-     *
-     * @param table
-     * @param id
-     * @param ctx
-     * @return
-     * @throws NotFoundException
-     * @throws AccessDeniedException
-     */
-    public Map<String,Object> get(String table, String id, Map<String,Object> ctx) throws NotFoundException, AccessDeniedException {
-        return getTable(table).get(id, ctx);
+    @Override
+    public Object callFunction(String method, List<Object> args) throws Exception {
+        String table = (String)args.get(0);
+        args = args.subList(1,args.size());
+        return MapMethodWrapper.findAndInvoke(getTable(table), method, args);
     }
 
-    /**
-     *
-     * @param table
-     * @param list
-     * @param search
-     * @param sort
-     * @param fieldMask
-     * @param skip
-     * @param max
-     * @param ctx
-     * @return
-     * @throws AccessDeniedException
-     */
-    public long list(String table, List<Map<String,Object>> list, Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fieldMask, Integer skip, Integer max, Map<String,Object> ctx) throws AccessDeniedException {
-        Query q = new Query();
-        if(search!=null){
-            q.fromMap(search);
-        }
-        Sort s = new Sort();
-        if(sort!=null){
-            s.fromMap(sort);
-        }
-        FieldsMask f = new FieldsMask();
-        if(fieldMask!=null){
-            f.fromMap(fieldMask);
-        }
-        return getTable(table).list(list, q, s, f, skip, max, ctx);
-    }
-
-    public List<Map<String,Object>> listOnly(String table, Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fieldMask, Integer skip, Integer max, Map<String,Object> ctx) throws AccessDeniedException {
-        Query q = new Query();
-        if(search!=null){
-            q.fromMap(search);
-        }
-        Sort s = new Sort();
-        if(sort!=null){
-            s.fromMap(sort);
-        }
-        FieldsMask f = new FieldsMask();
-        if(fieldMask!=null){
-            f.fromMap(fieldMask);
-        }
-        return getTable(table).list(q, s, f, skip, max, ctx);
-    }
-
-    public long count(String table, Map<String,Object> search) throws AccessDeniedException {
-        Query q = new Query();
-        if(search!=null){
-            q.fromMap(search);
-        }
-        return getTable(table).count(q);
-    }
-
-    public Map<String,Object> add(String table, String action, Map<String,Object> data) throws AlreadyExistsException, AccessDeniedException, ActionBusinessException, BadDataException {
-        return getTable(table).add(action, data);
-    }
-
-    public Map<String,Object> set(String table, String id, String action, Map<String,Object> data) throws AccessDeniedException, BadDataException, ActionBusinessException, NotFoundException, AlreadyExistsException {
-        return getTable(table).set(id, action, data);
-    }
-
-    public Map<String,Object> remove(String table, String id, String action, Map<String,Object> data) throws AccessDeniedException, ActionBusinessException, NotFoundException, BadDataException {
-        return getTable(table).remove(id, action, data);
-    }
-
-    /**
-     *
-     * @param table
-     * @return
-     */
-    public boolean isAccessAllowed(String table){
-        return getTable(table).isAccessAllowed();
-    }
-
-    /**
-     *
-     * @param table
-     * @return
-     */
-    public boolean isImportAccessAllowed(String table){
-        return getTable(table).isImportAllowed();
-    }
 }

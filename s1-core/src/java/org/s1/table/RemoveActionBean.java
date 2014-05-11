@@ -37,7 +37,7 @@ public class RemoveActionBean extends ActionBean{
     }
 
     protected final void removeInternal(String id){
-        getTable().getTableStorage().collectionRemove(id);
+        getTable().collectionRemove(id);
     }
 
 }

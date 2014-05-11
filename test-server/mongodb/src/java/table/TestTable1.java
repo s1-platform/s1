@@ -17,12 +17,14 @@
 package table;
 
 import org.s1.cluster.dds.beans.CollectionId;
-import org.s1.mongodb.table.MongoDBTableStorage;
-import org.s1.objects.BadDataException;
+import org.s1.mongodb.MongoDBQueryHelper;
+import org.s1.mongodb.table.MongoDBTable;
+import org.s1.objects.MapMethod;
 import org.s1.objects.Objects;
 import org.s1.table.*;
 import org.s1.table.errors.ActionBusinessException;
 import org.s1.table.errors.AlreadyExistsException;
+import org.s1.objects.BadDataException;
 import org.s1.user.AccessDeniedException;
 
 import java.util.List;
@@ -35,7 +37,7 @@ import java.util.UUID;
  * Date: 24.03.2014
  * Time: 12:24
  */
-public class TestTable1 extends Table {
+public class TestTable1 extends MongoDBTable {
 
     @Override
     public CollectionId getCollectionId() {
@@ -45,30 +47,40 @@ public class TestTable1 extends Table {
     @Override
     public List<IndexBean> getIndexes() {
         return Objects.newArrayList(
-                new IndexBean(Objects.newArrayList("a"),true,null)
-                );
-    }
-
-    @Override
-    protected TableStorage createTableStorage() {
-        return new MongoDBTableStorage();
-    }
-
-    @Override
-    protected Map<String, Object> mergeRecordBeforeImport(String id, Map<String, Object> oldObject, Map<String, Object> data) throws BadDataException {
-        if(Objects.isNullOrEmpty(id))
-            id = UUID.randomUUID().toString();
-        String a = Objects.get(data,"a");
-        int b = Objects.get(Integer.class,data,"b");
-        if(Objects.isNullOrEmpty(a))
-            throw new BadDataException("imp_aaa");
-
-        Map<String,Object> m = Objects.newSOHashMap(
-                "id",id,
-                "a",a,
-                "b",b
+                new IndexBean(Objects.newArrayList("a"))
         );
-        return m;
+    }
+
+    @Override
+    protected void checkUnique(Map<String, Object> object, boolean isNew) throws AlreadyExistsException {
+        Map<String,Object> search = Objects.newSOHashMap("a",Objects.get(object,"a"));
+        if(!isNew)
+            search = Objects.newSOHashMap("$and",
+                    Objects.newArrayList(
+                            search,
+                            Objects.newSOHashMap("id", Objects.newSOHashMap("$ne", Objects.get(object, "id")))
+                    ));
+        MongoDBQueryHelper.ensureNotExists(getCollectionId(),search);
+    }
+
+    @MapMethod(names = {"list"})
+    public int doImport(List<Map<String,Object>> list){
+        int s = 0;
+        for(Map<String,Object> m:list){
+            try {
+                String id = Objects.get(m, "id");
+                if (Objects.isNullOrEmpty(id)) {
+                    add("add", Objects.newSOHashMap("a", Objects.get(m, "a"),
+                            "b", Objects.get(m, "b")));
+                } else {
+                    set(id, "set", m);
+                }
+                s++;
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return s;
     }
 
     @Override
@@ -86,7 +98,7 @@ public class TestTable1 extends Table {
                         "a",a,
                         "b",b
                 );
-                addIternal(id, m);
+                addInternal(id, m);
                 return m;
             }
         });
@@ -102,7 +114,20 @@ public class TestTable1 extends Table {
                     throw new BadDataException("bbb1");
 
                 record.put("b",b);
-                setIternal(id,record);
+                setInternal(id, record);
+                return record;
+            }
+        },new SetActionBean("set"){
+            @Override
+            public Map<String, Object> run(String id, Map<String, Object> record, Map<String, Object> data) throws AccessDeniedException, ActionBusinessException, AlreadyExistsException, BadDataException {
+                String a = Objects.get(data,"a");
+                int b = Objects.get(Integer.class,data,"b");
+                if(Objects.isNullOrEmpty(a))
+                    throw new BadDataException("aaa");
+
+                record.put("a",a);
+                record.put("b",b);
+                setInternal(id, record);
                 return record;
             }
         });

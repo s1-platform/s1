@@ -39,7 +39,7 @@ public class TableWebTest extends HttpServerTest {
 
     @BeforeMethod
     protected void clear() throws Exception {
-        Table t = new TestTable1();
+        TestTable1 t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
@@ -114,10 +114,14 @@ public class TableWebTest extends HttpServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "skip",0,"max",10,
-                                    "search",Objects.newHashMap("node",Objects.newHashMap("field","a","operation","equals","value","a_"+input))
+                                    "search",Objects.newSOHashMap("a","a_"+input)
                                     ));
-                            l = Objects.get(m,"list");
-                            c = Objects.get(m,"count");
+                            l = Objects.get(m,"result");
+                            m = client().postJSON(getContext()+"/dispatcher/Table.count",Objects.newHashMap(String.class,Object.class,
+                                    "table","table1",
+                                    "search",Objects.newSOHashMap("a","a_"+input)
+                            ));
+                            c = Objects.get(m,"result");
 
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
@@ -128,10 +132,14 @@ public class TableWebTest extends HttpServerTest {
                             m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
                                     "table","table1",
                                     "skip",0,"max",10,
-                                    "sort",Objects.newHashMap("name","a","desc",false)
+                                    "sort",Objects.newSOHashMap("a",1)
                             ));
-                            l = Objects.get(m,"list");
-                            c = Objects.get(m,"count");
+                            l = Objects.get(m,"result");
+                            m = client().postJSON(getContext()+"/dispatcher/Table.count",Objects.newHashMap(String.class,Object.class,
+                                    "table","table1"
+                            ));
+                            c = Objects.get(m,"result");
+
                             assertEquals((long) p, c);
                             assertEquals(Math.min(10,p), l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));

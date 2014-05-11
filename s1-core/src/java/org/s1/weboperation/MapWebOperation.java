@@ -218,4 +218,11 @@ public abstract class MapWebOperation extends WebOperation<Map<String,Object>,Ma
         m.put("errorClass", e.getClass().getName());
         return m;
     }
+
+    protected static Map<String,Object> asMap(Object o){
+        if(o instanceof Map){
+            return (Map<String,Object>)o;
+        }
+        return Objects.newSOHashMap("result",o);
+    }
 }

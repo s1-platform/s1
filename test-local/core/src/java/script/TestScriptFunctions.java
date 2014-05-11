@@ -1,5 +1,6 @@
 package script;
 
+import org.s1.objects.MapMethod;
 import org.s1.script.function.ScriptFunctionSet;
 
 /**
@@ -10,6 +11,7 @@ import org.s1.script.function.ScriptFunctionSet;
  */
 public class TestScriptFunctions extends ScriptFunctionSet {
 
+    @MapMethod
     public int sum(Integer a, Integer b){
         return a+b;
     }

@@ -21,13 +21,13 @@ import org.s1.S1SystemError;
 import org.s1.cluster.Session;
 import org.s1.misc.Closure;
 import org.s1.mongodb.MongoDBConnectionHelper;
+import org.s1.mongodb.table.MongoDBTable;
 import org.s1.objects.Objects;
 import org.s1.script.Context;
 import org.s1.script.S1ScriptEngine;
 import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
-import org.s1.table.AggregationBean;
-import org.s1.table.ImportResultBean;
+
 import org.s1.table.Table;
 import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.NotFoundException;
@@ -54,7 +54,7 @@ public class TableTest extends ClusterTest {
 
     @BeforeMethod
     protected void clear() throws Exception {
-        Table t = new TestTable1();
+        MongoDBTable t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
@@ -64,7 +64,7 @@ public class TableTest extends ClusterTest {
     public void testUnique() {
         final int p = 10;
 
-        final Table t = new TestTable1();
+        final TestTable1 t = new TestTable1();
         //add, set
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -96,7 +96,8 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals(1L,t.list(l, null, null, null, 0, 10));
+            l.addAll(t.list(null, null, null, 0, 10));
+            assertEquals(1L,t.count(null));
             assertEquals("a",Objects.get(l.get(0),"a"));
             assertEquals(1,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -107,7 +108,7 @@ public class TableTest extends ClusterTest {
     @Test
     public void testComplex() {
         final int p = 10;
-        final Table t = new TestTable1();
+        final TestTable1 t = new TestTable1();
 
         final Map<Integer, String> ids = Objects.newHashMap();
 
@@ -174,16 +175,16 @@ public class TableTest extends ClusterTest {
 
                             //list
                             List<Map<String, Object>> l = Objects.newArrayList();
-                            c = t.list(l, new Query(new FieldQueryNode(
-                                    "a", FieldQueryNode.FieldOperation.EQUALS, "a_"+input
-                            )), null, null, 0, 10);
+                            l.addAll(t.list(Objects.newSOHashMap("a","a_"+input), null, null, 0, 10));
+                            c = t.count(Objects.newSOHashMap("a","a_"+input));
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
                             assertEquals(id, Objects.get(l.get(0), "id"));
 
                             //list all
                             l.clear();
-                            c = t.list(l, null, new Sort("a",false), null, 0, 10);
+                            l.addAll(t.list(null, Objects.newSOHashMap("a",1), null, 0, 10));
+                            c = t.count(null);
                             assertEquals((long) p, c);
                             assertEquals(Math.min(10,p), l.size());
                             assertEquals("a_0", Objects.get(l.get(0), "a"));
@@ -248,7 +249,7 @@ public class TableTest extends ClusterTest {
     public void testExpImport() {
         final int p = 10;
         final int c = 10;
-        final Table t = new TestTable1();
+        final TestTable1 t = new TestTable1();
 
         //import new
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
@@ -268,8 +269,7 @@ public class TableTest extends ClusterTest {
                             l.add(Objects.newHashMap(String.class,Object.class,
                                     "a1","test_"
                             ));
-                            List<ImportResultBean> lr = t.doImport(l);
-                            assertEquals(c+1,lr.size());
+                            assertTrue(t.doImport(l)<=c);
                         } catch (Throwable e) {
                             throw S1SystemError.wrap(e);
                         }
@@ -282,7 +282,9 @@ public class TableTest extends ClusterTest {
 
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
-            assertEquals((long)c,t.list(l, null, new Sort("b", false), null, 0, 10));
+            l.clear();
+            l.addAll(t.list(null, Objects.newSOHashMap("b",1), null, 0, 10));
+            assertEquals((long)c,t.count(null));
             assertEquals("test_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -310,7 +312,9 @@ public class TableTest extends ClusterTest {
         }));
 
         try{
-            assertEquals((long)c,t.list(l, null, new Sort("b", false), null, 0, 10));
+            l.clear();
+            l.addAll(t.list(null, Objects.newSOHashMap("b",1), null, 0, 10));
+            assertEquals((long)c,t.count(null));
             assertEquals("qwer_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
         }catch (Exception e){
@@ -322,7 +326,7 @@ public class TableTest extends ClusterTest {
     public void testScript() {
         final int p = 10;
         final int c = 10;
-        final Table t = new TestTable1();
+        final TestTable1 t = new TestTable1();
 
         try {
             Session.start("s_" + 1);
@@ -338,8 +342,7 @@ public class TableTest extends ClusterTest {
                 l.add(Objects.newHashMap(String.class,Object.class,
                         "a1","test_"
                 ));
-                List<ImportResultBean> lr = t.doImport(l);
-                assertEquals(c+1,l.size());
+                assertEquals(c,t.doImport(l));
             } catch (Throwable e) {
                 throw S1SystemError.wrap(e);
             }
@@ -352,12 +355,14 @@ public class TableTest extends ClusterTest {
 
         String t1 = Objects.cast(se.eval(null,"var count = 0;\n" +
                 "var list = [];\n" +
-                "count = table.list('table1',list,{},{},{},0,10,{});\n" +
+                "count = table.count('table1',{});" +
+                "list = table.list('table1',{},{},{},0,10,{});\n" +
                 "s1.length(list);",Objects.newSOHashMap()),String.class);
         assertEquals(""+c,t1);
         String t2 = se.template(null,"<%var count = 0;\n" +
                 "var list = [];\n" +
-                "count = table.list('table1',list,{},{},{},0,10,{});\n" +
+                "count = table.count('table1',{});\n" +
+                "list = table.list('table1',{},{},{},0,10);\n" +
                 "%><%=s1.length(list)%>",Objects.newSOHashMap());
         assertEquals(""+c,t2);
     }

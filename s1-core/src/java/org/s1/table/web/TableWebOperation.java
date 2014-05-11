@@ -17,6 +17,7 @@
 package org.s1.table.web;
 
 import org.s1.S1SystemError;
+import org.s1.objects.MapMethodWrapper;
 import org.s1.objects.Objects;
 import org.s1.table.*;
 import org.s1.table.format.FieldsMask;
@@ -41,102 +42,8 @@ public class TableWebOperation extends MapWebOperation{
         return Tables.get(t);
     }
 
-    @WebOperationMethod
-    public Map<String,Object> get(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String id = Objects.get(params,"id");
-        Map<String,Object> ctx = Objects.get(params,"context");
-        return getTable(params).get(id,ctx);
-    }
-
-    protected Query getQuery(Map<String,Object> params){
-        Query q = new Query();
-        Map<String,Object> mq = Objects.get(params,"search");
-        if(!Objects.isNullOrEmpty(mq)){
-            q.fromMap(mq);
-        }
-        return q;
-    }
-
-    protected Sort getSort(Map<String,Object> params){
-        Sort q = new Sort();
-        Map<String,Object> mq = Objects.get(params,"sort");
-        if(!Objects.isNullOrEmpty(mq)){
-            q.fromMap(mq);
-        }
-        return q;
-    }
-
-    protected FieldsMask getFieldsMask(Map<String,Object> params){
-        FieldsMask q = new FieldsMask();
-        Map<String,Object> mq = Objects.get(params,"fields");
-        if(!Objects.isNullOrEmpty(mq)){
-            q.fromMap(mq);
-        }
-        return q;
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> list(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        Map<String,Object> ctx = Objects.get(params,"context");
-        int skip = Objects.get(Integer.class,params,"skip");
-        int max = Objects.get(Integer.class,params,"max");
-
-        List<Map<String,Object>> l = Objects.newArrayList();
-        long c = getTable(params).list(l, getQuery(params), getSort(params), getFieldsMask(params), skip, max, ctx);
-        return Objects.newHashMap("count",c,"list",l);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> listOnly(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        Map<String,Object> ctx = Objects.get(params,"context");
-        int skip = Objects.get(Integer.class,params,"skip");
-        int max = Objects.get(Integer.class,params,"max");
-
-        List<Map<String,Object>> l = getTable(params).list(getQuery(params), getSort(params), getFieldsMask(params), skip, max, ctx);
-        return Objects.newHashMap("list",l);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> count(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        long c = getTable(params).count(getQuery(params));
-        return Objects.newHashMap("count",c);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> add(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String action = Objects.get(params,"action");
-        Map<String,Object> data = Objects.get(params, "data");
-        return getTable(params).add(action,data);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> set(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String id = Objects.get(params,"id");
-        String action = Objects.get(params,"action");
-        Map<String,Object> data = Objects.get(params, "data");
-        return getTable(params).set(id,action,data);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> remove(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        String id = Objects.get(params,"id");
-        String action = Objects.get(params,"action");
-        Map<String,Object> data = Objects.get(params, "data");
-        return getTable(params).remove(id,action,data);
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> isAccessAllowed(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        return Objects.newHashMap("allowed",getTable(params).isAccessAllowed());
-    }
-
-    @WebOperationMethod
-    public Map<String,Object> isImportAccessAllowed(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception{
-        return Objects.newHashMap("allowed",getTable(params).isImportAllowed());
-    }
-
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return processClassMethods(this,method,params,request,response);
+        return asMap(MapMethodWrapper.findAndInvoke(getTable(params),method,params));
     }
 }

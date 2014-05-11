@@ -17,7 +17,7 @@ public abstract class BasicTest {
     protected static final Properties properties = new Properties();
     static {
         try {
-            //properties.load( BasicTest.class.getResourceAsStream("/s1test.properties"));
+            properties.load( BasicTest.class.getResourceAsStream("/s1test.properties"));
         } catch (Throwable e) {
             System.out.println("Cannot load /s1test.properties: "+e.getMessage());
         }

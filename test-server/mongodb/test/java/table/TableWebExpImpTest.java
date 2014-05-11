@@ -43,7 +43,7 @@ public class TableWebExpImpTest extends HttpServerTest {
 
     @BeforeMethod
     protected void clear() throws Exception {
-        Table t = new TestTable1();
+        TestTable1 t = new TestTable1();
         MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase())
                 .getCollection(t.getCollectionId().getCollection()).remove(new BasicDBObject());
         trace("Cleared");
@@ -54,7 +54,7 @@ public class TableWebExpImpTest extends HttpServerTest {
         final int p = 10;
         final int c = 10;
         //add
-        Table t = new TestTable1();
+        TestTable1 t = new TestTable1();
         try{
             DBCollection coll = MongoDBConnectionHelper.getConnection(t.getCollectionId().getDatabase()).getCollection(t.getCollectionId().getCollection());
             for(int i=0;i<c;i++){
@@ -68,38 +68,26 @@ public class TableWebExpImpTest extends HttpServerTest {
             throw S1SystemError.wrap(e);
         }
 
-        final File dir = new File("/home/travis/build/s1-platform/s1/s1-core/target/");
-        dir.mkdirs();
-
         //export
+        final List<List<Map<String,Object>>> exports = Objects.newArrayList();
         assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input)  throws Exception {
                 Map<String, Object> m = null;
 
                 //add
-                m = client().postJSON(getContext()+"/dispatcher/TableExpImp.exportData",Objects.newHashMap(String.class,Object.class,
+                m = client().postJSON(getContext()+"/dispatcher/Table.list",Objects.newHashMap(String.class,Object.class,
                         "table","table1",
-                        "collection","test1",
-                        "type","default",
                         "search",Objects.newHashMap(
-                            "node",Objects.newHashMap(
-                                "field","b",
-                                "operation","equals",
-                                "value",1
-                    ))));
-                assertNotNull(m.get("id"));
+                                "b",1
+                            )));
 
-                //download
-                try{
-                    FileOutputStream fos = new FileOutputStream(new File(dir.getAbsolutePath()+"/exp_"+input));
-                    fos.write(client().get(getContext() + "/dispatcher/Upload.download", Objects.newHashMap(String.class, Object.class,
-                            "collection", "test1",
-                            "id", m.get("id")), null).getData());
-                    fos.close();
-                }catch (Exception e){
-                    throw S1SystemError.wrap(e);
+                List<Map<String,Object>> e = Objects.get(m,"result");
+                assertEquals(1,e.size());
+                synchronized (exports) {
+                    exports.add(e);
                 }
+
             }
         }));
 
@@ -109,7 +97,8 @@ public class TableWebExpImpTest extends HttpServerTest {
 
         try{
             List<Map<String,Object>> list = Objects.newArrayList();
-            assertEquals(0L,t.list(list,null,null,null,0,10));
+            list.addAll(t.list(null,null,null,0,10));
+            assertEquals(0L,t.count(null));
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }
@@ -119,50 +108,23 @@ public class TableWebExpImpTest extends HttpServerTest {
             @Override
             public void call(int input)  throws Exception {
                 Map<String,Object> m = null;
-                //upload
-                String id = "";
-                try{
-                    FileInputStream fis = new FileInputStream(new File(dir.getAbsolutePath()+"/exp_0"));
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    IOUtils.copy(fis,bos);
-                    m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?collection=test2", new ByteArrayInputStream(bos.toByteArray()),
-                            "export.zip",
-                            "application/zip");
-                    id = Objects.get(m,"id");
-                    assertNotNull(id);
-                    fis.close();
-                }catch (Exception e){
-                    throw S1SystemError.wrap(e);
+                for(Map<String,Object> e:exports.get(input)){
+                    e.remove("id");
                 }
-
-                //preview
-                m = client().postJSON(getContext()+"/dispatcher/TableExpImp.viewData",Objects.newHashMap(String.class,Object.class,
-                        "collection","test2",
-                        "type","default",
-                        "id",id));
-                List<Map<String,Object>> l = Objects.get(m,"list");
-                //assertNotNull(Objects.get(m,"schema"));
-                assertEquals(1L,Objects.get(m,"count"));
-                assertEquals(1,l.size());
-                assertEquals("test_1",Objects.get(l.get(0),"a"));
-                assertEquals(1,Objects.get(Integer.class,l.get(0),"b").intValue());
-
                 //import
-                m = client().postJSON(getContext()+"/dispatcher/TableExpImp.importData",Objects.newHashMap(String.class,Object.class,
+                m = client().postJSON(getContext()+"/dispatcher/Table.doImport",Objects.newHashMap(String.class,Object.class,
                         "table","table1",
-                        "collection","test2",
-                        "type","default",
-                        "id",id));
-                l = Objects.get(m,"list");
-                assertEquals(1,l.size());
-                assertTrue(Objects.get(Boolean.class,l.get(0),"success"));
+                        "list",exports.get(input)));
+                int s = Objects.get(Integer.class,m,"result");
+                assertTrue(1>=s);
 
             }
         }));
 
         try{
             List<Map<String,Object>> list = Objects.newArrayList();
-            assertEquals(1L,t.list(list,null,null,null,0,10));
+            list.addAll(t.list(null,null,null,0,10));
+            assertEquals(1L,t.count(null));
         }catch (Exception e){
             throw S1SystemError.wrap(e);
         }

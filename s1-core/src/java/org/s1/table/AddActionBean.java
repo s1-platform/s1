@@ -39,11 +39,11 @@ public class AddActionBean extends ActionBean{
     public Map<String,Object> run(Map<String,Object> data)
             throws AccessDeniedException, ActionBusinessException, AlreadyExistsException, BadDataException {
         String id = UUID.randomUUID().toString();
-        addIternal(id,data);
+        addInternal(id, data);
         return data;
     }
 
-    protected final void addIternal(String id, Map<String,Object> record) throws AlreadyExistsException, BadDataException {
+    protected final void addInternal(String id, Map<String, Object> record) throws AlreadyExistsException, BadDataException {
         record.put("id",id);
         getTable().check(record);
         //lock table to check unique
@@ -51,12 +51,13 @@ public class AddActionBean extends ActionBean{
         try {
             //lock and set
             //avoiding dead-lock we lock not collection, but some fictional id
-            lockId = Locks.lockEntityQuite(new StorageId(getTable().getTableStorage().getDataSource(),
+            lockId = Locks.lockQuite(getTable().getLockName(Table.TABLE_LOCK_ID), Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            /*lockId = Locks.lockEntityQuite(new StorageId(getTable().getTableStorage().getDataSource(),
                     getTable().getCollectionId().getDatabase(),
-                    getTable().getCollectionId().getCollection(), Table.TABLE_LOCK_ID), Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+                    getTable().getCollectionId().getCollection(), Table.TABLE_LOCK_ID), Table.LOCK_TIMEOUT, TimeUnit.MILLISECONDS);*/
             getTable().checkUnique(record, true);
             //save
-            getTable().getTableStorage().collectionAdd(id, record);
+            getTable().collectionAdd(id, record);
         } finally {
             Locks.releaseLock(lockId);
         }
