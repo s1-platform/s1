@@ -28,8 +28,10 @@ import org.testng.annotations.Test;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URLEncoder;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * s1v2
@@ -89,6 +91,61 @@ public class UploadTest extends HttpServerTest {
                     assertEquals(s, IOUtils.toString(r.getData(),"UTF-8"));
                     assertEquals(ct, r.getHeaders().get("Content-Type"));
                     assertTrue(r.getHeaders().get("Content-Disposition").contains("attachment;filename=" + URLEncoder.encode(name,"UTF-8")));
+                }catch (Exception e){
+                    throw S1SystemError.wrap(e);
+                }
+            }
+        }));
+    }
+
+    @Test
+    public void testUploadAsync(){
+        int p = 2;
+        final String id = "123";
+        assertEquals("upload/"+id,Objects.get(client().postJSON(getContext() + "/dispatcher/Monitor.startTask", Objects.newSOHashMap("id", "upload/"+id)),"result"));
+
+        StringBuilder sb = new StringBuilder("qwerasdf");
+        for(long i=0;i<100000;i++){
+            sb.append("a");
+        }
+        final String s = sb.toString();
+        final String name = "name_1";
+        final String ct = "text/plain";
+
+        assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
+            @Override
+            public void call(int input) throws Exception {
+
+
+                try{
+                    Map<String,Object> m = null;
+                    //upload
+                    if(input==1) {
+                        trace("uploading...");
+                        m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?id="+id,
+                                new ByteArrayInputStream(s.getBytes()), name, ct);
+                        trace("uploaded");
+                    }else {
+                        trace("waiting...");
+
+                        //progress
+                        long progress = 0;
+                        while(progress!=-1) {
+                            m = client().postJSON(getContext() + "/dispatcher/Monitor.getProgress", Objects.newSOHashMap("id", "upload/" + id));
+                            progress = Objects.get(Long.class, m, "result");
+                            //if (input == 0)
+                                trace(progress);
+                            sleep(10);
+                        }
+
+                        //download
+                        TestHttpClient.HttpResponseBean r = client().get(getContext() + "/dispatcher/Upload.download",
+                                Objects.newHashMap(String.class, Object.class, "id", id), null);
+                        assertEquals(200, r.getStatus());
+                        //assertEquals(s, IOUtils.toString(r.getData(),"UTF-8"));
+                        assertEquals(s.length(), IOUtils.toString(r.getData(), "UTF-8").length());
+                        assertEquals(ct, r.getHeaders().get("Content-Type"));
+                    }
                 }catch (Exception e){
                     throw S1SystemError.wrap(e);
                 }

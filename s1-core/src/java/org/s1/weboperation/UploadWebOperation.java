@@ -17,10 +17,12 @@
 package org.s1.weboperation;
 
 import org.s1.S1SystemError;
+import org.s1.cluster.LongRunningTasks;
 import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
+import org.s1.options.Options;
 import org.s1.table.errors.NotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Operation for file uploading and downloading to/from FileStorage
@@ -41,19 +47,28 @@ public class UploadWebOperation extends MapWebOperation {
 
     @Override
     protected Map<String, Object> process(String method, Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Map<String, Object> result = new HashMap<String, Object>();
-        if ("upload".equals(method)) {
-            upload(params, result);
-        } else if ("download".equals(method)) {
-            download(params, response);
-            result = null;
-        } else if ("downloadAsFile".equals(method)) {
-            downloadAsFile(params, response);
-            result = null;
-        } else {
-            throwMethodNotFound(method);
+        return processClassMethods(this,method,params,request,response);
+    }
+
+    protected void writeFile(Id id, FileParameter fp){
+        String taskId = LongRunningTasks.start("upload/"+id.getEntity());
+        FileStorage.FileWriteBean b = null;
+        try{
+            b = FileStorage.createFileWriteBean(id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
+            try {
+                long l = 1024L;
+                for(long i=0;i<fp.getSize();i+=l) {
+                    IOUtils.copy(fp.getInputStream(), b.getOutputStream(), 0, l);
+                    LongRunningTasks.setProgress(taskId,i);
+                }
+            } catch (IOException e) {
+                throw S1SystemError.wrap(e);
+            }
+            FileStorage.save(b);
+        }finally {
+            FileStorage.closeAfterWrite(b);
+            LongRunningTasks.finish(taskId);
         }
-        return result;
     }
 
     /**
@@ -64,30 +79,20 @@ public class UploadWebOperation extends MapWebOperation {
      * @throws Exception
      * @see org.s1.weboperation.MapWebOperation.FileParameter
      */
-    public static void upload(Map<String, Object> params,
-                              Map<String, Object> result) throws Exception {
+    @WebOperationMethod
+    public Map<String,Object> upload(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Map<String,Object> result = Objects.newSOHashMap();
         String database = (String) params.get("database");
         String collection = (String) params.get("collection");
         if (Objects.isNullOrEmpty(collection))
             collection = COLLECTION;
 
         if (params.containsKey("file")) {
-            String id = UUID.randomUUID().toString();
+            String id = Objects.get(params,"id",UUID.randomUUID().toString());
 
             final FileParameter fp = (FileParameter) params.get("file");
 
-            FileStorage.FileWriteBean b = null;
-            try{
-                b = FileStorage.createFileWriteBean(new Id(database,collection,id), new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
-                try {
-                    IOUtils.copy(fp.getInputStream(), b.getOutputStream());
-                } catch (IOException e) {
-                    throw S1SystemError.wrap(e);
-                }
-                FileStorage.save(b);
-            }finally {
-                FileStorage.closeAfterWrite(b);
-            }
+            writeFile(new Id(database,collection,id),fp);
             result.put("id", id);
         } else {
             List<String> ids = new ArrayList<String>();
@@ -97,23 +102,13 @@ public class UploadWebOperation extends MapWebOperation {
 
                 final FileParameter fp = (FileParameter) params.get("file" + i);
 
-                FileStorage.FileWriteBean b = null;
-                try{
-                    b = FileStorage.createFileWriteBean(new Id(database,collection,id), new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
-                    try {
-                        IOUtils.copy(fp.getInputStream(), b.getOutputStream());
-                    } catch (IOException e) {
-                        throw S1SystemError.wrap(e);
-                    }
-                    FileStorage.save(b);
-                }finally {
-                    FileStorage.closeAfterWrite(b);
-                }
+                writeFile(new Id(database,collection,id),fp);
 
                 ids.add(id);
             }
             result.put("ids", ids);
         }
+        return result;
     }
 
     /**
@@ -122,8 +117,8 @@ public class UploadWebOperation extends MapWebOperation {
      * @param params   {group:"...default is GROUP...", id:"..."}
      * @param response
      */
-    public static void download(Map<String, Object> params,
-                                final HttpServletResponse response) throws Exception {
+    @WebOperationMethod
+    public Map<String,Object> download(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String database = Objects.get(params, "database");
         String collection = Objects.get(params, "collection", COLLECTION);
         String id = Objects.get(params, "id");
@@ -142,6 +137,7 @@ public class UploadWebOperation extends MapWebOperation {
         }finally {
             FileStorage.closeAfterRead(b);
         }
+        return null;
     }
 
     /**
@@ -150,8 +146,8 @@ public class UploadWebOperation extends MapWebOperation {
      * @param params   {group:"...default is GROUP...", id:"...", name:"...default will be taken from FileMetaBean.name ..."}
      * @param response
      */
-    public static void downloadAsFile(Map<String, Object> params,
-                                      final HttpServletResponse response) throws Exception {
+    @WebOperationMethod
+    public Map<String,Object> downloadAsFile(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String database = Objects.get(params, "database");
         String collection = Objects.get(params, "collection", COLLECTION);
         String id = Objects.get(params, "id");
@@ -179,6 +175,7 @@ public class UploadWebOperation extends MapWebOperation {
         }finally {
             FileStorage.closeAfterRead(b);
         }
+        return null;
     }
 
 
