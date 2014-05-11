@@ -16,15 +16,8 @@
 
 package org.s1.lifecycle;
 
-import org.s1.objects.Objects;
-import org.s1.options.Options;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Lifecycle servlet listener. Actions list is described in system options on path 'lifecycleActions'

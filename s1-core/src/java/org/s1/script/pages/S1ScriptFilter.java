@@ -43,7 +43,6 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 /**
  * Script pages filter

@@ -19,7 +19,6 @@ package org.s1.objects;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Type utils

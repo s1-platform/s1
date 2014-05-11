@@ -18,7 +18,6 @@ package org.s1.background;
 
 import org.s1.cluster.ClusterLifecycleAction;
 import org.s1.lifecycle.LifecycleAction;
-import org.s1.lifecycle.LifecycleListener;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
 import org.slf4j.Logger;

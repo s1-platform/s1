@@ -11,11 +11,10 @@ import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.mongodb.cluster.MongoDBDDS;
 import org.s1.objects.MapMethod;
 import org.s1.objects.Objects;
-import org.s1.table.*;
-import org.s1.table.errors.AlreadyExistsException;
+import org.s1.table.IndexBean;
+import org.s1.table.Table;
 import org.s1.table.errors.MoreThanOneFoundException;
 import org.s1.table.errors.NotFoundException;
-import org.s1.table.format.Query;
 import org.s1.user.AccessDeniedException;
 
 import java.util.List;
@@ -64,6 +63,7 @@ public abstract class MongoDBTable extends Table {
         checkAccess();
         if(search==null)
             search = Objects.newSOHashMap();
+        search = MongoDBFormat.escapeInjections(search);
         prepareSearch(search);
         if(sort==null)
             sort = Objects.newSOHashMap();

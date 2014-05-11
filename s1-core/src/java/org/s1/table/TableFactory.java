@@ -20,7 +20,6 @@ import org.s1.S1SystemError;
 import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
-import org.s1.weboperation.WebOperation;
 
 import java.util.List;
 import java.util.Map;

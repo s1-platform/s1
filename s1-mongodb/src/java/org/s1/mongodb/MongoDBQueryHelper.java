@@ -16,10 +16,11 @@
 
 package org.s1.mongodb;
 
-import com.mongodb.*;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import org.s1.cluster.dds.beans.CollectionId;
 import org.s1.cluster.dds.beans.Id;
-import org.s1.misc.Closure;
 import org.s1.objects.Objects;
 import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.MoreThanOneFoundException;
@@ -27,7 +28,6 @@ import org.s1.table.errors.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

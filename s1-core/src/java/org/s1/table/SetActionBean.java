@@ -17,11 +17,10 @@
 package org.s1.table;
 
 import org.s1.cluster.Locks;
-import org.s1.cluster.dds.beans.StorageId;
+import org.s1.objects.BadDataException;
 import org.s1.objects.Objects;
 import org.s1.table.errors.ActionBusinessException;
 import org.s1.table.errors.AlreadyExistsException;
-import org.s1.objects.BadDataException;
 import org.s1.user.AccessDeniedException;
 
 import java.util.Map;

@@ -23,7 +23,6 @@ import org.s1.S1SystemError;
 import org.s1.misc.Closure;
 import org.s1.objects.ObjectIterator;
 import org.s1.objects.Objects;
-import org.s1.table.format.*;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -131,27 +130,6 @@ public class MongoDBFormat {
     }
 
     /**
-     *
-     * @param query
-     * @return
-     */
-    public static Map<String,Object> formatSearch(Query query){
-        Map<String,Object> o = Objects.newHashMap();
-        List<Map<String,Object>> l = Objects.newArrayList();
-        if(query.getNode()!=null){
-            l.add(formatQueryNode(query.getNode()));
-        }
-        if(query.getCustom()!=null){
-            l.add(query.getCustom());
-        }
-        if(l.size()>0){
-            o.put("$and",l);
-        }
-
-        return o;
-    }
-
-    /**
      * Remove $where commands from custom query (use it in Table)
      * @return
      */
@@ -169,90 +147,4 @@ public class MongoDBFormat {
             }
         });
     }
-
-    /**
-     *
-     * @param qn
-     * @return
-     */
-    public static Map<String,Object> formatQueryNode(QueryNode qn){
-        Map<String,Object> o = Objects.newHashMap();
-        if(qn instanceof GroupQueryNode){
-            List<Map<String,Object>> l = Objects.newArrayList();
-            for(QueryNode n:((GroupQueryNode) qn).getChildren()){
-                l.add(formatQueryNode(n));
-            }
-            if(l.size()>0)
-                o.put(((GroupQueryNode) qn).getOperation()== GroupQueryNode.GroupOperation.OR?"$or":"$and",l);
-        }else if(qn instanceof FieldQueryNode){
-            FieldQueryNode.FieldOperation op = ((FieldQueryNode) qn).getOperation();
-            String f = ((FieldQueryNode) qn).getField();
-            Object val = ((FieldQueryNode) qn).getValue();
-
-            //escape commands (for security reasons)
-            if(f.startsWith("$")){
-                f = "_"+f.substring(1);
-            }
-            /*if(f.equals("id")){
-                f = "_id";
-                val = parseId(""+val);
-            }*/
-            if(op == FieldQueryNode.FieldOperation.EQUALS){
-                o.put(f,val);
-            }else if(op == FieldQueryNode.FieldOperation.CONTAINS){
-                o.put(f, Pattern.compile(".*"+Pattern.quote(Objects.cast(val,String.class))+".*"));
-            }else if(op == FieldQueryNode.FieldOperation.NULL){
-                o.put(f,null);
-            }else if(op == FieldQueryNode.FieldOperation.GT){
-                o.put(f,new BasicDBObject("$gt",val));
-            }else if(op == FieldQueryNode.FieldOperation.GTE){
-                o.put(f,new BasicDBObject("$gte",val));
-            }else if(op == FieldQueryNode.FieldOperation.LT){
-                o.put(f,new BasicDBObject("$lt",val));
-            }else if(op == FieldQueryNode.FieldOperation.LTE){
-                o.put(f,new BasicDBObject("$lte",val));
-            }
-        }
-        if(qn.isNot()){
-            o = new BasicDBObject("$nor",Objects.newArrayList(o));
-        }
-        return o;
-    }
-
-    /**
-     *
-     * @param sort
-     * @return
-     */
-    public static Map<String,Object> formatSort(Sort sort){
-        Map<String,Object> o = Objects.newHashMap();
-        if(sort!=null && !Objects.isNullOrEmpty(sort.getName())){
-            String n = sort.getName();
-            if(n.equals("id"))
-                n = "_id";
-            o.put(n,sort.isDesc()?-1:1);
-        }
-        return o;
-    }
-
-    /**
-     *
-     * @param fieldsMask
-     * @return
-     */
-    public static Map<String,Object> formatFieldsMask(FieldsMask fieldsMask){
-        Map<String,Object> o = Objects.newHashMap();
-        if(fieldsMask!=null && fieldsMask.getFields()!=null){
-            int i = fieldsMask.isShow()?1:0;
-            for(String f: fieldsMask.getFields()){
-                if(!Objects.isNullOrEmpty(f)){
-                    if(f.equals("id"))
-                        f = "_id";
-                    o.put(f,i);
-                }
-            }
-        }
-        return o;
-    }
-
 }

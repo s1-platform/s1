@@ -16,8 +16,6 @@
 
 package org.s1.cluster.dds;
 
-import org.s1.objects.Objects;
-
 /**
  * Rollback error
  */

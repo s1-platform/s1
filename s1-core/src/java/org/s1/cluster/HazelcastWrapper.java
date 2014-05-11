@@ -20,7 +20,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import org.s1.misc.Closure;
 import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.options.Options;

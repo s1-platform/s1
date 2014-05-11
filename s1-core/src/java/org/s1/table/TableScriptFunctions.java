@@ -16,18 +16,10 @@
 
 package org.s1.table;
 
-import org.s1.objects.BadDataException;
 import org.s1.objects.MapMethodWrapper;
-import org.s1.objects.Objects;
 import org.s1.script.function.ScriptFunctionSet;
-import org.s1.table.errors.*;
-import org.s1.table.format.FieldsMask;
-import org.s1.table.format.Query;
-import org.s1.table.format.Sort;
-import org.s1.user.AccessDeniedException;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  *

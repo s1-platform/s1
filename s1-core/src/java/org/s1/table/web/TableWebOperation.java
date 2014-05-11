@@ -16,20 +16,14 @@
 
 package org.s1.table.web;
 
-import org.s1.S1SystemError;
 import org.s1.objects.MapMethodWrapper;
 import org.s1.objects.Objects;
-import org.s1.table.*;
-import org.s1.table.format.FieldsMask;
-import org.s1.table.format.Query;
-import org.s1.table.format.Sort;
+import org.s1.table.Table;
+import org.s1.table.Tables;
 import org.s1.weboperation.MapWebOperation;
-import org.s1.weboperation.WebOperationMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**

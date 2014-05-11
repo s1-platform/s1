@@ -17,7 +17,8 @@
 package org.s1.cluster.dds.sequence;
 
 import org.s1.cluster.Locks;
-import org.s1.cluster.dds.*;
+import org.s1.cluster.dds.DDSCluster;
+import org.s1.cluster.dds.DistributedDataSource;
 import org.s1.cluster.dds.beans.CommandBean;
 import org.s1.cluster.dds.beans.MessageBean;
 import org.s1.cluster.dds.beans.StorageId;

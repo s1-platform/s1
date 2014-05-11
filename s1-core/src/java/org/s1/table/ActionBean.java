@@ -16,8 +16,6 @@
 
 package org.s1.table;
 
-import org.s1.objects.BadDataException;
-
 /**
  * Table action
  */

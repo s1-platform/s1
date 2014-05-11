@@ -19,25 +19,14 @@ package table;
 import com.mongodb.BasicDBObject;
 import org.s1.S1SystemError;
 import org.s1.cluster.Session;
-import org.s1.misc.Closure;
 import org.s1.mongodb.MongoDBConnectionHelper;
 import org.s1.mongodb.table.MongoDBTable;
 import org.s1.objects.Objects;
-import org.s1.script.Context;
 import org.s1.script.S1ScriptEngine;
-import org.s1.script.errors.ScriptException;
-import org.s1.script.function.ScriptFunction;
-
-import org.s1.table.Table;
 import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.NotFoundException;
-import org.s1.table.format.FieldQueryNode;
-import org.s1.table.format.Query;
-import org.s1.table.format.Sort;
 import org.s1.testing.ClusterTest;
 import org.s1.testing.LoadTestUtils;
-import org.s1.testing.HttpServerTest;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -175,7 +164,7 @@ public class TableTest extends ClusterTest {
 
                             //list
                             List<Map<String, Object>> l = Objects.newArrayList();
-                            l.addAll(t.list(Objects.newSOHashMap("a","a_"+input), null, null, 0, 10));
+                            l.addAll(t.list(Objects.newSOHashMap("a", "a_" + input), null, null, 0, 10));
                             c = t.count(Objects.newSOHashMap("a","a_"+input));
                             assertEquals(1L, c);
                             assertEquals(1, l.size());
@@ -269,7 +258,7 @@ public class TableTest extends ClusterTest {
                             l.add(Objects.newHashMap(String.class,Object.class,
                                     "a1","test_"
                             ));
-                            assertTrue(t.doImport(l)<=c);
+                            assertTrue(t.doImport(l) <= c);
                         } catch (Throwable e) {
                             throw S1SystemError.wrap(e);
                         }
@@ -283,7 +272,7 @@ public class TableTest extends ClusterTest {
         final List<Map<String,Object>> l = Objects.newArrayList();
         try{
             l.clear();
-            l.addAll(t.list(null, Objects.newSOHashMap("b",1), null, 0, 10));
+            l.addAll(t.list(null, Objects.newSOHashMap("b", 1), null, 0, 10));
             assertEquals((long)c,t.count(null));
             assertEquals("test_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));
@@ -313,7 +302,7 @@ public class TableTest extends ClusterTest {
 
         try{
             l.clear();
-            l.addAll(t.list(null, Objects.newSOHashMap("b",1), null, 0, 10));
+            l.addAll(t.list(null, Objects.newSOHashMap("b", 1), null, 0, 10));
             assertEquals((long)c,t.count(null));
             assertEquals("qwer_0",Objects.get(l.get(0),"a"));
             assertEquals(0,Objects.get(l.get(0),"b"));

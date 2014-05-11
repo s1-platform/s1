@@ -22,7 +22,6 @@ import com.mongodb.WriteConcern;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.s1.log.Loggers;
-import org.s1.mongodb.MongoDBConnectionHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
