@@ -4,6 +4,8 @@ import com.hazelcast.core.IMap;
 import org.s1.objects.Objects;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 
 /**
  * @author Grigory Pykhov
@@ -39,7 +41,16 @@ public class LongRunningTasks {
     }
 
     public static void setProgress(String id, long progress){
-        getTasks().put(id,progress);
+        getTasks().put(id, progress);
+    }
+
+    public static void addProgress(String id, final long progress){
+        getTasks().computeIfPresent(id,new BiFunction<String, Long, Long>() {
+            @Override
+            public Long apply(String s, Long aLong) {
+                return progress+aLong;
+            }
+        });
     }
 
     public static long getProgress(String id){

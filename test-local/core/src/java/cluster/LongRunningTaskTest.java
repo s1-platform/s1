@@ -7,6 +7,7 @@ import org.s1.testing.LoadTestUtils;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Grigory Pykhov
@@ -22,7 +23,14 @@ public class LongRunningTaskTest extends BasicTest {
         for(int i=0;i<p;i++){
             LongRunningTasks.setProgress(id,i);
         }
-        assertEquals((long)p-1, LongRunningTasks.getProgress(id));
+
+        LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
+            @Override
+            public void call(int i) throws Exception {
+                LongRunningTasks.addProgress(id,2);
+            }
+        });
+        assertEquals((long)p-1+p*2, LongRunningTasks.getProgress(id));
         LongRunningTasks.finish(id);
         assertEquals(-1L, LongRunningTasks.getProgress(id));
     }
