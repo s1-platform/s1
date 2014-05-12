@@ -4,8 +4,7 @@ import com.hazelcast.core.IMap;
 import org.s1.objects.Objects;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Grigory Pykhov
@@ -45,12 +44,13 @@ public class LongRunningTasks {
     }
 
     public static void addProgress(String id, final long progress){
-        getTasks().computeIfPresent(id,new BiFunction<String, Long, Long>() {
-            @Override
-            public Long apply(String s, Long aLong) {
-                return progress+aLong;
-            }
-        });
+        String lid = Locks.lockQuite("longRunningTask:"+id,1, TimeUnit.SECONDS);
+        try{
+            long l = getTasks().get(id);
+            getTasks().put(id,l+progress);
+        }finally {
+            Locks.releaseLock(lid);
+        }
     }
 
     public static long getProgress(String id){
