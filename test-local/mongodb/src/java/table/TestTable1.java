@@ -45,9 +45,9 @@ public class TestTable1 extends MongoDBTable {
     }
 
     @Override
-    public List<IndexBean> getIndexes() {
+    public List<List<String>> getIndexes() {
         return Objects.newArrayList(
-                new IndexBean(Objects.newArrayList("a"))
+                Objects.newArrayList("a")
                 );
     }
 

@@ -1,6 +1,7 @@
 package org.s1.mongodb.table;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import org.s1.cluster.dds.beans.CollectionId;
 import org.s1.cluster.dds.beans.Id;
@@ -11,12 +12,14 @@ import org.s1.mongodb.MongoDBQueryHelper;
 import org.s1.mongodb.cluster.MongoDBDDS;
 import org.s1.objects.MapMethod;
 import org.s1.objects.Objects;
-import org.s1.table.IndexBean;
 import org.s1.table.Table;
 import org.s1.table.errors.MoreThanOneFoundException;
 import org.s1.table.errors.NotFoundException;
 import org.s1.user.AccessDeniedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,17 +27,86 @@ import java.util.Map;
  * @author Grigory Pykhov
  */
 public abstract class MongoDBTable extends Table {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBTable.class);
+
     public abstract CollectionId getCollectionId();
 
-    @Override
-    protected void collectionIndex(String name, IndexBean index) {
-        DBObject i = new BasicDBObject();
-        for(String f:index.getFields()){
-            i.put(f,1);
+    public void init() {
+        //indexes
+        checkIndexes();
+    }
+    public abstract List<List<String>> getIndexes();
+
+    protected void checkIndexes() {
+        //remove old indexes
+        DBCollection coll = MongoDBConnectionHelper.getCollection(getCollectionId());
+        List<DBObject> list = coll.getIndexInfo();
+        List<List<String>> indexes = new ArrayList<List<String>>(getIndexes());
+        indexes.add(Objects.newArrayList("id"));
+        for(DBObject o: list){
+            DBObject key = (DBObject)o.get("key");
+            if(key.keySet().size()==1 && Objects.equals(key.get("_id"),1)){
+                continue;
+            }
+
+            boolean exists = false;
+            for (List<String> b : indexes) {
+                boolean same = false;
+                if(key.keySet().size()==b.size()){
+                    same = true;
+                    for(String s:b){
+                        if(!Objects.equals(1,key.get(s))){
+                            same = false;
+                        }
+                    }
+                }
+                exists=same;
+                if(exists)
+                    break;
+            }
+            if(exists)
+                continue;
+
+            //removing
+            if(LOG.isDebugEnabled())
+                LOG.debug("Drop index "+o+" for collection "+getCollectionId().getCollection());
+            coll.dropIndex((String)o.get("name"));
         }
-        MongoDBConnectionHelper.getConnection(getCollectionId().getDatabase())
-                .getCollection(getCollectionId().getCollection()).ensureIndex(i,name);
+
+        //add new
+        for(List<String> b:indexes){
+            boolean exists = false;
+            for(DBObject o: list){
+                DBObject key = (DBObject)o.get("key");
+                if(key.keySet().size()==1 && Objects.equals(1, key.get("id"))){
+                    boolean same = false;
+                    if(key.keySet().size()==b.size()){
+                        same = true;
+                        for(String s:b){
+                            if(!Objects.equals(1,key.get(s))){
+                                same = false;
+                            }
+                        }
+                    }
+                    exists=same;
+                    if(exists)
+                        break;
+                }
+            }
+            if(exists)
+                break;
+
+            //add new index
+            if(LOG.isDebugEnabled())
+                LOG.debug("Ensure index "+b+" for collection "+getCollectionId().getCollection());
+            DBObject i = new BasicDBObject();
+            for(String f:b){
+                i.put(f,1);
+            }
+            coll.ensureIndex(i);
+        }
+
     }
 
     protected void prepareSearch(Map<String,Object> search){

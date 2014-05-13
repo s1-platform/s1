@@ -56,16 +56,12 @@ public abstract class Table {
      *
      */
     public void init() {
-        //indexes
-        checkIndexes();
     }
 
 
     /*==========================================
      * DESCRIPTOR
      ==========================================*/
-
-    public abstract List<IndexBean> getIndexes();
 
     public void check(Map<String,Object> record) throws BadDataException {
         if(Objects.isNullOrEmpty(record.get("id")))
@@ -75,21 +71,6 @@ public abstract class Table {
     public abstract List<AddActionBean> getAddActions();
     public abstract List<SetActionBean> getSetActions();
     public abstract List<RemoveActionBean> getRemoveActions();
-
-    /*==========================================
-     * INDEXES
-     ==========================================*/
-
-    protected abstract void collectionIndex(String name, IndexBean index);
-
-    public void checkIndexes() {
-        int i = 0;
-        collectionIndex("index_id", new IndexBean(Objects.newArrayList("id")));
-        for (IndexBean b : getIndexes()) {
-            collectionIndex("index_" + i, b);
-            i++;
-        }
-    }
 
     protected abstract void checkUnique(Map<String, Object> object, boolean isNew) throws AlreadyExistsException;
 
