@@ -20,6 +20,8 @@ import org.s1.objects.MapMethodWrapper;
 import org.s1.objects.Objects;
 import org.s1.script.Context;
 import org.s1.script.errors.ScriptException;
+import org.s1.script.errors.ScriptLimitException;
+import org.s1.script.errors.SyntaxException;
 
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,12 @@ public abstract class ScriptFunctionSet {
                 List<Object> args = getContext().get("arguments");
                 try {
                     return callFunction(name,args);
+                } catch (ScriptException e) {
+                    throw e;
+                } catch (SyntaxException e) {
+                    throw e;
+                } catch (ScriptLimitException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new ScriptException(e.getMessage(),e);
                 }

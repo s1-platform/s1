@@ -541,7 +541,6 @@ public class ASTEvaluator {
                 getResult = o;
             }
         }
-        ctx.getMemoryHeap().take(getResult);
         return getResult;
     }
 
@@ -565,19 +564,19 @@ public class ASTEvaluator {
                 ctx.remove(k);
             }else{
                 ctx.set(k, val);
-                mh.take(k);
             }
         }else if(node instanceof PropertyGet){
             Object obj = get(((PropertyGet) node).getTarget(),ctx);
             if(!(obj instanceof Map)){
-                throwScriptError("Object is not instance of Map",node);
+                throwScriptError("Object is not instance of Map (it is "+(obj==null?null:obj.getClass().getName())+")",node);
             }
             String k = ((PropertyGet) node).getProperty().getIdentifier();
+            mh.release(((Map) obj).get(k));
             if(val==UNDEFINED){
                 ((Map) obj).remove(k);
             }else{
                 ((Map) obj).put(k, val);
-                mh.take(k);
+                mh.take(((Map) obj).get(k));
             }
         }else if(node instanceof ElementGet){
             Object obj = get(((ElementGet) node).getTarget(),ctx);
@@ -585,7 +584,7 @@ public class ASTEvaluator {
             Object o = get(((ElementGet) node).getElement(), ctx);
             if(o instanceof Number){
                 if(!(obj instanceof List)){
-                    throwScriptError("Object is not instance of List",node);
+                    throwScriptError("Object is not instance of List (it is "+(obj==null?null:obj.getClass().getName())+")",node);
                 }
                 if(val==UNDEFINED)
                     val = null;
@@ -594,19 +593,21 @@ public class ASTEvaluator {
                 if(l.size()<=i){
                     for(int j=l.size();j<=i;j++){
                         l.add(null);
-                        mh.take(""+j);
                     }
                 }
+                mh.release(l.get(i));
                 l.set(i,val);
+                mh.take(l.get(i));
             }else{
                 if(!(obj instanceof Map)){
-                    throwScriptError("Object is not instance of Map",node);
+                    throwScriptError("Object is not instance of Map (it is "+(obj==null?null:obj.getClass().getName())+")",node);
                 }
+                mh.release(((Map) obj).get(o));
                 if(val==UNDEFINED){
                     ((Map) obj).remove(o);
                 }else{
                     ((Map) obj).put(o,val);
-                    mh.take(("" + o));
+                    mh.take(((Map) obj).get(o));
                 }
             }
         }

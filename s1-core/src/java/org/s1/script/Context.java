@@ -112,8 +112,11 @@ public class Context implements Serializable {
      */
     public void set(String name, Object o){
         Map<String,Object> m = getMap(name);
-        if(m!=null)
+        if(m!=null) {
+            memoryHeap.release(m.get(name));
             m.put(name, o);
+            memoryHeap.take(m.get(name));
+        }
     }
 
     /**
@@ -123,8 +126,10 @@ public class Context implements Serializable {
      */
     public void remove(String name){
         Map<String,Object> m = getMap(name);
-        if(m!=null)
+        if(m!=null) {
+            memoryHeap.release(m.get(name));
             m.remove(name);
+        }
     }
 
     /**

@@ -16,6 +16,10 @@ import java.util.Map;
  */
 public class MapMethodWrapperTest extends BasicTest {
 
+    @MapMethod
+    public void n(){
+        trace("VOID");
+    }
 
     @MapMethod(names = {"a","b"})
     public String a(String a, int b){
@@ -97,6 +101,7 @@ public class MapMethodWrapperTest extends BasicTest {
             @Override
             public void call(int index) throws Exception {
                 MapMethodWrapperTest m = new MapMethodWrapperTest();
+                MapMethodWrapper.findAndInvoke(m,"n");
 
                 assertEquals("qwer:1",MapMethodWrapper.findAndInvoke(m,"a","qwer","1"));
                 assertEquals("qwer:2:asd",MapMethodWrapper.findAndInvoke(m,"b","qwer",Objects.newSOHashMap("a",2,"b","asd")));

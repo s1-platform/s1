@@ -342,6 +342,8 @@ public class TestScript extends BasicTest{
                 String t = scriptEngine.eval("'012345'", null);
                 assertEquals("012345", t);
 
+                scriptEngine.eval("var a = {b:{c:{d:['1234567890']}}};for(var i=0;i<1000;i++){a.b.c.d[0]='test';}", null);
+
                 //limit
                 boolean b = false;
                 try {

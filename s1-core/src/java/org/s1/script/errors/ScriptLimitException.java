@@ -40,4 +40,9 @@ public class ScriptLimitException extends RuntimeException {
     public Limits getType() {
         return type;
     }
+
+    @Override
+    public String getMessage() {
+        return ""+getType()+" ("+getLimit()+")";
+    }
 }

@@ -38,8 +38,14 @@ public class MemoryHeap {
      * @throws org.s1.script.errors.ScriptLimitException
      */
     public synchronized void take(Object obj) throws ScriptLimitException {
+        take(getObjectSize(obj));
+    }
+
+    protected long getObjectSize(Object obj){
+        if(obj==null)
+            return 0;
         String s = ""+obj;
-        take(s.length());
+        return s.length();
     }
 
     /**
@@ -49,9 +55,15 @@ public class MemoryHeap {
      * @throws ScriptLimitException
      */
     public synchronized void take(long bytes) throws ScriptLimitException{
-        memory-=bytes;
-        if(memory<0)
-            throw new ScriptLimitException(ScriptLimitException.Limits.MEMORY,limit);
+        if(limit>0) {
+            memory -= bytes;
+            if (memory < 0)
+                throw new ScriptLimitException(ScriptLimitException.Limits.MEMORY, limit);
+        }
+    }
+
+    public synchronized void release(Object obj){
+        release(getObjectSize(obj));
     }
 
     public synchronized void release(long bytes){

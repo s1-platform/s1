@@ -366,8 +366,10 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     @MapMethod
     public void clear(Object o){
         if(o instanceof Map){
+            getContext().getMemoryHeap().release(o);
             ((Map) o).clear();
         }else if(o instanceof List){
+            getContext().getMemoryHeap().release(o);
             ((List) o).clear();
         }
     }
@@ -381,6 +383,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     @MapMethod
     public void putAll(Map<String,Object> m, Map<String,Object> m2){
         m.putAll(m2);
+        getContext().getMemoryHeap().take(m2);
     }
 
     /**
@@ -420,8 +423,8 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      */
     @MapMethod
     public void add(List<Object> l, Object o){
-        getContext().getMemoryHeap().take(o);
         l.add(o);
+        getContext().getMemoryHeap().take(o);
     }
 
     /**
@@ -431,12 +434,13 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      */
     @MapMethod
     public void addAll(List<Object> l, List<Object> o){
-        getContext().getMemoryHeap().take(o);
         l.addAll(o);
+        getContext().getMemoryHeap().take(o);
     }
 
     @MapMethod
     public void remove(List<Object> l, Integer i){
+        getContext().getMemoryHeap().release(l.get(i));
         l.remove(i.intValue());
     }
 
@@ -460,9 +464,9 @@ public class SystemFunctionSet extends ScriptFunctionSet {
      */
     @MapMethod
     public void set(Map<String,Object> m, String path, Object val){
-        getContext().getMemoryHeap().take(path);
-        getContext().getMemoryHeap().take(val);
+        getContext().getMemoryHeap().release(Objects.get(m,path));
         Objects.set(m, path, val);
+        getContext().getMemoryHeap().take(val);
     }
 
     /**
