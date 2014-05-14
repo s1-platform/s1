@@ -16,8 +16,9 @@
 
 package org.s1.weboperation;
 
+import com.hazelcast.core.IMap;
 import org.s1.S1SystemError;
-import org.s1.cluster.LongRunningTasks;
+import org.s1.cluster.HazelcastWrapper;
 import org.s1.cluster.dds.beans.Id;
 import org.s1.cluster.dds.file.FileStorage;
 import org.s1.misc.IOUtils;
@@ -40,6 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class UploadWebOperation extends MapWebOperation {
 
+    private static final IMap<String,Long> progress = HazelcastWrapper.getInstance().getMap("upload.progress");
+
     /**
      * Default group
      */
@@ -51,7 +54,8 @@ public class UploadWebOperation extends MapWebOperation {
     }
 
     protected void writeFile(Id id, FileParameter fp){
-        String taskId = LongRunningTasks.start("upload/"+id.getEntity());
+        String taskId = id.getEntity();
+        progress.put(taskId,0L);
         FileStorage.FileWriteBean b = null;
         try{
             b = FileStorage.createFileWriteBean(id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
@@ -59,7 +63,7 @@ public class UploadWebOperation extends MapWebOperation {
                 long l = 1024L;
                 for(long i=0;i<fp.getSize();i+=l) {
                     IOUtils.copy(fp.getInputStream(), b.getOutputStream(), 0, l);
-                    LongRunningTasks.setProgress(taskId,i);
+                    progress.put(taskId, i);
                 }
             } catch (IOException e) {
                 throw S1SystemError.wrap(e);
@@ -67,8 +71,27 @@ public class UploadWebOperation extends MapWebOperation {
             FileStorage.save(b);
         }finally {
             FileStorage.closeAfterWrite(b);
-            LongRunningTasks.finish(taskId);
+            progress.remove(taskId);
         }
+    }
+
+    @WebOperationMethod
+    public Map<String,Object> getProgress(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Map<String, Object> result = Objects.newSOHashMap();
+        String taskId = Objects.get(params,"id");
+        Objects.assertNotEmpty("id",taskId);
+        long p = Objects.get(Long.class,(Map)progress,taskId);
+        if(!progress.containsKey(taskId))
+            p = -1;
+        return asMap(p);
+    }
+
+    @WebOperationMethod
+    public Map<String,Object> startProgress(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Map<String, Object> result = Objects.newSOHashMap();
+        String id = Objects.get(params,"id",UUID.randomUUID().toString());
+        progress.put(id,0L);
+        return asMap(id);
     }
 
     /**

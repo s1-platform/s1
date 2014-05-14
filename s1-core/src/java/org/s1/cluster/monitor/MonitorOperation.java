@@ -17,7 +17,6 @@
 package org.s1.cluster.monitor;
 
 import org.s1.cluster.HazelcastWrapper;
-import org.s1.cluster.LongRunningTasks;
 import org.s1.cluster.NodeMessageExchange;
 import org.s1.objects.Objects;
 import org.s1.options.Options;
@@ -130,13 +129,6 @@ public class MonitorOperation extends MapWebOperation {
             String nodeId = Objects.get(params,"nodeId");
             Objects.assertNotEmpty("NodeId must not be empty",nodeId);
             result = (Map<String,Object>)NodeMessageExchange.getInstance().request(nodeId,"monitor.getLoggers",null);
-        }else if("startTask".equals(method)){
-            String id = Objects.get(params,"id", UUID.randomUUID().toString());
-            result = asMap(LongRunningTasks.start(id));
-        }else if("getProgress".equals(method)){
-            String id = Objects.get(params,"id");
-            Objects.assertNotEmpty("Id must not be empty",id);
-            result = asMap(LongRunningTasks.getProgress(id));
         }else{
             throwMethodNotFound(method);
         }

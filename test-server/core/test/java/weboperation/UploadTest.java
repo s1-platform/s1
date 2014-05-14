@@ -102,7 +102,7 @@ public class UploadTest extends HttpServerTest {
     public void testUploadAsync(){
         int p = 2;
         final String id = "123";
-        assertEquals("upload/"+id,Objects.get(client().postJSON(getContext() + "/dispatcher/Monitor.startTask", Objects.newSOHashMap("id", "upload/"+id)),"result"));
+        assertEquals(id,Objects.get(client().postJSON(getContext() + "/dispatcher/Upload.startProgress", Objects.newSOHashMap("id", id)),"result"));
 
         StringBuilder sb = new StringBuilder("qwerasdf");
         for(long i=0;i<100000;i++){
@@ -131,7 +131,7 @@ public class UploadTest extends HttpServerTest {
                         //progress
                         long progress = 0;
                         while(progress!=-1) {
-                            m = client().postJSON(getContext() + "/dispatcher/Monitor.getProgress", Objects.newSOHashMap("id", "upload/" + id));
+                            m = client().postJSON(getContext() + "/dispatcher/Upload.getProgress", Objects.newSOHashMap("id", id));
                             progress = Objects.get(Long.class, m, "result");
                             //if (input == 0)
                                 trace(progress);
