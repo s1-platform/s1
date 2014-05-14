@@ -343,7 +343,7 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     }
 
     @MapMethod
-    public String formatNumber(Object n, String groupSeparator,String decimalSeparator, String format){
+    public String formatNumber(Object n, String format, String groupSeparator, String decimalSeparator){
         if(Objects.isNullOrEmpty(groupSeparator))
             groupSeparator=",";
         if(Objects.isNullOrEmpty(decimalSeparator))
