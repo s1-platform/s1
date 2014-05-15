@@ -7,6 +7,8 @@ import org.s1.objects.Objects;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Grigory Pykhov
@@ -14,37 +16,62 @@ import java.net.URLEncoder;
 public class URLFunctionSet extends ScriptFunctionSet {
 
     @MapMethod
-    public String addParam(String url, String param, String value){
-        String [] arr = url.split("\\?");
-        String q = "";
-        if(arr.length>1){
-            q = arr[1];
-        }
-        if(q.length()!=0)
-            q+="&";
-        q+=param+"="+encode(value);
-        return arr[0]+"?"+q;
-    }
+    public Map<String,Object> getParams(String url){
+        Map<String,Object> m = Objects.newSOHashMap();
 
-    @MapMethod
-    public String removeParam(String url, String param){
         String [] arr = url.split("\\?");
         String q = "";
         if(arr.length>1){
             q = arr[1];
         }
+
         String [] arr2 = q.split("&");
         String q2 = "";
         for(String s:arr2){
             String arr3 [] = s.split("=");
-            if(!param.equals(arr3[0]) && arr3.length>1){
-                if(q2.length()!=0)
-                    q2+="&";
-                q2+=arr3[0]+"="+encode(arr3[1]);
+            String k = arr3[0];
+            if(!Objects.isNullOrEmpty(k)) {
+                String v = null;
+                if (arr3.length > 1)
+                    v = arr3[1];
+                m.put(k, v);
             }
         }
+        return m;
+    }
 
-        return arr[0]+(Objects.isNullOrEmpty(q2)?"":("?"+q2));
+    @MapMethod
+    public String setParams(String url, Map<String,Object> params){
+        Map<String,Object> m = getParams(url);
+        m.putAll(params);
+        return replaceParams(url,m);
+    }
+
+    @MapMethod
+    public String replaceParams(String url, Map<String,Object> params){
+        String [] arr = url.split("\\?");
+        String u = arr[0];
+        Map<String,Object> m = params;
+        int i=0;
+        for(String k:m.keySet()){
+            if(i==0)
+                u+="?";
+            else
+                u+="&";
+            u+=k+"="+encode(Objects.get(String.class,m,k));
+            i++;
+        }
+
+        return u;
+    }
+
+    @MapMethod
+    public String removeParams(String url, List<String> param){
+        Map<String,Object> m = getParams(url);
+        for(String k :param) {
+            m.remove(k);
+        }
+        return replaceParams(url,m);
     }
 
     @MapMethod

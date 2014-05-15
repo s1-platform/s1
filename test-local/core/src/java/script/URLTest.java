@@ -1,5 +1,6 @@
 package script;
 
+import org.s1.objects.Objects;
 import org.s1.script.function.URLFunctionSet;
 import org.s1.testing.BasicTest;
 import org.s1.testing.LoadTestUtils;
@@ -34,7 +35,7 @@ public class URLTest extends BasicTest{
         assertEquals(p,LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int i) throws Exception {
-                assertEquals(result,uf.addParam(url,param,value));
+                assertEquals(result,uf.setParams(url, Objects.newSOHashMap(param,value)));
             }
         }));
     }
@@ -46,7 +47,7 @@ public class URLTest extends BasicTest{
         assertEquals(p,LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int i) throws Exception {
-                assertEquals(result,uf.removeParam(url,param));
+                assertEquals(result,uf.removeParams(url, Objects.newArrayList(param)));
             }
         }));
     }
