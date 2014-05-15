@@ -16,7 +16,7 @@ public class URLTest extends BasicTest{
     public Object[][] add(){
         return new Object[][]{
                 {"http://example.com/a/b?a=1","http://example.com/a/b","a","1"},
-                {"http://example.com/a/b?a=1&b=2","http://example.com/a/b?a=1","b","2"}
+                {"http://example.com/a/b?b=2","http://example.com/a/b?b=1","b","2"}
         };
     }
 
