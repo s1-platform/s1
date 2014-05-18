@@ -140,9 +140,7 @@ public class MapMethodWrapper {
         }
         try {
             Object ret = method.invoke(instance, params.toArray());
-            if(ret instanceof MapSerializableObject){
-                ret = toMap((MapSerializableObject)ret);
-            }
+            ret = toMap(ret);
             return ret;
         }catch (InvocationTargetException e){
             if(e.getCause()!=null)

@@ -49,6 +49,14 @@ public class MapMethodWrapperTest extends BasicTest {
         return a+":"+b.size();
     }
 
+    @MapMethod
+    public List<M1> e(String a){
+        M1 m = new M1();
+        m.a = 1;
+        m.b = a;
+        return Objects.asList(m);
+    }
+
     @MapMethod(names = {"a","b"})
     public String map1(String a,Map<M1,List<M1>> b){
         for(M1 l:b.keySet()) {
@@ -133,6 +141,9 @@ public class MapMethodWrapperTest extends BasicTest {
                                         Objects.newSOHashMap("a", 2, "b", "asd2"))
                         )
                 )));
+
+                assertEquals(1,((List<Map<String,Object>>)MapMethodWrapper.findAndInvoke(m,"e", "aaa")).get(0).get("a"));
+                assertEquals("aaa",((List<Map<String,Object>>)MapMethodWrapper.findAndInvoke(m,"e", "aaa")).get(0).get("b"));
             }
         }));
     }
