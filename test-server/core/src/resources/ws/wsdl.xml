@@ -6,7 +6,7 @@
                   xmlns:tns="http://example.com/" targetNamespace="http://example.com/">
     <wsdl:types>
         <xs:schema targetNamespace="http://example.com/">
-            <xs:include schemaLocation="${address}?import=schema.xsd"></xs:include>
+            <xs:include schemaLocation="${address}?resource=schema.xsd"></xs:include>
 
         </xs:schema>
     </wsdl:types>

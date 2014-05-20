@@ -20,6 +20,7 @@ import org.s1.S1SystemError;
 import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
 import org.s1.misc.IOUtils;
+import org.s1.objects.BadDataException;
 import org.s1.objects.Objects;
 import org.s1.weboperation.WebOperation;
 import org.slf4j.MDC;
@@ -31,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.soap.*;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
@@ -43,8 +45,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
 
     @Override
     protected SOAPMessage parseInput(HttpServletRequest request) throws Exception {
-        if("wsdl".equals(request.getQueryString())
-                || (!Objects.isNullOrEmpty(request.getQueryString()) && request.getQueryString().startsWith("import"))){
+        if(!request.getMethod().equalsIgnoreCase("post")){
             return null;
         }
 
@@ -55,30 +56,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
             headers.put(h,request.getHeader(h));
         }
         SOAPMessage msg = SOAPHelper.createSoapFromStream(headers,request.getInputStream());
-
-        //validate
-        if(Objects.get(config,"ValidateInput",false)){
-            String path = getAddress(request);
-            String wsdlPath = Objects.get(config,"WSDL");
-            SOAPHelper.validateMessage("classpath:/ws",getResource(wsdlPath,path),msg);
-        }
-
         return msg;
-    }
-
-    /**
-     * Get resource (WSDL or XSD)
-     *
-     * @param path path to resource relative to /s1ws/ java package
-     * @param address service address - will replace ${address} in resource
-     * @return
-     */
-    protected Document getResource(String path, String address) throws XMLFormatException{
-        if(path.startsWith("/"))
-            path = path.substring(1);
-        String res = IOUtils.toString(this.getClass().getResourceAsStream("/s1ws/"+path),"UTF-8");
-        res = res.replace("${address}",address);
-        return XMLFormat.fromString(res);
     }
 
     @Override
@@ -95,13 +73,6 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
         if(msg.getAttachments().hasNext()){
             //has attachments
             msg.getSOAPPart().setContentId("rootpart@s1-platform.org");
-        }
-
-        //validate
-        if(Objects.get(config,"ValidateOutput",false)){
-            String path = getAddress(request);
-            String wsdlPath = Objects.get(config,"WSDL");
-            SOAPHelper.validateMessage("classpath:/ws",getResource(wsdlPath,path),msg);
         }
 
         //write content
@@ -138,32 +109,6 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     /**
-     * Get SOAPAction, try to get it from first body child name
-     *
-     * @param method
-     * @param msg
-     * @param request
-     * @return
-     */
-    protected String getAction(String method, SOAPMessage msg, HttpServletRequest request){
-        if("wsdl".equals(request.getQueryString())
-                || (!Objects.isNullOrEmpty(request.getQueryString()) && request.getQueryString().startsWith("import"))){
-            return null;
-        }
-
-        String a = null;
-        Element action = null;
-        try {
-            action = XMLFormat.getFirstChildElement(msg.getSOAPBody(), null, null);
-        } catch (SOAPException e) {
-            throw S1SystemError.wrap(e);
-        }
-        if(action!=null)
-            a = action.getLocalName();
-        return a;
-    }
-
-    /**
      * Implement business logic here
      *
      * @param action
@@ -171,7 +116,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
      * @return
      * @throws Exception
      */
-    protected abstract SOAPMessage processSOAP(String action, SOAPMessage request) throws Exception;
+    protected abstract SOAPMessage processSOAP(String method, String action, SOAPMessage request) throws Exception;
 
     @Override
     protected String inToString(SOAPMessage params) {
@@ -190,33 +135,94 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
      * @return
      */
     protected String getAddress(HttpServletRequest request){
-        String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getRequestURI();
+        String path = request.getScheme()+"://"+request.getServerName();
+        //port
+        if(request.getScheme().equals("http")&&request.getServerPort()!=80)
+            path+=":"+request.getServerPort();
+        if(request.getScheme().equals("https")&&request.getServerPort()!=443)
+            path+=":"+request.getServerPort();
+        path+=request.getRequestURI();
         return path;
     }
 
+    protected boolean shouldValidateInput(String service){
+        return true;
+    }
+
+    protected boolean shouldValidateOutput(String service){
+        return true;
+    }
+
+    /**
+     * Get resource (WSDL or XSD)
+     *
+     * @param service
+     * @param address service address - will replace ${address} in resource
+     * @param resource path to resource relative to /s1ws/ java package
+     * @return
+     */
+    protected abstract Document getResource(String service, String address, String resource) throws Exception;
+
+    /**
+     * Get SOAPAction, try to get it from first body child name
+     *
+     * @param service
+     * @param msg
+     * @param request
+     * @return
+     */
+    protected String getAction(String service, SOAPMessage msg, HttpServletRequest request){
+        if(!request.getMethod().equalsIgnoreCase("post")){
+            return null;
+        }
+
+        String a = null;
+        Element action = null;
+        try {
+            action = XMLFormat.getFirstChildElement(msg.getSOAPBody(), null, null);
+        } catch (SOAPException e) {
+            throw S1SystemError.wrap(e);
+        }
+        if(action!=null)
+            a = action.getLocalName();
+        return a;
+    }
+
     @Override
-    protected SOAPMessage process(String method, SOAPMessage msg, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    protected SOAPMessage process(String service, SOAPMessage msg, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String address = getAddress(request);
+
         if("wsdl".equals(request.getQueryString())){
-            String wsdlPath = Objects.get(config,"wsdl");
-            String path = getAddress(request);
-            String wsdl = XMLFormat.toString(getResource(wsdlPath, path).getDocumentElement());
+            String wsdl = XMLFormat.toString(getResource(service,address,null).getDocumentElement());
             response.setContentType("text/xml");
             response.setCharacterEncoding("UTF-8");
             OutputStream os = response.getOutputStream();
             os.write(wsdl.getBytes(Charset.forName("UTF-8")));
             return null;
-        }else if(!Objects.isNullOrEmpty(request.getQueryString()) && request.getQueryString().startsWith("import")){
-            String p = request.getParameter("import");
-            String path = getAddress(request);
-            String res = XMLFormat.toString(getResource(p,path).getDocumentElement());
+        }else if(!Objects.isNullOrEmpty(request.getQueryString()) && request.getParameter("resource")!=null){
+            String resource = request.getParameter("resource");
+            String res = XMLFormat.toString(getResource(service,address,resource).getDocumentElement());
             response.setContentType("text/xml");
             response.setCharacterEncoding("UTF-8");
             OutputStream os = response.getOutputStream();
             os.write(res.getBytes(Charset.forName("UTF-8")));
             return null;
         }else{
-            String action = getAction(method,msg,request);
-            SOAPMessage out = processSOAP(action,msg);
+            if(msg==null)
+                throw new BadDataException("Input SOAP message is null");
+            //validate
+            if(shouldValidateInput(service)){
+                SOAPHelper.validateMessage(address,getResource(service,address,null),msg);
+            }
+
+            String action = getAction(service,msg,request);
+            SOAPMessage out = processSOAP(service,action,msg);
+
+            //validate
+            if(shouldValidateOutput(service)){
+                SOAPHelper.validateMessage(address,getResource(service,address,null),out);
+            }
+
             return out;
         }
     }

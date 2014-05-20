@@ -75,14 +75,10 @@ public class DispatcherServlet extends HttpServlet {
     protected String getMethod(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String q = uri.substring((request.getContextPath()+request.getServletPath()).length()+1);
-        int i = q.indexOf("/");
-        int j = q.indexOf(".");
+        int i = q.indexOf(".");
         String method = null;
-        if(Math.max(i,j)>0){
-            int k = Math.min(i,j);
-            if(k<0)
-                k = Math.max(i,j);
-            method = q.substring(k+1);
+        if(i>0){
+            method = q.substring(i+1);
         }
         return method;
     }
@@ -131,14 +127,10 @@ public class DispatcherServlet extends HttpServlet {
     protected WebOperation getOperation(HttpServletRequest request) throws WebOperationNotFoundException{
         String uri = request.getRequestURI();
         String q = uri.substring((request.getContextPath()+request.getServletPath()).length()+1);
-        int i = q.indexOf("/");
-        int j = q.indexOf(".");
+        int i = q.indexOf(".");
         String name = q;
-        if(Math.max(i,j)>0){
-            int k = Math.min(i,j);
-            if(k<0)
-                k = Math.max(i,j);
-            name = q.substring(0,k);
+        if(i>0){
+            name = q.substring(0,i);
         }
         return getOperationByName(name);
     }
