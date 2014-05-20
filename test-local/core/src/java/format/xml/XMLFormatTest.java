@@ -120,7 +120,7 @@ public class XMLFormatTest extends BasicTest {
                 }
 
                 try {
-                    XMLFormat.validate(xsd, xml);
+                    XMLFormat.validate("classpath:/format/xml",xsd, xml);
                 } catch (XSDFormatException e) {
                     throw new RuntimeException(e);
                 } catch (XSDValidationException e) {
@@ -130,7 +130,7 @@ public class XMLFormatTest extends BasicTest {
                 //error
                 boolean b = false;
                 try {
-                    XMLFormat.validate(xsd, xml2);
+                    XMLFormat.validate("classpath:/format/xml",xsd, xml2);
                 } catch (XSDFormatException e) {
                     throw new RuntimeException(e);
                 } catch (XSDValidationException e) {
@@ -211,7 +211,7 @@ public class XMLFormatTest extends BasicTest {
                 }
 
                 try {
-                    XMLFormat.validate(xsd, xml);
+                    XMLFormat.validate("classpath:/format/xml",xsd, xml);
                 } catch (XSDFormatException e) {
                     throw new RuntimeException(e);
                 } catch (XSDValidationException e) {

@@ -17,9 +17,13 @@
 package org.s1.format.xml;
 
 import org.s1.S1SystemError;
+import org.s1.misc.FileUtils;
+import org.s1.misc.IOUtils;
 import org.s1.objects.ObjectPath;
 import org.s1.objects.Objects;
 import org.w3c.dom.*;
+import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.ls.LSResourceResolver;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -32,8 +36,10 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -467,8 +473,8 @@ public class XMLFormat {
      * @throws XSDFormatException
      * @throws XSDValidationException
      */
-    public static void validate(Document xsd, Document xml) throws XSDFormatException,XSDValidationException {
-        validate(xsd.getDocumentElement(),xml.getDocumentElement());
+    public static void validate(final String schemaPath, Document xsd, Document xml) throws XSDFormatException,XSDValidationException {
+        validate(schemaPath,xsd.getDocumentElement(),xml.getDocumentElement());
     }
 
     /**
@@ -478,8 +484,8 @@ public class XMLFormat {
      * @throws XSDFormatException
      * @throws XSDValidationException
      */
-    public static void validate(Document xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        validate(xsd.getDocumentElement(),xml);
+    public static void validate(final String schemaPath, Document xsd, Element xml) throws XSDFormatException,XSDValidationException{
+        validate(schemaPath,xsd.getDocumentElement(),xml);
     }
 
     /**
@@ -487,12 +493,106 @@ public class XMLFormat {
      * @param xsd
      * @param xml
      */
-    public static void validate(Element xsd, Element xml) throws XSDFormatException,XSDValidationException{
+    public static void validate(final String schemaPath, Element xsd, Element xml) throws XSDFormatException,XSDValidationException{
         DOMSource schemaFile = new DOMSource(xsd);
-        DOMSource source = new DOMSource(xml);
+        DOMSource source = new DOMSource(xml,schemaPath);
         DOMResult xmlFile = new DOMResult();
 
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        schemaFactory.setResourceResolver(new LSResourceResolver() {
+            @Override
+            public LSInput resolveResource(final String type, final String namespaceURI, final String publicId, final String systemId, final String baseURI) {
+                String d = null;
+                String path = systemId;
+                if(path.matches("^[a-z]+:.+$")) {
+                } else {
+                    path = schemaPath+"/"+path;
+                }
+                InputStream is = null;
+                try{
+                    is = FileUtils.readResource(path);
+                    d = IOUtils.toString(is,"UTF-8");
+                } catch (IOException e){
+                    throw S1SystemError.wrap(e);
+                }finally {
+                    IOUtils.closeQuietly(is);
+                }
+                final String data = d;
+                return new LSInput() {
+                    @Override
+                    public Reader getCharacterStream() {
+                        return new StringReader(data);
+                    }
+
+                    @Override
+                    public void setCharacterStream(Reader characterStream) {
+                    }
+
+                    @Override
+                    public InputStream getByteStream() {
+                        return new ByteArrayInputStream(data.getBytes(Charset.forName("UTF-8")));
+                    }
+
+                    @Override
+                    public void setByteStream(InputStream byteStream) {
+                    }
+
+                    @Override
+                    public String getStringData() {
+                        return data;
+                    }
+
+                    @Override
+                    public void setStringData(String stringData) {
+                    }
+
+                    @Override
+                    public String getSystemId() {
+                        return systemId;
+                    }
+
+                    @Override
+                    public void setSystemId(String systemId) {
+                    }
+
+                    @Override
+                    public String getPublicId() {
+                        return publicId;
+                    }
+
+                    @Override
+                    public void setPublicId(String publicId) {
+                    }
+
+                    @Override
+                    public String getBaseURI() {
+                        return baseURI;
+                    }
+
+                    @Override
+                    public void setBaseURI(String baseURI) {
+                    }
+
+                    @Override
+                    public String getEncoding() {
+                        return "UTF-8";
+                    }
+
+                    @Override
+                    public void setEncoding(String encoding) {
+                    }
+
+                    @Override
+                    public boolean getCertifiedText() {
+                        return false;
+                    }
+
+                    @Override
+                    public void setCertifiedText(boolean certifiedText) {
+                    }
+                };
+            }
+        });
 
         Validator validator = null;
         try{
@@ -502,7 +602,6 @@ public class XMLFormat {
         }catch (Exception e){
             throw new XSDFormatException(e.getMessage(),e);
         }
-
         try{
             //validate
             validator.validate(source,xmlFile);

@@ -129,7 +129,7 @@ public class SOAPHelperTest extends BasicTest {
 
                 String res = resourceAsString("/ws/wsdl.xml");
                 try {
-                    SOAPHelper.validateMessage(XMLFormat.fromString(res),msg);
+                    SOAPHelper.validateMessage("classpath:/ws",XMLFormat.fromString(res),msg);
                 } catch (Exception e) {
                     throw S1SystemError.wrap(e);
                 }
@@ -152,7 +152,7 @@ public class SOAPHelperTest extends BasicTest {
 
                 boolean b = false;
                 try {
-                    SOAPHelper.validateMessage(XMLFormat.fromString(res),msg2);
+                    SOAPHelper.validateMessage("classpath:/ws",XMLFormat.fromString(res),msg2);
                 } catch (XSDFormatException e) {
                     throw S1SystemError.wrap(e);
                 } catch (XSDValidationException e) {

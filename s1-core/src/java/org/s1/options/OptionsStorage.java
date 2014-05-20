@@ -20,8 +20,8 @@ import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
+import org.s1.misc.FileUtils;
 import org.s1.misc.IOUtils;
-import org.s1.misc.protocols.Init;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +38,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +50,6 @@ import java.util.regex.Pattern;
  * Default options storage implementation
  */
 public class OptionsStorage {
-    static {
-        Init.init();
-    }
 
     private static final Logger LOG = LoggerFactory.getLogger(OptionsStorage.class);
 
@@ -270,23 +269,13 @@ public class OptionsStorage {
     public InputStream openConfig(String name) {
         InputStream is = null;
         String configPath = configHome + "/" + name;
-        if(!configPath.matches("^[a-z]+:/.+$")) {
-            File file = new File(configPath);
-            if (file.exists() && file.isFile()) {
-                try {
-                    is = new FileInputStream(file);
-                } catch (FileNotFoundException e) {
-                    LOG.debug("Config " + name + " (" + configPath + ") not found");
-                }
-            }
-        }else {
-            try {
-                URLConnection c = new URL(configPath).openConnection();
-                is = c.getInputStream();
-            } catch (Throwable e) {
-                LOG.debug("Config " + name + " (" + configPath + ") not found", e);
-            }
+
+        try {
+            return FileUtils.readResource(configPath);
+        } catch (Throwable e) {
+            LOG.debug("Config " + name + " (" + configPath + ") not found", e);
         }
+
         return is;
     }
 

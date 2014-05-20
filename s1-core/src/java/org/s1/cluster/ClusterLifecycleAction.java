@@ -19,7 +19,6 @@ package org.s1.cluster;
 import com.hazelcast.core.Hazelcast;
 import org.s1.cluster.dds.DDSCluster;
 import org.s1.lifecycle.LifecycleAction;
-import org.s1.misc.protocols.Init;
 
 /**
  * S1 system action
@@ -28,7 +27,6 @@ public class ClusterLifecycleAction extends LifecycleAction {
 
     @Override
     public void start() {
-        Init.init();
         HazelcastWrapper.getInstance();
         NodeMessageExchange.instance = new NodeMessageExchange();
         DDSCluster.start();

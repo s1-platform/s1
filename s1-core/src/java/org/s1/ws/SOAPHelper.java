@@ -104,7 +104,7 @@ public class SOAPHelper {
      * @throws XSDFormatException
      * @throws XSDValidationException
      */
-    public static void validateMessage(Document wsdl, SOAPMessage msg) throws XSDFormatException, XSDValidationException{
+    public static void validateMessage(String basePath, Document wsdl, SOAPMessage msg) throws XSDFormatException, XSDValidationException{
         LOG.debug("Validating message on WSDL");
 
         //get schema
@@ -131,7 +131,7 @@ public class SOAPHelper {
 
         //validate Body children
         for(Element el:XMLFormat.getChildElementList(body,null,null)){
-            XMLFormat.validate(schemaNode, el);
+            XMLFormat.validate(basePath, schemaNode, el);
         }
     }
 

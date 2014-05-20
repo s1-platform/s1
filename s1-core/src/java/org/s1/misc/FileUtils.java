@@ -19,8 +19,7 @@ package org.s1.misc;
 import org.s1.objects.Objects;
 
 import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -30,6 +29,24 @@ import java.util.jar.JarFile;
  * File utils
  */
 public class FileUtils {
+
+    public static InputStream readResource(String path) throws IOException {
+        InputStream is = null;
+        if(path.startsWith("classpath:")){
+            path = path.replaceAll("^classpath:/*","");
+            is = FileUtils.class.getResourceAsStream("/"+path);
+        } else if(path.matches("^[a-z]+:.+$")) {
+            URL u = new URL(path);
+            URLConnection c = u.openConnection();
+            is = c.getInputStream();
+        } else {
+            File file = new File(path);
+            if (file.exists() && file.isFile()) {
+                is = new FileInputStream(file);
+            }
+        }
+        return is;
+    }
 
     public static List<String> getClasspathResources(String path){
         String pkgname = path.replace('/','.');

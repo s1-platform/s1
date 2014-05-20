@@ -60,7 +60,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
         if(Objects.get(config,"ValidateInput",false)){
             String path = getAddress(request);
             String wsdlPath = Objects.get(config,"WSDL");
-            SOAPHelper.validateMessage(getResource(wsdlPath,path),msg);
+            SOAPHelper.validateMessage("classpath:/ws",getResource(wsdlPath,path),msg);
         }
 
         return msg;
@@ -101,7 +101,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
         if(Objects.get(config,"ValidateOutput",false)){
             String path = getAddress(request);
             String wsdlPath = Objects.get(config,"WSDL");
-            SOAPHelper.validateMessage(getResource(wsdlPath,path),msg);
+            SOAPHelper.validateMessage("classpath:/ws",getResource(wsdlPath,path),msg);
         }
 
         //write content
