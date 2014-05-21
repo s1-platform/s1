@@ -18,6 +18,7 @@ package org.s1.cluster.dds.beans;
 
 
 import org.s1.cluster.dds.DistributedDataSource;
+import org.s1.objects.Objects;
 
 import java.util.Map;
 
@@ -97,6 +98,21 @@ public class MessageBean extends CommandBean{
         String s = "id:"+getId()+",nodeId: "+getNodeId()+","+
                 super.toString(withData);
         return s;
+    }
+
+    public void fromMap(Map<String,Object> m){
+        super.fromMap(m);
+        setEntity(Objects.get(String.class, m, "entity"));
+        setId(Objects.get(Long.class, m, "id"));
+        setNodeId(Objects.get(String.class, m, "nodeId"));
+    }
+
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = super.toMap();
+        m.put("id",getId());
+        m.put("entity",getEntity());
+        m.put("nodeId",getNodeId());
+        return m;
     }
 
 }

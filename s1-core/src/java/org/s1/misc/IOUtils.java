@@ -16,10 +16,7 @@
 
 package org.s1.misc;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
@@ -49,6 +46,12 @@ public class IOUtils {
             return null;
         Scanner s = new Scanner(is, charset).useDelimiter("\\A");
         return s.hasNext() ? s.next() : null;
+    }
+
+    public static byte[] toBytes(InputStream is) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        IOUtils.copy(is,bos);
+        return bos.toByteArray();
     }
 
     /**

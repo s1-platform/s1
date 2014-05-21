@@ -123,4 +123,16 @@ public class CommandBean extends StorageId {
         return s;
     }
 
+    public void fromMap(Map<String,Object> m){
+        super.fromMap(m);
+        setCommand(Objects.get(String.class, m, "command"));
+        setParams(Objects.get(m, "params", Objects.newSOHashMap()));
+    }
+
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = super.toMap();
+        m.put("command",getCommand());
+        m.put("params",getParams());
+        return m;
+    }
 }

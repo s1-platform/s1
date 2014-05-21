@@ -16,8 +16,11 @@
 
 package org.s1.cluster.dds.beans;
 
+import org.s1.S1SystemError;
 import org.s1.cluster.dds.DistributedDataSource;
 import org.s1.objects.Objects;
+
+import java.util.Map;
 
 /**
  * Command bean
@@ -81,6 +84,22 @@ public class StorageId extends Id {
         }else{
             return ""+getDataSource()+"/"+getDatabase()+"/"+getCollection()+"/"+getEntity();
         }
+    }
+
+    public void fromMap(Map<String,Object> m){
+        super.fromMap(m);
+        String cls = Objects.get(String.class, m, "dataSource");
+        try{
+            setDataSource((Class<? extends DistributedDataSource>)Class.forName(cls));
+        }catch (Throwable e){
+            throw S1SystemError.wrap(e);
+        }
+    }
+
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = super.toMap();
+        m.put("dataSource",getDataSource()==null?null:getDataSource().getName());
+        return m;
     }
 
 }

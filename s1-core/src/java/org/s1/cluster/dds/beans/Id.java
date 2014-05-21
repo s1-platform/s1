@@ -16,6 +16,10 @@
 
 package org.s1.cluster.dds.beans;
 
+import org.s1.objects.Objects;
+
+import java.util.Map;
+
 /**
  * Command bean
  */
@@ -37,6 +41,10 @@ public class Id extends CollectionId {
     public Id(String database, String collection, String entity) {
         super(database,collection);
         this.entity = entity;
+    }
+
+    public Id(Map<String,Object> m) {
+        this.fromMap(m);
     }
 
    /**
@@ -62,6 +70,17 @@ public class Id extends CollectionId {
     public String toString(){
         String s = super.toString()+", entity: "+getEntity();
         return s;
+    }
+
+    public void fromMap(Map<String,Object> m){
+        super.fromMap(m);
+        setEntity(Objects.get(String.class,m,"id"));
+    }
+
+    public Map<String,Object> toMap(){
+        Map<String,Object> m = super.toMap();
+        m.put("id",getEntity());
+        return m;
     }
 
 }

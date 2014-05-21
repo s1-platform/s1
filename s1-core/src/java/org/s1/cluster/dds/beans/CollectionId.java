@@ -16,12 +16,16 @@
 
 package org.s1.cluster.dds.beans;
 
+import org.s1.objects.MapSerializableObject;
+import org.s1.objects.Objects;
+
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Command bean
  */
-public class CollectionId implements Serializable{
+public class CollectionId implements Serializable, MapSerializableObject{
     private String database;
     private String collection;
 
@@ -83,4 +87,15 @@ public class CollectionId implements Serializable{
         return s;
     }
 
+    public void fromMap(Map<String,Object> m){
+        setCollection(Objects.get(String.class,m,"collection"));
+        setDatabase(Objects.get(String.class,m,"database"));
+    }
+
+    public Map<String,Object> toMap(){
+        return Objects.newSOHashMap(
+                "collection",getCollection(),
+                "database",getDatabase()
+        );
+    }
 }

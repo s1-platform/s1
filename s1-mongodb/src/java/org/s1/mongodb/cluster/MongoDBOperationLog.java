@@ -55,7 +55,9 @@ public class MongoDBOperationLog extends OperationLog {
         while(cur.hasNext()){
             DBObject o = cur.next();
             Map<String,Object> m1 = MongoDBFormat.toMap(o);
-            cl.call(fromMap(m1));
+            MessageBean mb = new MessageBean();
+            mb.fromMap(m1);
+            cl.call(mb);
         }
     }
 
@@ -67,14 +69,16 @@ public class MongoDBOperationLog extends OperationLog {
         while(cur.hasNext()){
             DBObject o = cur.next();
             Map<String,Object> m1 = MongoDBFormat.toMap(o);
-            cl.call(fromMap(m1));
+            MessageBean mb = new MessageBean();
+            mb.fromMap(m1);
+            cl.call(mb);
         }
     }
 
     @Override
     public void addToLocalLog(MessageBean m) {
         DBCollection coll = getCollection();
-        Map<String,Object> m1 = toMap(m);
+        Map<String,Object> m1 = m.toMap();
         m1.put("done", false);
         coll.insert(MongoDBFormat.fromMap(m1), WriteConcern.FSYNC_SAFE);
         if(LOG.isTraceEnabled()){
@@ -120,41 +124,4 @@ public class MongoDBOperationLog extends OperationLog {
         return coll;
     }
 
-    private static Map<String,Object> toMap(MessageBean b){
-        Map<String,Object> m = Objects.newHashMap();
-        m.put("id",b.getId());
-        m.put("database",b.getDatabase());
-        m.put("collection",b.getCollection());
-        m.put("entity",b.getEntity());
-        m.put("command",b.getCommand());
-        m.put("nodeId",b.getNodeId());
-        m.put("params",b.getParams());
-
-        if(b.getDataSource()!=null){
-            m.put("dataSource",b.getDataSource().getName());
-        }
-        return m;
-    }
-
-    private static MessageBean fromMap(Map<String,Object> m){
-        MessageBean b = new MessageBean();
-        b.setId(Objects.get(Long.class,m,"id"));
-        b.setDatabase(Objects.get(String.class, m, "database"));
-        b.setCollection(Objects.get(String.class, m, "collection"));
-        b.setEntity(Objects.get(String.class, m, "entity"));
-        b.setCommand(Objects.get(String.class, m, "command"));
-        b.setNodeId(Objects.get(String.class, m, "nodeId"));
-        b.setParams(Objects.get(Map.class, m, "params"));
-        Class<? extends DistributedDataSource> ds = null;
-        String _ds = Objects.get(String.class,m,"dataSource");
-        if(!Objects.isNullOrEmpty(_ds)) {
-            try {
-                ds = (Class<? extends DistributedDataSource>) Class.forName(_ds);
-            } catch (Exception e) {
-                throw S1SystemError.wrap(e);
-            }
-        }
-        b.setDataSource(ds);
-        return b;
-    }
 }

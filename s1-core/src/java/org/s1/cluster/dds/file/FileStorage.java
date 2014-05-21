@@ -106,6 +106,18 @@ public class FileStorage extends DistributedDataSource {
         }
     }
 
+    public static byte[] readBytes(Id id) throws NotFoundException{
+        FileReadBean fr = null;
+        try{
+            fr = read(id);
+            return IOUtils.toBytes(fr.getInputStream());
+        }catch (IOException e){
+            throw S1SystemError.wrap(e);
+        }finally {
+            closeAfterRead(fr);
+        }
+    }
+
 
     /**
      *
