@@ -38,11 +38,11 @@ public class SOAPOperationTest extends HttpServerTest {
                 if(input==0)
                     trace(s);
                 assertTrue(s.contains("<wsdl:definitions "));
-                assertTrue(s.contains("<xs:include schemaLocation=\"http://localhost:"+getPort()+getContext()+"/dispatcher/ws1?import=schema.xsd\""));
+                assertTrue(s.contains("<xs:include schemaLocation=\"http://localhost:"+getPort()+getContext()+"/dispatcher/ws1?resource=schema.xsd\""));
                 assertTrue(s.contains("<soap:address location=\"http://localhost:"+getPort()+getContext()+"/dispatcher/ws1\""));
 
                 String s1 = null;
-                s1 = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?import=schema.xsd", null, null).getData(),"UTF-8");
+                s1 = IOUtils.toString(client().get(getContext() + "/dispatcher/ws1?resource=schema.xsd", null, null).getData(),"UTF-8");
 
                 if(input==0)
                     trace(s1);

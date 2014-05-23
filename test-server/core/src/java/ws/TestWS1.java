@@ -21,6 +21,16 @@ import java.io.InputStream;
 public class TestWS1 extends SOAPOperation {
 
     @Override
+    protected boolean shouldValidateInput(String service) {
+        return false;
+    }
+
+    @Override
+    protected boolean shouldValidateOutput(String service) {
+        return false;
+    }
+
+    @Override
     protected Document getResource(String service, String address, String resource) throws Exception {
         if(Objects.isNullOrEmpty(resource))
             resource = "wsdl.xml";
