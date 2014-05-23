@@ -118,6 +118,32 @@ public class FileStorage extends DistributedDataSource {
         }
     }
 
+    public static void writeBytes(Id id, FileMetaBean meta, byte [] data) {
+        FileWriteBean fw = null;
+        try{
+            fw = createFileWriteBean(id,meta);
+            fw.getOutputStream().write(data);
+            save(fw);
+        }catch (IOException e){
+            throw S1SystemError.wrap(e);
+        }finally {
+            closeAfterWrite(fw);
+        }
+    }
+
+    public static void writeFromStream(Id id, FileMetaBean meta, InputStream is) {
+        FileWriteBean fw = null;
+        try{
+            fw = createFileWriteBean(id,meta);
+            IOUtils.copy(is,fw.getOutputStream());
+            save(fw);
+        }catch (IOException e){
+            throw S1SystemError.wrap(e);
+        }finally {
+            closeAfterWrite(fw);
+        }
+    }
+
 
     /**
      *
