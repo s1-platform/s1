@@ -350,10 +350,20 @@ public class XMLFormat {
                 String name = getLocalName(parts[i]);
                 String ns = getNamespaceURI(parts[i],namespaces);
                 if(parts[i].startsWith("@")){
-                    if(ns!=null){
-                        ret = el.getAttributeNS(ns,name);
-                    }else{
-                        ret = el.getAttribute(name);
+                    NamedNodeMap attrs = el.getAttributes();
+                    for(int k=0;k<attrs.getLength();k++){
+                        Attr a = (Attr)attrs.item(k);
+                        if(a.getLocalName().equals(name)){
+                            if(ns!=null){
+                                if(a.getNamespaceURI().equals(ns)) {
+                                    ret = a.getValue();
+                                    break;
+                                }
+                            }else{
+                                ret = a.getValue();
+                                break;
+                            }
+                        }
                     }
                     break;
                 }else

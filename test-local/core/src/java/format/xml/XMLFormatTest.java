@@ -56,6 +56,7 @@ public class XMLFormatTest extends BasicTest {
                     throw new RuntimeException(e);
                 }
 
+                assertEquals("zzz", XMLFormat.get(xml, "b.@xx", null));
                 assertEquals("yyy", XMLFormat.get(xml, "b.@xxx", null));
                 assertEquals("qwer", XMLFormat.get(xml, "b.a", null));
                 assertEquals("aaa", XMLFormat.get(xml, "b.c[0]", null));
@@ -64,6 +65,7 @@ public class XMLFormatTest extends BasicTest {
                 assertEquals("qwer", XMLFormat.get(xml, "x:b.a", Objects.newHashMap(String.class, String.class, "x", "urn:a")));
                 assertEquals(null, XMLFormat.get(xml, "x:b.a", Objects.newHashMap(String.class, String.class, "x", "urn:b")));
                 assertEquals("zzz", XMLFormat.get(xml, "b.@x:xx", Objects.newHashMap(String.class, String.class, "x", "urn:a")));
+
 
                 assertEquals("aaa", XMLFormat.getElement(xml, "b.c[0]", null).getTextContent());
                 assertEquals("aaa1", XMLFormat.getElement(xml, "b.c[1]", null).getTextContent());
