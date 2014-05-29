@@ -36,11 +36,11 @@ import java.util.Map;
  */
 public class ASTEvaluator {
 
-    private String source;
+    //private String source;
 
-    public ASTEvaluator(String source) {
+    /*public ASTEvaluator(String source) {
         this.source = source;
-    }
+    }*/
 
     /**
      * Eval container
@@ -259,7 +259,7 @@ public class ASTEvaluator {
             }else if(obj instanceof Map){
                 getResult = ((Map) obj).get(((PropertyGet) node).getProperty().getIdentifier());
             }else{
-                throwScriptError("Object is not instance of Map",node);
+                throwScriptError("Object is not instance of Map (it is "+(obj==null?null:obj.getClass().getName())+")",node);
             }
         }else if(node instanceof ElementGet){
             Object obj = get(((ElementGet) node).getTarget(),ctx);
@@ -267,7 +267,7 @@ public class ASTEvaluator {
             Object o = get(((ElementGet) node).getElement(), ctx);
             if(o instanceof Number){
                 if(!(obj instanceof List)){
-                    throwScriptError("Object is not instance of List",node);
+                    throwScriptError("Object is not instance of List (it is "+(obj==null?null:obj.getClass().getName())+")",node);
                 }
                 if(((List) obj).size()>((Number) o).intValue())
                     getResult = ((List) obj).get(((Number) o).intValue());
@@ -277,10 +277,10 @@ public class ASTEvaluator {
                 }else if(obj instanceof Map){
                     getResult = ((Map) obj).get(o);
                 }else{
-                    throwScriptError("Object is not instance of Map",node);
+                    throwScriptError("Object is not instance of Map (it is "+(obj==null?null:obj.getClass().getName())+")",node);
                 }
                 if(!(obj instanceof Map)){
-                    throwScriptError("Object is not instance of Map",node);
+                    throwScriptError("Object is not instance of Map (it is "+(obj==null?null:obj.getClass().getName())+")",node);
                 }
             }
         }else if(node instanceof KeywordLiteral){
@@ -356,7 +356,7 @@ public class ASTEvaluator {
                 sf.getContext().getVariables().put("arguments",params);
                 getResult = sf.call();
             }else{
-                throwScriptError("Object is not a ScriptFunction",node);
+                throwScriptError("Object is not a ScriptFunction (it is "+(f==null?null:f.getClass().getName())+")",node);
             }
         }else if(node instanceof UnaryExpression){
             //a++, delete a; typeof a
@@ -619,11 +619,11 @@ public class ASTEvaluator {
      * @param node
      */
     protected void throwScriptError(String message, AstNode node){
-        String m = getErrorMessage(source, node.getLineno() - 1, node.getPosition());
-        throw new ScriptException(message+": "+m);
+        //String m = getErrorMessage(source, node.getLineno() - 1, node.getPosition());
+        throw new ScriptException(null,node.getLineno() - 1, node.getPosition(),message);
     }
 
-    protected static String getErrorMessage(String source, int lineno, int position){
+    /*protected static String getErrorMessage(String source, int lineno, int position){
         String arr [] = source.split("\n");
         String line = lineno<arr.length?arr[lineno]:"";
         int s = position-20;
@@ -631,6 +631,6 @@ public class ASTEvaluator {
         s = s<0?0:s;
         e = e<line.length()?e:line.length()-1;
         return "line "+(lineno+1)+", column "+position+": ... "+line.substring(s,e)+" ...";
-    }
+    }*/
 
 }

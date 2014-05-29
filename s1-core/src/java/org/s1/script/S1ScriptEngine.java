@@ -269,7 +269,7 @@ public class S1ScriptEngine {
                         try {
                             isInside.set(true);
                             id = Session.start(sb.getId());
-                            ASTEvaluator ast = new ASTEvaluator(script);
+                            ASTEvaluator ast = new ASTEvaluator();
                             Object o = ast.eval(root, ctx);
                             return o;
                         } finally {
@@ -285,7 +285,7 @@ public class S1ScriptEngine {
                     public Object call() throws Exception {
                         try {
                             isInside.set(true);
-                            ASTEvaluator ast = new ASTEvaluator(script);
+                            ASTEvaluator ast = new ASTEvaluator();
                             Object o = ast.eval(root, ctx);
                             return o;
                         }finally {
@@ -307,7 +307,7 @@ public class S1ScriptEngine {
                 throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
             }*/
             if(f==null){
-                ASTEvaluator ast = new ASTEvaluator(script);
+                ASTEvaluator ast = new ASTEvaluator();
                 result = (T)ast.eval(root, ctx);
             }else {
                 while (true) {
@@ -333,10 +333,28 @@ public class S1ScriptEngine {
             if(e.getCause()!=null){
                 if(e.getCause() instanceof ScriptLimitException)
                     throw (ScriptLimitException)e.getCause();
-                if(e.getCause() instanceof ScriptException)
-                    throw (ScriptException)e.getCause();
+                if(e.getCause() instanceof ScriptException) {
+                    ScriptException se = (ScriptException) e.getCause();
+                    int line = se.getLine();
+                    if(line>0){
+                        String arr [] = script.split("\n",-1);
+                        String m = (arr.length>line?(arr[line]):"");
+                        se.setCode(m);
+                        throw se;
+                    }
+                    throw se;
+                }
             }
             throw S1SystemError.wrap(e);
+        } catch (ScriptException se){
+            int line = se.getLine();
+            if(line>0){
+                String arr [] = script.split("\n",-1);
+                String m = (arr.length>line?(arr[line]):"");
+                se.setCode(m);
+                throw se;
+            }
+            throw se;
         }
     }
 
@@ -351,13 +369,20 @@ public class S1ScriptEngine {
             root = new Parser(ce).parse(script,"S1RestrictedScript",1);
         } catch (Throwable e) {
             String message = "";
+            int line = 0;
+            int column = 0;
+            String m = null;
             if(e instanceof EvaluatorException){
                 EvaluatorException ex = (EvaluatorException)e;
-                message = "Syntax error: "+ASTEvaluator.getErrorMessage(script,ex.getLineNumber()-1,ex.getColumnNumber());
+                message = "Syntax error: "+ex.getMessage();
+                line = ex.getLineNumber()-1;
+                column = ex.getColumnNumber();
+                String arr [] = script.split("\n",-1);
+                m = (arr.length>line?(arr[line]):"");
             }else{
                 message = e.getMessage();
             }
-            throw new SyntaxException(message,e);
+            throw new SyntaxException(m,line,column,message,e);
         }
         if(LOG.isDebugEnabled()){
             LOG.debug(root.debugPrint());
@@ -404,7 +429,7 @@ public class S1ScriptEngine {
 
     public String template(String name, String template, Map<String,Object> data)
         throws ScriptException,ScriptLimitException,SyntaxException{
-
+        String originalTemplate = template;
         if(LOG.isDebugEnabled()){
             LOG.debug("Building S1 template "+name+":\n"+template+"\nWith data:"+data);
         }
@@ -497,8 +522,27 @@ public class S1ScriptEngine {
             }
         });
 
-        eval(name, template, data);
-
+        try {
+            eval(name, template, data);
+        }catch (SyntaxException se){
+            int line = se.getLine();
+            if(line>0){
+                String arr [] = originalTemplate.split("\n",-1);
+                String m = (arr.length>line?(arr[line]):"");
+                se.setCode(m);
+                throw se;
+            }
+            throw se;
+        }catch (ScriptException se){
+            int line = se.getLine();
+            if(line>0){
+                String arr [] = originalTemplate.split("\n",-1);
+                String m = (arr.length>line?(arr[line]):"");
+                se.setCode(m);
+                throw se;
+            }
+            throw se;
+        }
         template = printBuffer.toString();
         template = template
                 .replace("|--startCode--|",startCode)
@@ -535,7 +579,8 @@ public class S1ScriptEngine {
         while (matcherCode.find()) {
             String text = matcherCode.group(1);
             template = template.replace(startCode+text+endCode,
-                    BEGIN+"\n"+text+"\n"+END);
+                    //BEGIN+"\n"+text+"\n"+END);
+                    BEGIN+text+END);
         }
 
         //text

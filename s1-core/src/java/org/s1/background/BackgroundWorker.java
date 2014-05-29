@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * Base class for background workers
  */
-public abstract class BackgroundWorker extends Thread {
+public abstract class BackgroundWorker implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundWorker.class);
 
@@ -54,9 +54,8 @@ public abstract class BackgroundWorker extends Thread {
     }
 
     /**
-     * Initializing with name and config
+     * Initializing with config
      *
-     * @param name
      * @param config
      */
     public void init(String name, Map<String,Object> config) {
@@ -126,7 +125,7 @@ public abstract class BackgroundWorker extends Thread {
         LOG.info(""+name+" stopped in "+(System.currentTimeMillis()-t)+" ms.");
     }
 
-    private static List<BackgroundWorker> workers = Objects.newArrayList();
+    private static final List<BackgroundWorker> workers = Objects.newArrayList();
 
     /**
      *
@@ -155,7 +154,7 @@ public abstract class BackgroundWorker extends Thread {
         synchronized (workers){
             boolean b = false;
             for(BackgroundWorker a:workers){
-                if(a.getName().equals(name)){
+                if(a.getWorkerName().equals(name)){
                     b = true;
                     break;
                 }
@@ -188,7 +187,8 @@ public abstract class BackgroundWorker extends Thread {
                 if(w!=null){
                     lst.add(w);
                     try{
-                        w.start();
+                        Thread t = new Thread(null,w,"BackgroundWorker_"+name);
+                        t.start();
                     }catch (Throwable e){
                         LOG.warn("Worker #"+i+" failed to start, "+e.getClass().getName()+": "+e.getMessage(),e);
                     }
@@ -208,7 +208,7 @@ public abstract class BackgroundWorker extends Thread {
         }
         for(BackgroundWorker w:l){
             w.doShutdown();
-            w.interrupt();
+            //w.interrupt();
         }
         synchronized (workers){
             workers.clear();

@@ -391,6 +391,35 @@ public class TestScript extends BasicTest{
         }catch (SyntaxException e){
             b = true;
             trace(e.getMessage());
+            assertTrue(e.getMessage().contains("return"));
+        }
+        assertTrue(b);
+
+    }
+
+    @Test
+    public void testTemplateSyntaxError(){
+
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        boolean b = false;
+        try{
+            scriptEngine.template("hello123\n" +
+                    "<%\n" +
+                    "var name='test1';\n"+
+                    "%>\n" +
+                    "my name is <%=name%>;\n" +
+                    "my list is:\n" +
+                    "<%for(var i in list){%>\n" +
+                    "* <%=list[i].a%>\n" +
+                    "<%}%>\n",Objects.newSOHashMap("list",Objects.newArrayList(
+                    Objects.newSOHashMap("a","1"),
+                    Objects.newSOHashMap("a","2"),
+                    "test"
+            )));
+        }catch (ScriptException e){
+            e.printStackTrace();
+            b = true;
+            trace(e.getMessage());
         }
         assertTrue(b);
 

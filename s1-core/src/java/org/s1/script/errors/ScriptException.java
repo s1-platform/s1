@@ -25,6 +25,41 @@ import org.s1.objects.Objects;
  * command or on some runtime error
  */
 public class ScriptException extends RuntimeException {
+
+    private int line;
+    private int column;
+    public String code;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public int getLine() {
+        return line;
+    }
+
+    public int getColumn() {
+        return column;
+    }
+
+    public String getRawMessage(){
+        return super.getMessage();
+    }
+
+    @Override
+    public String getMessage() {
+        String m = super.getMessage();
+        if(line>0)
+            m+=" line "+(line+1)+", column "+column;
+        if(!Objects.isNullOrEmpty(code))
+            m+="\n"+code;
+        return m;
+    }
+
     private Object data;
 
     public Object getData() {
@@ -45,7 +80,19 @@ public class ScriptException extends RuntimeException {
         this.data = data;
     }
 
-    public String getMessage(){
-        return Objects.cast(data,String.class);
+    public ScriptException(String code, int line, int column, Object data) {
+        super(""+data);
+        this.code = code;
+        this.data = data;
+        this.line = line;
+        this.column = column;
+    }
+
+    public ScriptException(String code, int line, int column, Object data, Throwable cause) {
+        super(""+data,cause);
+        this.code = code;
+        this.data = data;
+        this.line = line;
+        this.column = column;
     }
 }
