@@ -27,6 +27,7 @@ import org.s1.script.Context;
 import org.s1.script.S1ScriptEngine;
 import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
+import org.s1.script.function.URLFunctionSet;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 import org.s1.weboperation.MapWebOperation;
@@ -183,6 +184,11 @@ public class S1ScriptFilter implements Filter{
             port = ":"+req.getServerPort();
         else if(req.getScheme().equals("https") && req.getServerPort()!=443)
             port = ":"+req.getServerPort();
+        String query = req.getQueryString();
+        if(!Objects.isNullOrEmpty(query)) {
+            URLFunctionSet url_fs = new URLFunctionSet();
+            query = url_fs.removeParams("url?" + query, Objects.newArrayList("_pjax")).split("\\?", -1)[1];
+        }
         text = scriptEngine.template(page, text, Objects.newSOHashMap(
                 "page",Objects.newSOHashMap(
                         "params",params,
@@ -190,7 +196,7 @@ public class S1ScriptFilter implements Filter{
                         "responseHeaders",responseHeaders,
                         "url",url,
                         "method",req.getMethod().toLowerCase(),
-                        "query",req.getQueryString(),
+                        "query",query,
                         "uri",req.getRequestURI(),
                         "scheme",req.getScheme(),
                         "host",req.getServerName(),
