@@ -26,7 +26,7 @@ import org.s1.objects.Objects;
  */
 public class ScriptException extends RuntimeException {
 
-    private int line;
+    private int line = -1;
     private int column;
     public String code;
 
@@ -53,7 +53,7 @@ public class ScriptException extends RuntimeException {
     @Override
     public String getMessage() {
         String m = super.getMessage();
-        if(line>0)
+        if(line>=0)
             m+=" line "+(line+1)+", column "+column;
         if(!Objects.isNullOrEmpty(code))
             m+="\n"+code;

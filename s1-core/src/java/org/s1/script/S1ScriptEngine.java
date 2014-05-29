@@ -336,7 +336,7 @@ public class S1ScriptEngine {
                 if(e.getCause() instanceof ScriptException) {
                     ScriptException se = (ScriptException) e.getCause();
                     int line = se.getLine();
-                    if(line>0){
+                    if(line>=0){
                         String arr [] = script.split("\n",-1);
                         String m = (arr.length>line?(arr[line]):"");
                         se.setCode(m);
@@ -348,7 +348,7 @@ public class S1ScriptEngine {
             throw S1SystemError.wrap(e);
         } catch (ScriptException se){
             int line = se.getLine();
-            if(line>0){
+            if(line>=0){
                 String arr [] = script.split("\n",-1);
                 String m = (arr.length>line?(arr[line]):"");
                 se.setCode(m);
@@ -526,7 +526,7 @@ public class S1ScriptEngine {
             eval(name, template, data);
         }catch (SyntaxException se){
             int line = se.getLine();
-            if(line>0){
+            if(line>=0){
                 String arr [] = originalTemplate.split("\n",-1);
                 String m = (arr.length>line?(arr[line]):"");
                 se.setCode(m);
@@ -535,7 +535,7 @@ public class S1ScriptEngine {
             throw se;
         }catch (ScriptException se){
             int line = se.getLine();
-            if(line>0){
+            if(line>=0){
                 String arr [] = originalTemplate.split("\n",-1);
                 String m = (arr.length>line?(arr[line]):"");
                 se.setCode(m);
@@ -580,7 +580,8 @@ public class S1ScriptEngine {
             String text = matcherCode.group(1);
             template = template.replace(startCode+text+endCode,
                     //BEGIN+"\n"+text+"\n"+END);
-                    BEGIN+text+END);
+                    BEGIN+";"+text+";"+END);
+                    //BEGIN+text+END);
         }
 
         //text
