@@ -211,9 +211,9 @@ public class S1ScriptFilter implements Filter{
                 "args",local,
                 "include",new ScriptFunction(new Context(10000),Objects.newArrayList("path","params")) {
                     @Override
-                    public Object call() throws ScriptException {
-                        Map<String,Object> l = getContext().get("params");
-                        String p = getContext().get(String.class,"path");
+                    public Object call(Context ctx) throws ScriptException {
+                        Map<String,Object> l = ctx.get("params");
+                        String p = ctx.get(String.class,"path");
                         String id = UUID.randomUUID().toString();
                         //includePages.put(id,p);
                         //includeParams.put(id,l);
@@ -233,9 +233,9 @@ public class S1ScriptFilter implements Filter{
                 },
                 "layout",new ScriptFunction(new Context(10000),Objects.newArrayList("path","params")) {
                     @Override
-                    public Object call() throws ScriptException {
-                        Map<String,Object> l = getContext().get("params");
-                        String p = getContext().get(String.class,"path");
+                    public Object call(Context ctx) throws ScriptException {
+                        Map<String,Object> l = ctx.get("params");
+                        String p = ctx.get(String.class,"path");
                         layout.put("page",p);
                         layout.put("params",l);
                         return "";

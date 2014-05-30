@@ -61,9 +61,10 @@ public abstract class ScriptFunctionSet {
 
     public ScriptFunction getFunction(final String name){
         return new ScriptFunction(getContext(), Objects.newArrayList(String.class)) {
+
             @Override
-            public Object call() throws ScriptException {
-                List<Object> args = getContext().get("arguments");
+            public Object call(Context ctx) throws ScriptException {
+                List<Object> args = ctx.get("arguments");
                 try {
                     return callFunction(name,args);
                 } catch (ScriptException e) {

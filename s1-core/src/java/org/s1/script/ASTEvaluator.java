@@ -325,9 +325,9 @@ public class ASTEvaluator {
             }
             ScriptFunction sf = new ScriptFunction(ctx.createChild(),fparams){
                 @Override
-                public Object call() throws ScriptException {
+                public Object call(Context ctx) throws ScriptException {
                     try{
-                        eval(fnode.getBody(), getContext());
+                        eval(fnode.getBody(), ctx);
                     }catch (FunctionReturnException e){
                         return e.getData();
                     }
@@ -349,12 +349,20 @@ public class ASTEvaluator {
             Object f = get(((FunctionCall) node).getTarget(),ctx);
             if(f instanceof ScriptFunction){
                 ScriptFunction sf = (ScriptFunction)f;
+                Map<String,Object> _params = Objects.newSOHashMap();
                 for(int i=0;i<sf.getParams().size();i++){
                     Object pval = i<params.size()?params.get(i):null;
-                    sf.getContext().getVariables().put(sf.getParams().get(i),pval);
+                    //sf.getContext().getVariables().put(sf.getParams().get(i),pval);
+                    _params.put(sf.getParams().get(i),pval);
                 }
-                sf.getContext().getVariables().put("arguments",params);
-                getResult = sf.call();
+                getResult = sf.call(_params,params);
+                //sf.getContext().getVariables().put("arguments",params);
+                /*try {
+                    getResult = sf.call();
+                }finally {
+                    sf.setContext(sf.getContext().getParent());
+                    sf.getContext().getChildren().clear();
+                }*/
             }else{
                 throwScriptError("Object is not a ScriptFunction (it is "+(f==null?null:f.getClass().getName())+")",node);
             }

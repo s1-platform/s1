@@ -66,9 +66,18 @@ public abstract class ScriptFunction implements Serializable {
         for(Object o:m.values()){
             args.add(o);
         }
-        m.put("arguments",args);
-        getContext().getVariables().putAll(m);
-        return call();
+        return call(m,args);
+    }
+
+    public Object call(Map<String,Object> m, List<Object> arguments) throws ScriptException {
+        m.put("arguments",arguments);
+        Context ctx = getContext().createChild();
+        ctx.getVariables().putAll(m);
+        try{
+            return call(ctx);
+        }finally {
+            getContext().removeChild(ctx);
+        }
     }
 
     /**
@@ -77,6 +86,6 @@ public abstract class ScriptFunction implements Serializable {
      * @return
      * @throws ScriptException
      */
-    public abstract Object call() throws ScriptException;
+    protected abstract Object call(Context ctx) throws ScriptException;
 
 }

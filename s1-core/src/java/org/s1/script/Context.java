@@ -57,6 +57,10 @@ public class Context implements Serializable {
         return c;
     }
 
+    public void removeChild(Context ctx){
+        this.children.remove(ctx);
+    }
+
     public MemoryHeap getMemoryHeap() {
         return memoryHeap;
     }

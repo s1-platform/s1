@@ -306,7 +306,7 @@ public class S1ScriptEngine {
                 f.cancel(true);
                 throw new ScriptLimitException(ScriptLimitException.Limits.TIME,getTimeLimit());
             }*/
-            if(f==null){
+            if(f==null || getTimeLimit()<=0){
                 ASTEvaluator ast = new ASTEvaluator();
                 result = (T)ast.eval(root, ctx);
             }else {
@@ -456,8 +456,8 @@ public class S1ScriptEngine {
         final Map<String,Object> _data = data;
         data.put(TEMPLATE_PRINT_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList("text")) {
             @Override
-            public Object call() throws ScriptException {
-                List<Object> args = getContext().get("arguments");
+            public Object call(Context ctx) throws ScriptException {
+                List<Object> args = ctx.get("arguments");
                 StringBuilder sb = printBuffer;
                 String name = null;
                 if(customPrintStack.size()>0)
@@ -473,8 +473,8 @@ public class S1ScriptEngine {
         });
         data.put(TEMPLATE_START_CUSTOM_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()), Objects.newArrayList("name")) {
             @Override
-            public Object call() throws ScriptException {
-                String name = getContext().get(String.class, "name");
+            public Object call(Context ctx) throws ScriptException {
+                String name = ctx.get(String.class, "name");
                 customPrintMap.put(name, new StringBuilder());
                 customPrintStack.add(name);
                 return null;
@@ -482,7 +482,7 @@ public class S1ScriptEngine {
         });
         data.put(TEMPLATE_END_CUSTOM_FUNCTION, new ScriptFunction(new Context(getMemoryLimit()),Objects.newArrayList(String.class)) {
             @Override
-            public Object call() throws ScriptException {
+            public Object call(Context ctx) throws ScriptException {
                 String name = null;
                 if(customPrintStack.size()>0) {
                     name = customPrintStack.get(customPrintStack.size() - 1);
@@ -501,9 +501,11 @@ public class S1ScriptEngine {
                     }
                     if(o instanceof ScriptFunction){
                         ScriptFunction sf = ((ScriptFunction)o);
-                        List<String> params = Objects.newArrayList(text);
+                        Map<String,Object> params = Objects.newSOHashMap("text",text);
+
+                        /*List<String> params = Objects.newArrayList(text);
                         sf.getContext().getVariables().put("text",text);
-                        sf.getContext().getVariables().put("arguments",params);
+                        sf.getContext().getVariables().put("arguments",params);*/
 
                         StringBuilder sb2 = printBuffer;
                         String name2 = null;
@@ -513,7 +515,8 @@ public class S1ScriptEngine {
                             sb2 = customPrintMap.get(name2);
                         }
 
-                        sb2.append(sf.call());
+                        //sb2.append(sf.call());
+                        sb2.append(sf.call(params));
                     }else{
                         throw new ScriptException("Custom print function "+name+" is not instanceof ScriptFunction");
                     }

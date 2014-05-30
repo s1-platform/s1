@@ -26,39 +26,48 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TestScript extends BasicTest{
 
+    private  final Map<String,Object> data = Objects.newHashMap(
+            "assert",
+            new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message","b")) {
+                @Override
+                public Object call(Context ctx) throws ScriptException {
+                    Object o = ctx.getVariables().get("b");
+                    boolean b = false;
+                    if(o instanceof Boolean)
+                        b = ((Boolean) o).booleanValue();
+                    else
+                        b = !Objects.isNullOrEmpty(o);
+                    if(!b)
+                        throw new ScriptException("Assertion failed: " +ctx.getVariables().get("message"));
+                    return null;
+                }
+            },
+            "print",
+            new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message")) {
+                @Override
+                public Object call(Context ctx) throws ScriptException {
+                    Object o = ctx.getVariables().get("message");
+                    if(o!=null)
+                        System.out.println(">>>"+o.getClass().getName()+":"+o);
+                    else
+                        System.out.println(">>>null");
+                    return null;
+                }
+            }
+    );
+
+    @Test
+    public void testOne(){
+        final S1ScriptEngine scriptEngine = new S1ScriptEngine();
+        scriptEngine.setTimeLimit(0);
+        scriptEngine.eval(resourceAsString("/script/array.js"), data);
+    }
+
     @Test
     public void testCases(){
         int p=10;
         final S1ScriptEngine scriptEngine = new S1ScriptEngine();
-        final Map<String,Object> data = Objects.newHashMap(
-                "assert",
-                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message","b")) {
-                    @Override
-                    public Object call() throws ScriptException {
-                        Object o = getContext().getVariables().get("b");
-                        boolean b = false;
-                        if(o instanceof Boolean)
-                            b = ((Boolean) o).booleanValue();
-                        else
-                            b = !Objects.isNullOrEmpty(o);
-                        if(!b)
-                            throw new ScriptException("Assertion failed: " +getContext().getVariables().get("message"));
-                        return null;
-                    }
-                },
-                "print",
-                new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"message")) {
-                    @Override
-                    public Object call() throws ScriptException {
-                        Object o = getContext().getVariables().get("message");
-                        if(o!=null)
-                            System.out.println(">>>"+o.getClass().getName()+":"+o);
-                        else
-                            System.out.println(">>>null");
-                        return null;
-                    }
-                }
-        );
+
 
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
@@ -255,15 +264,15 @@ public class TestScript extends BasicTest{
                 "sleep",
                 new ScriptFunction(new Context(1000), Objects.newArrayList(String.class,"time")) {
                     @Override
-                    public Object call() throws ScriptException {
-                        sleep(getContext().get(Long.class, "time"));
+                    public Object call(Context ctx) throws ScriptException {
+                        sleep(ctx.get(Long.class, "time"));
                         return null;
                     }
                 },
                 "tick",
                 new ScriptFunction(new Context(1000), Objects.newArrayList(String.class)) {
                     @Override
-                    public Object call() throws ScriptException {
+                    public Object call(Context ctx) throws ScriptException {
                         al.incrementAndGet();
                         return null;
                     }

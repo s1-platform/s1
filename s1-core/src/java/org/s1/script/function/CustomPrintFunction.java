@@ -30,8 +30,8 @@ public abstract class CustomPrintFunction extends ScriptFunction {
     }
 
 
-    public Object call() throws ScriptException {
-        String text = getContext().get("text");
+    public Object call(Context ctx) throws ScriptException {
+        String text = ctx.get("text");
         return print(text);
     }
 
