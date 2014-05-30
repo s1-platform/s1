@@ -13,6 +13,7 @@ import org.s1.mongodb.cluster.MongoDBDDS;
 import org.s1.objects.MapMethod;
 import org.s1.objects.Objects;
 import org.s1.table.Table;
+import org.s1.table.errors.AlreadyExistsException;
 import org.s1.table.errors.MoreThanOneFoundException;
 import org.s1.table.errors.NotFoundException;
 import org.s1.user.AccessDeniedException;
@@ -37,6 +38,35 @@ public abstract class MongoDBTable extends Table {
         checkIndexes();
     }
     public abstract List<List<String>> getIndexes();
+
+    protected String[][] getUniqueFields(){
+        return null;
+    }
+
+    @Override
+    protected void checkUnique(Map<String, Object> object, boolean isNew) throws AlreadyExistsException {
+        String [][] uniqueFields = getUniqueFields();
+        if(uniqueFields==null)
+            return;
+        List<String []> list = Objects.newArrayList(uniqueFields);
+        list.add(new String[]{"id"});
+        String id = Objects.get(object,"id");
+        for(String [] uf:list){
+            Map<String,Object> search = Objects.newSOHashMap();
+            for(String f:uf){
+                search.put(f, Objects.get(object, f));
+            }
+            if(isNew){
+
+            }else{
+                search = Objects.newSOHashMap("$and",Objects.newArrayList(
+                        Objects.newSOHashMap("id",Objects.newSOHashMap("$ne",id)),
+                        search
+                ));
+            }
+            MongoDBQueryHelper.ensureNotExists(getCollectionId(), search);
+        }
+    }
 
     protected void checkIndexes() {
         //remove old indexes

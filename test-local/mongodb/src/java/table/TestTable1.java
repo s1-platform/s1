@@ -52,15 +52,10 @@ public class TestTable1 extends MongoDBTable {
     }
 
     @Override
-    protected void checkUnique(Map<String, Object> object, boolean isNew) throws AlreadyExistsException {
-        Map<String,Object> search = Objects.newSOHashMap("a",Objects.get(object,"a"));
-        if(!isNew)
-            search = Objects.newSOHashMap("$and",
-                    Objects.newArrayList(
-                            search,
-                            Objects.newSOHashMap("id", Objects.newSOHashMap("$ne", Objects.get(object, "id")))
-                    ));
-        MongoDBQueryHelper.ensureNotExists(getCollectionId(),search);
+    protected String[][] getUniqueFields() {
+        return new String[][]{
+                {"a"}
+        };
     }
 
     @MapMethod(names = {"list"})
