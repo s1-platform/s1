@@ -101,8 +101,8 @@ public class UploadTest extends HttpServerTest {
     @Test
     public void testUploadAsync(){
         int p = 2;
-        final String id = "123";
-        assertEquals(id,Objects.get(client().postJSON(getContext() + "/dispatcher/Upload.startProgress", Objects.newSOHashMap("id", id)),"result"));
+        final String task_id = Objects.get(client().postJSON(getContext() + "/dispatcher/Upload.startProgress", Objects.newSOHashMap()),"result");
+        assertNotNull(task_id);
 
         StringBuilder sb = new StringBuilder("qwerasdf");
         for(long i=0;i<100000;i++){
@@ -112,18 +112,22 @@ public class UploadTest extends HttpServerTest {
         final String name = "name_1";
         final String ct = "text/plain";
 
+        final Map<String,Object> m1 = Objects.newHashMap();
+
         assertEquals(p, LoadTestUtils.run("test",p,p,new LoadTestUtils.LoadTestProcedure() {
             @Override
             public void call(int input) throws Exception {
 
 
+                String id = null;
                 try{
                     Map<String,Object> m = null;
                     //upload
                     if(input==1) {
                         trace("uploading...");
-                        m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?id="+id,
+                        m = client().uploadFileForJSON(getContext() + "/dispatcher/Upload.upload?task="+task_id,
                                 new ByteArrayInputStream(s.getBytes()), name, ct);
+                        m1.putAll(m);
                         trace("uploaded");
                     }else {
                         trace("waiting...");
@@ -131,13 +135,14 @@ public class UploadTest extends HttpServerTest {
                         //progress
                         long progress = 0;
                         while(progress!=-1) {
-                            m = client().postJSON(getContext() + "/dispatcher/Upload.getProgress", Objects.newSOHashMap("id", id));
+                            m = client().postJSON(getContext() + "/dispatcher/Upload.getProgress", Objects.newSOHashMap("id", task_id));
                             progress = Objects.get(Long.class, m, "result");
                             //if (input == 0)
                                 trace(progress);
                             sleep(10);
                         }
 
+                        id = Objects.get(m1,"id");
                         //download
                         TestHttpClient.HttpResponseBean r = client().get(getContext() + "/dispatcher/Upload.download",
                                 Objects.newHashMap(String.class, Object.class, "id", id), null);

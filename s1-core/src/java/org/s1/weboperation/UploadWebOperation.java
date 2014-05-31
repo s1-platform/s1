@@ -53,9 +53,9 @@ public class UploadWebOperation extends MapWebOperation {
         return processClassMethods(this,method,params,request,response);
     }
 
-    protected void writeFile(Id id, FileParameter fp){
-        String taskId = id.getEntity();
-        progress.put(taskId,0L);
+    protected void writeFile(String taskId, Id id, FileParameter fp){
+        if(taskId!=null)
+            progress.put(taskId,0L);
         FileStorage.FileWriteBean b = null;
         try{
             b = FileStorage.createFileWriteBean(id, new FileStorage.FileMetaBean(fp.getName(), fp.getExt(), fp.getContentType(), fp.getSize(), null));
@@ -63,7 +63,8 @@ public class UploadWebOperation extends MapWebOperation {
                 long l = 1024L;
                 for(long i=0;i<fp.getSize();i+=l) {
                     IOUtils.copy(fp.getInputStream(), b.getOutputStream(), 0, l);
-                    progress.put(taskId, i);
+                    if(taskId!=null)
+                        progress.put(taskId, i);
                 }
             } catch (IOException e) {
                 throw S1SystemError.wrap(e);
@@ -71,7 +72,8 @@ public class UploadWebOperation extends MapWebOperation {
             FileStorage.save(b);
         }finally {
             FileStorage.closeAfterWrite(b);
-            progress.remove(taskId);
+            if(taskId!=null)
+                progress.remove(taskId);
         }
     }
 
@@ -89,7 +91,7 @@ public class UploadWebOperation extends MapWebOperation {
     @WebOperationMethod
     public Map<String,Object> startProgress(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Map<String, Object> result = Objects.newSOHashMap();
-        String id = Objects.get(params,"id",UUID.randomUUID().toString());
+        String id = UUID.randomUUID().toString();
         progress.put(id,0L);
         return asMap(id);
     }
@@ -104,18 +106,20 @@ public class UploadWebOperation extends MapWebOperation {
      */
     @WebOperationMethod
     public Map<String,Object> upload(Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) throws Exception {
+
         Map<String,Object> result = Objects.newSOHashMap();
         String database = (String) params.get("database");
         String collection = (String) params.get("collection");
+        String taskId = (String) params.get("task");
         if (Objects.isNullOrEmpty(collection))
             collection = COLLECTION;
 
         if (params.containsKey("file")) {
-            String id = Objects.get(params,"id",UUID.randomUUID().toString());
+            String id = UUID.randomUUID().toString();
 
             final FileParameter fp = (FileParameter) params.get("file");
 
-            writeFile(new Id(database,collection,id),fp);
+            writeFile(taskId,new Id(database,collection,id),fp);
             result.put("id", id);
         } else {
             List<String> ids = new ArrayList<String>();
@@ -125,7 +129,7 @@ public class UploadWebOperation extends MapWebOperation {
 
                 final FileParameter fp = (FileParameter) params.get("file" + i);
 
-                writeFile(new Id(database,collection,id),fp);
+                writeFile(taskId,new Id(database,collection,id),fp);
 
                 ids.add(id);
             }
