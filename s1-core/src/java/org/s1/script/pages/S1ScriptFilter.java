@@ -187,7 +187,8 @@ public class S1ScriptFilter implements Filter{
         String query = req.getQueryString();
         if(!Objects.isNullOrEmpty(query)) {
             URLFunctionSet url_fs = new URLFunctionSet();
-            query = url_fs.removeParams("url?" + query, Objects.newArrayList("_pjax")).split("\\?", -1)[1];
+            String arr [] = url_fs.removeParams("url?" + query, Objects.newArrayList("_pjax")).split("\\?", -1);
+            query = arr.length>1?arr[1]:"";
         }
         text = scriptEngine.template(page, text, Objects.newSOHashMap(
                 "page",Objects.newSOHashMap(
