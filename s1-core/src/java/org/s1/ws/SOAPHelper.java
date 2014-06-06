@@ -52,8 +52,20 @@ public class SOAPHelper {
      * @return
      */
     public static SOAPMessage createSoapFromString(String soap){
+        return createSoapFromString(null,soap);
+    }
+
+    public static SOAPMessage createSoapFromString(String protocol, String soap){
+        if(Objects.isNullOrEmpty(protocol)) {
+            if(soap.contains("http://www.w3.org/2003/05/soap-envelope") &&
+                    !soap.contains("http://schemas.xmlsoap.org/soap/envelope/")){
+                protocol = SOAPConstants.SOAP_1_2_PROTOCOL;
+            }else{
+                protocol = SOAPConstants.SOAP_1_1_PROTOCOL;
+            }
+        }
         try{
-            MessageFactory messageFactory = MessageFactory.newInstance();
+            MessageFactory messageFactory = MessageFactory.newInstance(protocol);
             return messageFactory.createMessage(null,new ByteArrayInputStream(soap.getBytes("UTF-8")));
         }catch (Exception e){
             throw S1SystemError.wrap(e);
@@ -82,14 +94,20 @@ public class SOAPHelper {
      * @return
      */
     public static SOAPMessage createSoapFromStream(Map<String,String> headers, InputStream is){
+        return createSoapFromStream(null,headers,is);
+    }
+
+    public static SOAPMessage createSoapFromStream(String protocol, Map<String,String> headers, InputStream is){
         if(headers==null)
             headers = Objects.newHashMap();
         MimeHeaders sh = new MimeHeaders();
         for(String k:headers.keySet()){
             sh.addHeader(k,headers.get(k));
         }
+        if(Objects.isNullOrEmpty(protocol))
+            protocol = SOAPConstants.SOAP_1_1_PROTOCOL;
         try{
-            MessageFactory messageFactory = MessageFactory.newInstance();
+            MessageFactory messageFactory = MessageFactory.newInstance(protocol);
             return messageFactory.createMessage(sh,is);
         }catch (Exception e){
             throw S1SystemError.wrap(e);

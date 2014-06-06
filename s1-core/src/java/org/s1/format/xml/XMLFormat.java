@@ -487,6 +487,10 @@ public class XMLFormat {
         validate(schemaPath,xsd.getDocumentElement(),xml.getDocumentElement());
     }
 
+    public static void validate(final String schemaPath, Document[] xsd, Document xml) throws XSDFormatException,XSDValidationException {
+        validate(schemaPath,xsd,xml.getDocumentElement());
+    }
+
     /**
      *
      * @param xsd
@@ -495,7 +499,15 @@ public class XMLFormat {
      * @throws XSDValidationException
      */
     public static void validate(final String schemaPath, Document xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        validate(schemaPath,xsd.getDocumentElement(),xml);
+        validate(schemaPath,new Document[]{xsd},xml);
+    }
+
+    public static void validate(final String schemaPath, Document[] xsd, Element xml) throws XSDFormatException,XSDValidationException{
+        Element el [] = new Element[xsd.length];
+        for(int i=0;i<xsd.length;i++){
+            el[i] = xsd[i].getDocumentElement();
+        }
+        validate(schemaPath,el,xml);
     }
 
     /**
@@ -504,7 +516,18 @@ public class XMLFormat {
      * @param xml
      */
     public static void validate(final String schemaPath, Element xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        DOMSource schemaFile = new DOMSource(xsd);
+        validate(schemaPath,new Element[]{xsd},xml);
+    }
+
+    public static void validate(final String schemaPath, List<Element> xsd, Element xml) throws XSDFormatException,XSDValidationException{
+        validate(schemaPath,(Element [])xsd.toArray(),xml);
+    }
+
+    public static void validate(final String schemaPath, Element[] xsd, Element xml) throws XSDFormatException,XSDValidationException{
+        DOMSource schemaFile[] = new DOMSource[xsd.length];
+        for(int i=0;i<xsd.length;i++){
+            schemaFile[i] = new DOMSource(xsd[i]);
+        }
         DOMSource source = new DOMSource(xml,schemaPath);
         DOMResult xmlFile = new DOMResult();
 

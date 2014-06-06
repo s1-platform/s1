@@ -14,6 +14,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import javax.xml.soap.SOAPConstants;
+import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPMessage;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
@@ -47,6 +49,43 @@ public class SOAPHelperTest extends BasicTest {
 
                 SOAPMessage msg = SOAPHelper.createSoapFromString(soap);
                 SOAPMessage msg2 = SOAPHelper.createSoapFromStream(Objects.newHashMap(String.class,String.class),new ByteArrayInputStream(soap.getBytes(Charset.forName("UTF-8"))));
+                assertNotNull(msg);
+                assertNotNull(msg2);
+                assertTrue(SOAPHelper.getEnvelope(msg).isEqualNode(SOAPHelper.getEnvelope(msg2)));
+                //soap
+                if(input==0){
+                    trace(SOAPHelper.toString(msg));
+                    trace(SOAPHelper.toString(msg2));
+                    trace(soap);
+                }
+                assertEquals(soap, SOAPHelper.toString(msg2));
+                assertEquals(soap, SOAPHelper.toString(msg));
+
+            }
+        }));
+    }
+
+    @Test
+    public void testSOAP12(){
+        int p = 10;
+
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
+            @Override
+            public void call(int input) throws Exception {
+
+                String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\">\n" +
+                        "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
+                        "                <SOAP-ENV:Body>\n" +
+                        "                <a:TestRequest xmlns:a=\"http://example.com/\">\n" +
+                        "                <a>qwer0</a>\n" +
+                        "                <a>тест1</a>\n" +
+                        "                </a:TestRequest>\n" +
+                        "                </SOAP-ENV:Body>\n" +
+                        "                </SOAP-ENV:Envelope>";
+                soap = soap.replace("\n",System.lineSeparator());
+
+                SOAPMessage msg = SOAPHelper.createSoapFromString(soap);
+                SOAPMessage msg2 = SOAPHelper.createSoapFromStream(SOAPConstants.SOAP_1_2_PROTOCOL,Objects.newHashMap(String.class,String.class),new ByteArrayInputStream(soap.getBytes(Charset.forName("UTF-8"))));
                 assertNotNull(msg);
                 assertNotNull(msg2);
                 assertTrue(SOAPHelper.getEnvelope(msg).isEqualNode(SOAPHelper.getEnvelope(msg2)));
