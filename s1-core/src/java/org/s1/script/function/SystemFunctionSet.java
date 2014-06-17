@@ -504,5 +504,20 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     public List<Double> getDoubleRange(Double min, Double max, Integer groups){
         return Ranges.getDoubleRange(Objects.cast(min,Double.class),Objects.cast(max,Double.class),groups);
     }
+
+    @MapMethod
+    public String escapeJS(String s){
+        return EscapeUtils.escapeJS(s);
+    }
+
+    @MapMethod
+    public String escapeXML(String s){
+        return EscapeUtils.escapeXML(s);
+    }
+
+    @MapMethod
+    public String escapeHTML(String s){
+        return EscapeUtils.escapeHTML(s);
+    }
     
 }
