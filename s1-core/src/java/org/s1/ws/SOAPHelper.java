@@ -30,7 +30,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
 import javax.xml.soap.*;
+import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -122,11 +125,21 @@ public class SOAPHelper {
      * @throws XSDFormatException
      * @throws XSDValidationException
      */
-    /*public static void validateMessage(String basePath, Document wsdl, SOAPMessage msg) throws XSDFormatException, XSDValidationException{
+    public static void validateMessage(String basePath, Document wsdl, SOAPMessage msg) throws XSDFormatException, XSDValidationException{
         LOG.debug("Validating message on WSDL");
 
         //get schema
-        Element schemaNode = (Element)wsdl.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema","schema").item(0);
+        //Element schemaNode = (Element)wsdl.getElementsByTagNameNS(XMLConstants"http://www.w3.org/2001/XMLSchema","schema").item(0);
+        NodeList schemaNodes = wsdl.getElementsByTagNameNS(
+                XMLConstants.W3C_XML_SCHEMA_NS_URI, "schema");
+
+        int nrSchemas = schemaNodes.getLength();
+
+        Source[] schemas = new Source[nrSchemas];
+
+        for (int i = 0; i < nrSchemas; i++) {
+            schemas[i] = new DOMSource(schemaNodes.item(i));
+        }
 
         //get body
         Element body = null;
@@ -149,9 +162,9 @@ public class SOAPHelper {
 
         //validate Body children
         for(Element el:XMLFormat.getChildElementList(body,null,null)){
-            XMLFormat.validate(basePath, schemaNode, el);
+            XMLFormat.validate(basePath, schemas, el);
         }
-    }*/
+    }
 
     /**
      * Send message

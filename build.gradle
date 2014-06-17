@@ -30,7 +30,8 @@ ext.libs = [
         servlet : 'javax.servlet:javax.servlet-api:3.0.1',
         mongodb : 'org.mongodb:mongo-java-driver:2.11.3',
         xerces : 'xerces:xercesImpl:2.11.0',
-        jcommander : 'com.beust:jcommander:1.35'
+        jcommander : 'com.beust:jcommander:1.35',
+        wsdl4j : 'wsdl4j:wsdl4j:1.6.3'
 ]
 
 /**

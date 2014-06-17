@@ -145,13 +145,13 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
         return path;
     }
 
-    /*protected boolean shouldValidateInput(String service){
+    protected boolean shouldValidateInput(String service){
         return true;
     }
 
     protected boolean shouldValidateOutput(String service){
         return true;
-    }*/
+    }
 
     protected String getProtocol(){
         return SOAPConstants.SOAP_1_1_PROTOCOL;
@@ -215,17 +215,17 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
             if(msg==null)
                 throw new BadDataException("Input SOAP message is null");
             //validate
-            /*if(shouldValidateInput(service)){
+            if(shouldValidateInput(service)){
                 SOAPHelper.validateMessage(address,getResource(service,address,null),msg);
-            }*/
+            }
 
             String action = getAction(service,msg,request);
             SOAPMessage out = processSOAP(service,action,msg);
 
             //validate
-            /*if(shouldValidateOutput(service)){
+            if(shouldValidateOutput(service)){
                 SOAPHelper.validateMessage(address,getResource(service,address,null),out);
-            }*/
+            }
 
             return out;
         }
