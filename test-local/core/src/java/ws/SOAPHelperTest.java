@@ -14,21 +14,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.wsdl.Definition;
-import javax.wsdl.Operation;
-import javax.wsdl.PortType;
-import javax.wsdl.factory.WSDLFactory;
-import javax.wsdl.xml.WSDLReader;
-import javax.xml.namespace.QName;
 import javax.xml.soap.SOAPConstants;
-import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPMessage;
-import javax.xml.ws.Service;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * s1v2
