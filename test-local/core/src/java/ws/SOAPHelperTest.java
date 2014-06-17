@@ -146,7 +146,7 @@ public class SOAPHelperTest extends BasicTest {
         }));
     }
 
-    @Test
+    /*@Test
     public void testValidate(){
         int p = 1;
 
@@ -207,7 +207,7 @@ public class SOAPHelperTest extends BasicTest {
 
             }
         }));
-    }
+    }*/
 
     @Test
     public void testChange(){
