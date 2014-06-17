@@ -107,12 +107,23 @@ public class SOAPHelper {
         for(String k:headers.keySet()){
             sh.addHeader(k,headers.get(k));
         }
+        String p = protocol;
         if(Objects.isNullOrEmpty(protocol))
-            protocol = SOAPConstants.SOAP_1_1_PROTOCOL;
+            p = SOAPConstants.SOAP_1_1_PROTOCOL;
         try{
-            MessageFactory messageFactory = MessageFactory.newInstance(protocol);
-            return messageFactory.createMessage(sh,is);
+            try {
+                MessageFactory messageFactory = MessageFactory.newInstance(p);
+                return messageFactory.createMessage(sh, is);
+            }catch(SOAPException e){
+                if("SOAPVersionMismatchException".equals(e.getClass().getSimpleName()) && Objects.isNullOrEmpty(protocol)){
+                    MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+                    return messageFactory.createMessage(sh, is);
+                }else{
+                    throw e;
+                }
+            }
         }catch (Exception e){
+
             throw S1SystemError.wrap(e);
         }
     }

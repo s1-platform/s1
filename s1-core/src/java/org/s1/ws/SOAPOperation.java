@@ -154,7 +154,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
     }
 
     protected String getProtocol(){
-        return SOAPConstants.SOAP_1_1_PROTOCOL;
+        return null;
     }
 
     /**
