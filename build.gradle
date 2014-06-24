@@ -28,7 +28,7 @@ ext.libs = [
         rhino : 'org.mozilla:rhino:1.7R4',
         hazelcast : 'com.hazelcast:hazelcast:3.1.5',
         servlet : 'javax.servlet:javax.servlet-api:3.0.1',
-        mongodb : 'org.mongodb:mongo-java-driver:2.11.3',
+        mongodb : 'org.mongodb:mongo-java-driver:2.12.2',
         xerces : 'xerces:xercesImpl:2.11.0',
         jcommander : 'com.beust:jcommander:1.35',
         wsdl4j : 'wsdl4j:wsdl4j:1.6.3'
