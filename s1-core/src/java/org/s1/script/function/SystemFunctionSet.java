@@ -439,9 +439,18 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     }
 
     @MapMethod
-    public void remove(List<Object> l, Integer i){
-        getContext().getMemoryHeap().release(l.get(i));
-        l.remove(i.intValue());
+    public void remove(Object o, Object i){
+        if(o instanceof Map){
+            Map m = (Map)o;
+            String s = Objects.cast(i,String.class);
+            getContext().getMemoryHeap().release(m.get(s));
+            m.remove(s);
+        }else if(o instanceof List){
+            List l = (List)o;
+            int j = Objects.cast(i, Integer.class).intValue();
+            getContext().getMemoryHeap().release(l.get(j));
+            l.remove(j);
+        }
     }
 
     /**
