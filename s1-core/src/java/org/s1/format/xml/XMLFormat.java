@@ -28,6 +28,7 @@ import org.w3c.dom.ls.LSResourceResolver;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
@@ -145,7 +146,7 @@ public class XMLFormat {
      * @return
      */
     public static Element getFirstChildElement(Element el, String name, String ns){
-        return getChildElement(0,el,name,ns);
+        return getChildElement(0, el, name, ns);
     }
 
     /**
@@ -167,7 +168,7 @@ public class XMLFormat {
      * @return
      */
     public static Element getLastChildElement(Element el, String name, String ns){
-        return getChildElement(-1,el,name,ns);
+        return getChildElement(-1, el, name, ns);
     }
 
     /**
@@ -234,7 +235,7 @@ public class XMLFormat {
         if(name.contains("["))
             name = name.substring(0,name.indexOf("["));
         if(name.contains(":"))
-            name = name.substring(name.indexOf(":")+1);
+            name = name.substring(name.indexOf(":") + 1);
         return name;
     }
 
@@ -403,7 +404,7 @@ public class XMLFormat {
      * @return
      */
     public static Map<String,Object> toMap(Document xml, List<String> listsPath){
-        return toMap(xml.getDocumentElement(),listsPath);
+        return toMap(xml.getDocumentElement(), listsPath);
     }
 
     /**
@@ -487,10 +488,6 @@ public class XMLFormat {
         validate(schemaPath,xsd.getDocumentElement(),xml.getDocumentElement());
     }
 
-    public static void validate(final String schemaPath, Document[] xsd, Document xml) throws XSDFormatException,XSDValidationException {
-        validate(schemaPath,xsd,xml.getDocumentElement());
-    }
-
     /**
      *
      * @param xsd
@@ -499,15 +496,7 @@ public class XMLFormat {
      * @throws XSDValidationException
      */
     public static void validate(final String schemaPath, Document xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        validate(schemaPath,new Document[]{xsd},xml);
-    }
-
-    public static void validate(final String schemaPath, Document[] xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        Element el [] = new Element[xsd.length];
-        for(int i=0;i<xsd.length;i++){
-            el[i] = xsd[i].getDocumentElement();
-        }
-        validate(schemaPath,el,xml);
+        validate(schemaPath,xsd.getDocumentElement(),xml);
     }
 
     /**
@@ -516,19 +505,11 @@ public class XMLFormat {
      * @param xml
      */
     public static void validate(final String schemaPath, Element xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        validate(schemaPath,new Element[]{xsd},xml);
+        validate(schemaPath,new DOMSource[]{new DOMSource(xsd,schemaPath)},xml);
     }
 
-    public static void validate(final String schemaPath, List<Element> xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        validate(schemaPath,(Element [])xsd.toArray(),xml);
-    }
-
-    public static void validate(final String schemaPath, Element[] xsd, Element xml) throws XSDFormatException,XSDValidationException{
-        DOMSource schemaFile[] = new DOMSource[xsd.length];
-        for(int i=0;i<xsd.length;i++){
-            schemaFile[i] = new DOMSource(xsd[i]);
-        }
-        DOMSource source = new DOMSource(xml,schemaPath);
+    public static void validate(final String schemaPath, Source[] xsd, Element xml) throws XSDFormatException,XSDValidationException{
+        DOMSource source = new DOMSource(xml);
         DOMResult xmlFile = new DOMResult();
 
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -630,7 +611,7 @@ public class XMLFormat {
         Validator validator = null;
         try{
             //schemaFactory.setProperty("")
-            Schema schema = schemaFactory.newSchema(schemaFile);
+            Schema schema = schemaFactory.newSchema(xsd);
             validator = schema.newValidator();
         }catch (Exception e){
             throw new XSDFormatException(e.getMessage(),e);

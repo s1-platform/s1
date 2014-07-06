@@ -55,7 +55,7 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
             String h = he.nextElement();
             headers.put(h,request.getHeader(h));
         }
-        SOAPMessage msg = SOAPHelper.createSoapFromStream(headers,request.getInputStream());
+        SOAPMessage msg = SOAPHelper.createSoapFromStream(getProtocol(),headers,request.getInputStream());
         return msg;
     }
 
@@ -151,6 +151,10 @@ public abstract class SOAPOperation extends WebOperation<SOAPMessage,SOAPMessage
 
     protected boolean shouldValidateOutput(String service){
         return true;
+    }
+
+    protected String getProtocol(){
+        return null;
     }
 
     /**

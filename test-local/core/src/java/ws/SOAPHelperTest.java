@@ -5,6 +5,7 @@ import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
 import org.s1.format.xml.XSDFormatException;
 import org.s1.format.xml.XSDValidationException;
+import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.s1.testing.BasicTest;
 import org.s1.testing.LoadTestUtils;
@@ -14,10 +15,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.xml.soap.SOAPConstants;
-import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPMessage;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 /**
@@ -137,6 +142,71 @@ public class SOAPHelperTest extends BasicTest {
                 new ByteArrayInputStream(mimeSoap.getBytes()));
 
                 SOAPHelper.writeFile(mimeMsg.getAttachments().hasNext(),mimeMsg,XMLFormat.getElement(SOAPHelper.getEnvelope(mimeMsg),"Body.SignRequest.data2",null),"asdf".getBytes());
+                if(input==0)
+                    trace(SOAPHelper.toString(mimeMsg));
+                assertEquals("qwer",new String(SOAPHelper.readFile(mimeMsg,XMLFormat.getElement(SOAPHelper.getEnvelope(mimeMsg),"Body.SignRequest.data",null))));
+                assertEquals("asdf",new String(SOAPHelper.readFile(mimeMsg,XMLFormat.getElement(SOAPHelper.getEnvelope(mimeMsg),"Body.SignRequest.data2",null))));
+
+            }
+        }));
+    }
+
+    @Test
+    public void testDataHandler(){
+        int p = 10;
+
+        assertEquals(p, LoadTestUtils.run("test", p, p, new LoadTestUtils.LoadTestProcedure() {
+            @Override
+            public void call(int input) throws Exception {
+                String soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                        "                <SOAP-ENV:Header> </SOAP-ENV:Header>\n" +
+                        "                <SOAP-ENV:Body>\n" +
+                        "                <cry:SignRequest xmlns:cry=\"http://s1-platform.com/crypto\">\n" +
+                        "                <type>smev</type>\n" +
+                        "                <key>test</key>\n" +
+                        "                <data>cXdlcg==</data>\n" +
+                        "                <data2/>\n" +
+                        "                </cry:SignRequest>\n" +
+                        "                </SOAP-ENV:Body>\n" +
+                        "                </SOAP-ENV:Envelope>";
+
+                SOAPMessage msg = SOAPHelper.createSoapFromString(soap);
+                assertNotNull(XMLFormat.getElement(SOAPHelper.getEnvelope(msg),"Body.SignRequest.data2",null));
+                SOAPHelper.writeFile(msg.getAttachments().hasNext(),msg,XMLFormat.getElement(SOAPHelper.getEnvelope(msg),"Body.SignRequest.data2",null),"asdf".getBytes());
+                assertEquals("qwer",new String(IOUtils.toBytes(SOAPHelper.readDataHandler(msg,XMLFormat.getElement(SOAPHelper.getEnvelope(msg),"Body.SignRequest.data",null)).getInputStream())));
+                assertEquals("asdf",new String(IOUtils.toBytes(SOAPHelper.readDataHandler(msg, XMLFormat.getElement(SOAPHelper.getEnvelope(msg), "Body.SignRequest.data2", null)).getInputStream())));
+
+                //mtom
+                String mimeSoap = resourceAsString("/ws/mime.txt");
+                SOAPMessage mimeMsg = SOAPHelper.createSoapFromStream(Objects.newHashMap(
+                                String.class,String.class,
+                                "Content-Type",
+                                "multipart/related; type=\"application/xop+xml\"; start=\"<rootpart@soapui.org>\"; start-info=\"text/xml\"; boundary=\"----=_Part_96_20122774.1369204635982\""
+                        ),
+                        new ByteArrayInputStream(mimeSoap.getBytes()));
+
+                SOAPHelper.writeDataHandler(mimeMsg.getAttachments().hasNext(), mimeMsg, XMLFormat.getElement(SOAPHelper.getEnvelope(mimeMsg), "Body.SignRequest.data2", null),
+                        new DataHandler(new DataSource(){
+                            @Override
+                            public InputStream getInputStream() throws IOException {
+                                return new ByteArrayInputStream("asdf".getBytes());
+                            }
+
+                            @Override
+                            public OutputStream getOutputStream() throws IOException {
+                                return null;
+                            }
+
+                            @Override
+                            public String getContentType() {
+                                return "application/octet-stream";
+                            }
+
+                            @Override
+                            public String getName() {
+                                return null;
+                            }
+                        }));
                 if(input==0)
                     trace(SOAPHelper.toString(mimeMsg));
                 assertEquals("qwer",new String(SOAPHelper.readFile(mimeMsg,XMLFormat.getElement(SOAPHelper.getEnvelope(mimeMsg),"Body.SignRequest.data",null))));

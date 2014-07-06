@@ -22,6 +22,7 @@ import org.s1.format.xml.XSDFormatException;
 import org.s1.format.xml.XSDValidationException;
 import org.s1.misc.Base64;
 import org.s1.misc.Base64FormatException;
+import org.s1.misc.IOUtils;
 import org.s1.objects.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +31,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.xml.XMLConstants;
 import javax.xml.soap.*;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
+import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -104,12 +108,23 @@ public class SOAPHelper {
         for(String k:headers.keySet()){
             sh.addHeader(k,headers.get(k));
         }
+        String p = protocol;
         if(Objects.isNullOrEmpty(protocol))
-            protocol = SOAPConstants.SOAP_1_1_PROTOCOL;
+            p = SOAPConstants.SOAP_1_1_PROTOCOL;
         try{
-            MessageFactory messageFactory = MessageFactory.newInstance(protocol);
-            return messageFactory.createMessage(sh,is);
+            try {
+                MessageFactory messageFactory = MessageFactory.newInstance(p);
+                return messageFactory.createMessage(sh, is);
+            }catch(SOAPException e){
+                if("SOAPVersionMismatchException".equals(e.getClass().getSimpleName()) && Objects.isNullOrEmpty(protocol)){
+                    MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+                    return messageFactory.createMessage(sh, is);
+                }else{
+                    throw e;
+                }
+            }
         }catch (Exception e){
+
             throw S1SystemError.wrap(e);
         }
     }
@@ -126,7 +141,17 @@ public class SOAPHelper {
         LOG.debug("Validating message on WSDL");
 
         //get schema
-        Element schemaNode = (Element)wsdl.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema","schema").item(0);
+        //Element schemaNode = (Element)wsdl.getElementsByTagNameNS(XMLConstants"http://www.w3.org/2001/XMLSchema","schema").item(0);
+        NodeList schemaNodes = wsdl.getElementsByTagNameNS(
+                XMLConstants.W3C_XML_SCHEMA_NS_URI, "schema");
+
+        int nrSchemas = schemaNodes.getLength();
+
+        Source[] schemas = new Source[nrSchemas];
+
+        for (int i = 0; i < nrSchemas; i++) {
+            schemas[i] = new DOMSource(schemaNodes.item(i));
+        }
 
         //get body
         Element body = null;
@@ -149,7 +174,7 @@ public class SOAPHelper {
 
         //validate Body children
         for(Element el:XMLFormat.getChildElementList(body,null,null)){
-            XMLFormat.validate(basePath, schemaNode, el);
+            XMLFormat.validate(basePath, schemas, el);
         }
     }
 
@@ -235,14 +260,88 @@ public class SOAPHelper {
         return data;
     }
 
+    public static DataHandler readDataHandler(SOAPMessage msg, Element el){
+        Element include = XMLFormat.getFirstChildElement(el,"Include","http://www.w3.org/2004/08/xop/include");
+        DataHandler is = null;
+        if(include!=null){
+            //LOG.debug("Reading XOP file")
+            String id = "<"+include.getAttribute("href").substring("cid:".length())+">";
+            Iterator<AttachmentPart> it = msg.getAttachments();
+            while(it.hasNext()){
+                AttachmentPart att = it.next();
+                if(id.equals(att.getContentId())){
+                    try {
+                        is = att.getDataHandler();
+                    } catch (SOAPException e) {
+                        throw S1SystemError.wrap(e);
+                    }
+                    break;
+                }
+            }
+        }else{
+            String b = el.getTextContent();
+            try{
+                final byte [] data = Base64.decode(b);
+                is = new DataHandler(new DataSource(){
+                    private InputStream is = new ByteArrayInputStream(data);
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return is;
+                    }
+
+                    @Override
+                    public OutputStream getOutputStream() throws IOException {
+                        return null;
+                    }
+
+                    @Override
+                    public String getContentType() {
+                        return "application/octet-stream";
+                    }
+
+                    @Override
+                    public String getName() {
+                        return null;
+                    }
+                });
+            } catch (Base64FormatException e) {
+                throw S1SystemError.wrap(e);
+            }
+        }
+        if(LOG.isDebugEnabled())
+            LOG.debug("Reading DataHandler from SOAP, contentType: "+(is==null?-1:is.getDataSource().getContentType()));
+        return is;
+    }
+
     /**
      * Write binary data to message as base64 or xop:Include depending on mtom parameter.
      *
      * @param mtom
      * @param msg
      * @param el
-     * @param b
+     * @param dh
      */
+    public static void writeDataHandler(boolean mtom, SOAPMessage msg, Element el, DataHandler dh){
+        LOG.debug("Writing DataHandler, mtom: "+mtom+", contentType: "+dh.getContentType());
+        if(mtom){
+            Element inc = el.getOwnerDocument().createElementNS("http://www.w3.org/2004/08/xop/include","Include");
+            el.appendChild(inc);
+            String id = UUID.randomUUID().toString()+"@s1-platform.org";
+            AttachmentPart ap = msg.createAttachmentPart();
+            ap.setDataHandler(dh);
+            ap.setContentId("<"+id+">");
+            msg.addAttachmentPart(ap);
+            inc.setAttribute("href","cid:"+id);
+            //LOG.debug("File contentId: "+id);
+        }else{
+            try {
+                el.setTextContent(Base64.encode(IOUtils.toBytes(dh.getInputStream())));
+            } catch (IOException e) {
+                throw S1SystemError.wrap(e);
+            }
+        }
+    }
+
     public static void writeFile(boolean mtom, SOAPMessage msg, Element el, byte [] b){
         LOG.debug("Writing file, mtom: "+mtom+", size: "+b.length);
         if(mtom){
