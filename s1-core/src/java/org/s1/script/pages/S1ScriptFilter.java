@@ -207,7 +207,8 @@ public class S1ScriptFilter implements Filter{
                         "context",context,
                         "debug",debug,
                         "isAnonymous",Session.getSessionBean().getUserId().equals(Session.ANONYMOUS),
-                        "user",user
+                        "user",user,
+                        "clientIP",WebOperation.getClientIpAddr(req)
                 ),
                 "args",local,
                 "include",new ScriptFunction(new Context(10000),Objects.newArrayList("path","params")) {
