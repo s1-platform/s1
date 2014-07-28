@@ -158,7 +158,12 @@ public abstract class Table {
                 throw new S1SystemError("Set action " + action+" not found");
             a.setTable(this);
 
-            Map<String,Object> record = get(id);
+            Map<String,Object> record = null;
+            try {
+                record = collectionGet(id);
+            } catch (MoreThanOneFoundException e) {
+                throw S1SystemError.wrap(e);
+            }
             return a.run(id, record, data);
         } finally {
             Locks.releaseLock(lockId);
@@ -186,7 +191,12 @@ public abstract class Table {
                 throw new S1SystemError("Remove action " + action+" not found");
             a.setTable(this);
 
-            Map<String,Object> record = get(id);
+            Map<String,Object> record = null;
+            try {
+                record = collectionGet(id);
+            } catch (MoreThanOneFoundException e) {
+                throw S1SystemError.wrap(e);
+            }
             a.run(id, record, data);
             return record;
         } finally {
