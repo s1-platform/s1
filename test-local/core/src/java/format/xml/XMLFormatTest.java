@@ -1,5 +1,6 @@
 package format.xml;
 
+import org.s1.format.json.JSONFormat;
 import org.s1.format.xml.XMLFormat;
 import org.s1.format.xml.XMLFormatException;
 import org.s1.format.xml.XSDFormatException;
@@ -181,6 +182,28 @@ public class XMLFormatTest extends BasicTest {
             }
 
         }));
+    }
+
+    @Test
+    public void testToMap() throws Exception{
+        String x = "<rev:MessageData xmlns:rev=\"http://smev.gosuslugi.ru/rev120315\">\n" +
+                "    <rev:AppData>\n" +
+                "        <ns:DeclarantINN xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">7706560536</ns:DeclarantINN>\n" +
+                "        <ns:DeclarantName xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">Росреестр</ns:DeclarantName>\n" +
+                "        <ns:DeclarantOGRN xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">1047796940465</ns:DeclarantOGRN>\n" +
+                "        <ns:IncomingDate xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">2014-08-01T16:26:19.046+04:00</ns:IncomingDate>\n" +
+                "        <ns:IncomingNumber xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">Иванников</ns:IncomingNumber>\n" +
+                "        <ns:IsFullRequest xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">true</ns:IsFullRequest>\n" +
+                "        <ns:PropertyType xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">Building</ns:PropertyType>\n" +
+                "        <ns:PublicPropertyLevel xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\">M</ns:PublicPropertyLevel>\n" +
+                "        <ns:Query xmlns:ns=\"http://rosim.ru/register/xmlExcerpt/2013/04\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"ns:CadasterNumberQuery\">\n" +
+                "            <ns:CadasterNumber>48:08:1480206:69</ns:CadasterNumber>\n" +
+                "        </ns:Query>\n" +
+                "    </rev:AppData>\n" +
+                "</rev:MessageData>";
+        Map<String,Object> m = XMLFormat.toMap(XMLFormat.fromString(x));
+        trace(JSONFormat.toJSON(m));
+        assertEquals("7706560536", Objects.get(m, "AppData.DeclarantINN"));
     }
 
     @Test

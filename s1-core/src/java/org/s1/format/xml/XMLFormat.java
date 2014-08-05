@@ -441,8 +441,15 @@ public class XMLFormat {
             String p = it.getLocalName().replace(".","\\.");
             if(path!=null)
                 p = path+"."+p;
+            boolean no_attrs = true;
+            NamedNodeMap nnm = it.getAttributes();
+            for(int i=0;i<nnm.getLength();i++){
+                if(!"xmlns".equals(nnm.item(i).getPrefix())){
+                    no_attrs = true;
+                }
+            }
             if(XMLFormat.getChildElementList(it,null,null).size()>0 ||
-                    it.getAttributes().getLength()>0){
+                    !no_attrs){
                 //map
                 c = convertElementToMap(path, it, listsPath);
             }else{
