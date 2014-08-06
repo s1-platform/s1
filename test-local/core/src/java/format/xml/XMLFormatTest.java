@@ -185,6 +185,15 @@ public class XMLFormatTest extends BasicTest {
     }
 
     @Test
+    public void testToMap2() throws Exception{
+        String x = "<a>\n" +
+                "<ДоляУстКап НоминСтоим=\"3500.0000\"/>\n" +
+                "</a>";
+        Map<String,Object> m = XMLFormat.toMap(XMLFormat.fromString(x));
+        trace(JSONFormat.toJSON(m));
+    }
+
+    @Test
     public void testToMap() throws Exception{
         String x = "<rev:MessageData xmlns:rev=\"http://smev.gosuslugi.ru/rev120315\">\n" +
                 "    <rev:AppData>\n" +

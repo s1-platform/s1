@@ -445,7 +445,7 @@ public class XMLFormat {
             NamedNodeMap nnm = it.getAttributes();
             for(int i=0;i<nnm.getLength();i++){
                 if(!"xmlns".equals(nnm.item(i).getPrefix())){
-                    no_attrs = true;
+                    no_attrs = false;
                 }
             }
             if(XMLFormat.getChildElementList(it,null,null).size()>0 ||
