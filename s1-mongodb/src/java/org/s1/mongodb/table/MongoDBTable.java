@@ -162,6 +162,8 @@ public abstract class MongoDBTable extends Table {
 
     @MapMethod(names = {"search","sort","fields","skip","max","ctx"})
     public List<Map<String,Object>> list(Map<String,Object> search, Map<String,Object> sort, Map<String,Object> fields, int skip, int max, Map<String,Object> ctx) throws AccessDeniedException {
+        if(ctx==null)
+            ctx = Objects.newSOHashMap();
         checkAccess();
         if(search==null)
             search = Objects.newSOHashMap();

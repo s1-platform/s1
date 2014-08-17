@@ -618,7 +618,7 @@ public class S1ScriptEngine {
      */
     private String printText(String text){
         return TEMPLATE_PRINT_FUNCTION+"(\""+text.replace("\"","\\\"")
-                .replaceAll("(\r\n|\n|\n\r)","\\\\n\",\n\"")+"\");";
+                .replaceAll("(\r\n|\n|\n\r|\r)","\\\\n\",\n\"")+"\");";
     }
 
     public static void main(String[] args) {
@@ -626,7 +626,7 @@ public class S1ScriptEngine {
         //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null).getClass());
         //System.out.println(se.evalInFunction(Object.class,"return 1*'25'",null));
         System.out.println(se.evalInFunction(Object.class,"return s1.formatNumber(10012.21)",null));
-
+        System.out.println(se.parseTemplate("qwer\r"));
         stopAll();
     }
 }
