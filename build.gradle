@@ -3,7 +3,7 @@
  */
 allprojects{
     group = 'org.s1-platform'
-    version = '2.4.6-SNAPSHOT'
+    version = '2.4.6'
 }
 
 /**
