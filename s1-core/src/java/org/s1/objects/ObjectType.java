@@ -87,7 +87,7 @@ public class ObjectType {
         } else if (type == BigDecimal.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
-            obj = new BigDecimal("" + obj);
+            obj = new BigDecimal(("" + obj).replace(",","."));
         } else if (type == Integer.class || type == int.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
@@ -101,21 +101,21 @@ public class ObjectType {
             if(obj instanceof Long){
 
             }else
-                obj = new BigDecimal(""+obj).longValue();
+                obj = new BigDecimal(("" + obj).replace(",",".")).longValue();
         } else if (type == Float.class || type==float.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Float){
 
             }else
-                obj = new BigDecimal(""+obj).floatValue();
+                obj = new BigDecimal(("" + obj).replace(",",".")).floatValue();
         } else if (type == Double.class || type==double.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "0";
             if(obj instanceof Double){
 
             }else
-                obj = new BigDecimal(""+obj).doubleValue();
+                obj = new BigDecimal(("" + obj).replace(",",".")).doubleValue();
         } else if (type == Boolean.class || type==boolean.class) {
             if (obj == null || (""+obj).isEmpty())
                 obj = "false";

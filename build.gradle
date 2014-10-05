@@ -37,6 +37,7 @@ ext.libs = [
 /**
  * Common compile, build, tasks
  */
+
 subprojects {
     apply plugin: 'java'
 
@@ -69,11 +70,11 @@ subprojects {
     }
 
     //provided-compile configuration
-    configurations { providedCompile }
+    configurations { provided }
 
-    sourceSets.main.compileClasspath += configurations.providedCompile
-    sourceSets.test.compileClasspath += configurations.providedCompile
-    sourceSets.test.runtimeClasspath += configurations.providedCompile
+    sourceSets.main.compileClasspath += configurations.provided
+    sourceSets.test.compileClasspath += configurations.provided
+    sourceSets.test.runtimeClasspath += configurations.provided
 
     //maven repos
     repositories {
@@ -84,6 +85,16 @@ subprojects {
     //javadoc
     javadoc{
         options.encoding = "UTF-8"
+        classpath+=configurations.provided
+    }
+}
+
+//javadoc 8 fix
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
     }
 }
 
@@ -139,7 +150,7 @@ configure(subprojects.findAll {it.name.startsWith('test-server')}) {
     dependencies {
         testCompile project(':s1-testing')
         compile project(':s1-core')
-        providedCompile libs.servlet
+        provided libs.servlet
         tomcat project(':s1-tomcat-embedded')
     }
 

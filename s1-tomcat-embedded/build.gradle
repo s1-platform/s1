@@ -22,9 +22,8 @@
 
 description 'S1 testing utils'
 dependencies {
-    compile project(':s1-core')
     compile libs.tomcat_core
     compile libs.tomcat_logging
     compile libs.tomcat_jasper
-    providedCompile libs.servlet
+    provided libs.servlet
 }

@@ -165,6 +165,7 @@ public class ObjectsTest extends BasicTest {
                 Date dt = new Date();
                 assertEquals(123.2D, Objects.cast("123.2", Double.class));
                 assertEquals(123.2D, Objects.cast("123.2", "Double"));
+                assertEquals(123.2D, Objects.cast("123,2", "Double"));
                 assertEquals((Integer) 123, Objects.cast("123", Integer.class));
                 assertEquals(123, Objects.cast("123", "Integer"));
                 assertEquals(123.2F, Objects.cast("123.2", Float.class));

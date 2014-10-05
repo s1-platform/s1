@@ -18,6 +18,6 @@ description 'S1 MongoDB'
 dependencies {
     compile libs.mongodb
     compile project(':s1-core')
-    providedCompile libs.servlet
+    provided libs.servlet
     testCompile project(':s1-testing')
 }

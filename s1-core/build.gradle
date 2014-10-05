@@ -25,5 +25,5 @@ description 'S1 core'
 dependencies {
     compile libs.hazelcast
     compile libs.rhino
-    providedCompile libs.servlet
+    provided libs.servlet
 }

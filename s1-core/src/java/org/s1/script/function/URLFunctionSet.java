@@ -33,8 +33,8 @@ public class URLFunctionSet extends ScriptFunctionSet {
             if(!Objects.isNullOrEmpty(k)) {
                 String v = null;
                 if (arr3.length > 1)
-                    v = arr3[1];
-                m.put(k, v);
+                    v = decode(arr3[1]);
+                m.put(decode(k), v);
             }
         }
         return m;
@@ -58,7 +58,7 @@ public class URLFunctionSet extends ScriptFunctionSet {
                 u+="?";
             else
                 u+="&";
-            u+=k+"="+encode(Objects.get(String.class,m,k));
+            u+=encode(k)+"="+encode(Objects.get(String.class,m,k));
             i++;
         }
 

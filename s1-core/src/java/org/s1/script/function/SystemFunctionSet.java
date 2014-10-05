@@ -21,15 +21,14 @@ import org.s1.format.json.JSONFormat;
 import org.s1.format.json.JSONFormatException;
 import org.s1.misc.Closure;
 import org.s1.objects.*;
+import org.s1.objects.Objects;
 import org.s1.user.UserBean;
 import org.s1.user.Users;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * System script functions (available in all scripts)
@@ -528,5 +527,113 @@ public class SystemFunctionSet extends ScriptFunctionSet {
     public String escapeHTML(String s){
         return EscapeUtils.escapeHTML(s);
     }
-    
+
+    @MapMethod
+    public List<Map<String,Object>> group(List<Map<String,Object>> list, String key, String keyData, final String sortKey, final Boolean desc){
+        if(keyData==null)
+            keyData = key;
+        Map<Object,Map<String,Object>> tree = new TreeMap<Object, Map<String, Object>>();
+        for(Map<String,Object> m:list){
+            Object o_key = Objects.get(m,key);
+            Object o_keyData = Objects.get(m,keyData);
+            if(!tree.containsKey(o_key)){
+                tree.put(o_key,Objects.newSOHashMap(
+                        "key",o_keyData,
+                        "list",Objects.newArrayList()
+                ));
+            }
+            Objects.get(tree.get(o_key),"list",Objects.newArrayList()).add(m);
+        }
+        List<Map<String,Object>> res = Objects.newArrayList();
+        for(Map<String,Object> m:tree.values()){
+            res.add(m);
+        }
+        if(sortKey!=null) {
+            Collections.sort(res, new Comparator<Map<String, Object>>() {
+                @Override
+                public int compare(Map<String, Object> o1, Map<String, Object> o2) {
+                    Object o_1 = Objects.get(o1, "key."+sortKey);
+                    Object o_2 = Objects.get(o2, "key."+sortKey);
+                    if(o_1==null && o_2==null)
+                        return 0;
+                    if(o_1==null){
+                        if(desc == null || !desc)
+                            return -1;
+                        else
+                            return 1;
+                    }
+                    if(o_2==null){
+                        if(desc == null || !desc)
+                            return 1;
+                        else
+                            return -1;
+                    }
+                    if (o_1 instanceof Comparable && o_2 instanceof Comparable) {
+                        if(desc == null || !desc)
+                            return ((Comparable) o_1).compareTo(o_2);
+                        else
+                            return ((Comparable) o_2).compareTo(o_1);
+                    }
+                    return 0;
+                }
+            });
+        }
+        return res;
+    }
+
+    @MapMethod
+    public List filter(List list, final ScriptFunction filter){
+        return Objects.findAll(list,new Closure() {
+            @Override
+            public Object call(Object input) {
+                return filter.call(Objects.newSOHashMap(
+                        "it",input
+                ));
+            }
+        });
+    }
+
+    @MapMethod
+    public BigDecimal sum(List<Map<String,Object>> list,String name){
+        BigDecimal sum = new BigDecimal(0);
+        for(Map<String,Object> m:list){
+            BigDecimal s = Objects.get(BigDecimal.class,m,name,new BigDecimal(0));
+            sum = sum.add(s);
+        }
+        return sum;
+    }
+
+    @MapMethod
+    public BigDecimal avg(List<Map<String,Object>> list,String name){
+        BigDecimal sum = new BigDecimal(0);
+        for(Map<String,Object> m:list){
+            BigDecimal s = Objects.get(BigDecimal.class,m,name,new BigDecimal(0));
+            sum = sum.add(s);
+        }
+        return sum.divide(new BigDecimal(list.size()),10,BigDecimal.ROUND_HALF_UP);
+    }
+
+    @MapMethod
+    public BigDecimal min(List<Map<String,Object>> list,String name){
+        BigDecimal min = null;
+        for(Map<String,Object> m:list){
+            BigDecimal s = Objects.get(BigDecimal.class,m,name,new BigDecimal(0));
+            if(min==null || min.doubleValue()>s.doubleValue()){
+                min = s;
+            }
+        }
+        return min;
+    }
+
+    @MapMethod
+    public BigDecimal max(List<Map<String,Object>> list,String name){
+        BigDecimal max = null;
+        for(Map<String,Object> m:list){
+            BigDecimal s = Objects.get(BigDecimal.class,m,name,new BigDecimal(0));
+            if(max==null || max.doubleValue()<s.doubleValue()){
+                max = s;
+            }
+        }
+        return max;
+    }
 }

@@ -27,6 +27,7 @@ import org.s1.script.errors.ScriptException;
 import org.s1.script.function.ScriptFunction;
 import org.s1.script.function.ScriptFunctionSet;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -463,24 +464,32 @@ public class ASTEvaluator {
                     getResult = ((Number)l).doubleValue() < ((Number)r).doubleValue();
                 }else if(l instanceof String && r instanceof String){
                     getResult = ((String) l).compareTo((String)r)<0;
+                }else if(l instanceof Date && r instanceof Date){
+                    getResult = ((Date) l).compareTo((Date)r)<0;
                 }
             }else if(operator==Token.LE){
                 if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() <= ((Number)r).doubleValue();
                 }else if(l instanceof String && r instanceof String){
                     getResult = ((String) l).compareTo((String)r)<=0;
+                }else if(l instanceof Date && r instanceof Date){
+                    getResult = ((Date) l).compareTo((Date)r)<=0;
                 }
             }else if(operator==Token.GT){
                 if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() > ((Number)r).doubleValue();
                 }else if(l instanceof String && r instanceof String){
                     getResult = ((String) l).compareTo((String)r)>0;
+                }else if(l instanceof Date && r instanceof Date){
+                    getResult = ((Date) l).compareTo((Date)r)>0;
                 }
             }else if(operator==Token.GE){
                 if(l instanceof Number && r instanceof Number){
                     getResult = ((Number)l).doubleValue() >= ((Number)r).doubleValue();
                 }else if(l instanceof String && r instanceof String){
                     getResult = ((String) l).compareTo((String)r)>=0;
+                }else if(l instanceof Date && r instanceof Date){
+                    getResult = ((Date) l).compareTo((Date)r)>=0;
                 }
             }else if(operator==Token.ADD){
                 if(l instanceof Number && r instanceof Number)

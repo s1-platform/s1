@@ -26,5 +26,5 @@ dependencies {
     compile libs.testng
     compile libs.httpclient
     compile libs.httpmime
-    providedCompile libs.servlet
+    provided libs.servlet
 }
