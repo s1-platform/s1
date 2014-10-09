@@ -497,9 +497,14 @@ public class ASTEvaluator {
                 else
                     getResult = Objects.cast(l,String.class)+Objects.cast(r,String.class);
             }else if(operator==Token.SUB){
-                double l_d = Objects.cast(l,Double.class);
-                double r_d = Objects.cast(r,Double.class);
-                getResult = l_d-r_d;
+                if(l instanceof Number && r instanceof Number)
+                    getResult = ((Number)l).doubleValue() - ((Number)r).doubleValue();
+                else if(l instanceof Date && r instanceof Date){
+                    getResult = ((Date) l).getTime()-((Date) r).getTime();
+                }
+                //double l_d = Objects.cast(l,Double.class);
+                //double r_d = Objects.cast(r,Double.class);
+                //getResult = l_d-r_d;
                 //if(l instanceof Number && r instanceof Number)
                 //    getResult = ((Number)l).doubleValue() - ((Number)r).doubleValue();
             }else if(operator==Token.MOD){

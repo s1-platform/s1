@@ -312,6 +312,16 @@ public class SystemFunctionSet extends ScriptFunctionSet {
         return new Date();
     }
 
+    @MapMethod
+    public Long ms(Date date){
+        return date.getTime();
+    }
+
+    @MapMethod
+    public Date date(Long ms){
+        return new Date(ms);
+    }
+
     /**
      * @see Objects#parseDate(String, String)
      *
