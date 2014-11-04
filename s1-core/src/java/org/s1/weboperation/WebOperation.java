@@ -229,6 +229,12 @@ public abstract class WebOperation<I, O> {
         return id;
     }
 
+    private static ThreadLocal<HttpServletRequest> requests = new ThreadLocal<HttpServletRequest>();
+
+    public static HttpServletRequest getCurrentRequest(){
+        return requests.get();
+    }
+
     /**
      * Main method, that makes request processing. Called from DispatcherServlet
      *
@@ -243,6 +249,7 @@ public abstract class WebOperation<I, O> {
 
         String id = null;
         try{
+            requests.set(request);
             id = Session.start(getSessionId(request,response));
 
             long t = System.currentTimeMillis();
@@ -277,6 +284,7 @@ public abstract class WebOperation<I, O> {
             }
             logResult(System.currentTimeMillis() - t);
         }finally {
+            requests.remove();
             Session.end(id);
         }
     }
