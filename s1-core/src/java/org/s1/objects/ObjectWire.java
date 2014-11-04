@@ -18,6 +18,7 @@ package org.s1.objects;
 
 import org.s1.misc.Closure;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
@@ -44,7 +45,9 @@ public class ObjectWire {
             public Object call(ObjectIterator.IterateBean i) {
                 try {
                     if (i.getValue() instanceof Date) {
-                        return "/Date(" + ((Date) i.getValue()).getTime() + ")/";
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd HH:mm:ss.SSS");
+                        //return "/Date(" + ((Date) i.getValue()).getTime() + ")/";
+                        return "/Date(" + sdf.format((Date) i.getValue()) + ")/";
                     }
                 } catch (Exception e) {
                 }

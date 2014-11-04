@@ -182,6 +182,7 @@ public class ObjectsTest extends BasicTest {
                 assertEquals(new BigInteger("123"), Objects.cast(123, "BigInteger"));
                 assertEquals(dt.getTime(), Objects.cast(dt, Date.class).getTime());
                 assertEquals(null, Objects.cast(null, "Date"));
+                assertEquals(dt.getTime(), Objects.cast(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(dt), Date.class).getTime());
                 
             }
         }));
@@ -458,7 +459,7 @@ public class ObjectsTest extends BasicTest {
 
                 m1 = Objects.toWire(m1);
 
-                assertEquals("/Date(" + dt.getTime() + ")/", Objects.get(m1, "m.dt"));
+                assertEquals("/Date(" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(dt) + ")/", Objects.get(m1, "m.dt"));
                 assertTrue(!Objects.equals(_m1, m1));
 
                 m1 = Objects.fromWire(m1);

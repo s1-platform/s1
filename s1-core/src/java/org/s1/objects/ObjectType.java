@@ -18,6 +18,8 @@ package org.s1.objects;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -128,7 +130,22 @@ public class ObjectType {
                 obj = null;
             if (obj != null) {
                 if (obj instanceof String) {
-                    obj = new Date(Long.parseLong("" + obj));
+                    Date dt = null;
+                    SimpleDateFormat[] sdf = new SimpleDateFormat[]{
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm"),
+                            new SimpleDateFormat("yyyy-MM-dd")
+                    };
+                    for(SimpleDateFormat s:sdf){
+                        try {
+                            dt = s.parse("" + obj);
+                            break;
+                        }catch (Throwable e){}
+                    }
+                    if(dt==null)
+                        dt = new Date(Long.parseLong("" + obj));
+                    obj = dt;
                 } else if (obj instanceof Long) {
                     obj = new Date((Long) obj);
                 }

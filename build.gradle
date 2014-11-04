@@ -87,6 +87,14 @@ subprojects {
         options.encoding = "UTF-8"
         classpath+=configurations.provided
     }
+
+    //idea
+    apply plugin: 'idea'
+    idea {
+        module {
+            scopes.PROVIDED.plus += [configurations.provided]
+        }
+    }
 }
 
 //javadoc 8 fix
